@@ -1,6 +1,6 @@
 # Template engine (Mustache subset) in `core/template`
 
-Status: open
+Status: done
 Blocked by: 01
 Spec: ../spec.md
 
