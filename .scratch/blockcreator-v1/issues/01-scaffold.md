@@ -1,6 +1,6 @@
 # Scaffold Tauri + Vite + React + TypeScript app with `core/` package
 
-Status: open
+Status: done
 Blocked by: -
 Spec: ../spec.md
 

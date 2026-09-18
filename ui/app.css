@@ -1,0 +1,110 @@
+:root {
+  --bg: #1b1f27;
+  --panel: #242a35;
+  --panel2: #2d3441;
+  --line: #3a4252;
+  --text: #e6e9ef;
+  --muted: #9aa3b2;
+  --accent: #f2b233;
+  --accent2: #5aa9ff;
+  --filled: #3fbf7f;
+  --danger: #e5534b;
+  --code-bg: #14171d;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font:
+    14px/1.4 system-ui,
+    'Segoe UI',
+    sans-serif;
+}
+
+.app {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  height: 100%;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  background: var(--panel);
+  border-right: 1px solid var(--line);
+  overflow: auto;
+}
+
+.sidebar section {
+  padding: 12px;
+}
+
+.props {
+  border-bottom: 1px solid var(--line);
+}
+
+.props h1 {
+  margin: 0 0 8px;
+  font-size: 15px;
+  color: var(--accent);
+}
+
+.save {
+  margin-top: auto;
+  border-top: 1px solid var(--line);
+}
+
+.main {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-width: 0;
+}
+
+.edhead {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 12px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+}
+
+.split {
+  display: grid;
+  grid-template-columns: 1fr 42%;
+  min-height: 0;
+}
+
+.editor {
+  padding: 12px;
+}
+
+.asm {
+  border-left: 1px solid var(--line);
+  background: var(--code-bg);
+  overflow: auto;
+}
+
+.asm pre {
+  margin: 0;
+  padding: 10px 12px;
+  color: #6f7b8f;
+  font:
+    12px/1.45 Consolas,
+    'Cascadia Mono',
+    monospace;
+}
+
+.placeholder {
+  margin: 0;
+  color: var(--muted);
+}
