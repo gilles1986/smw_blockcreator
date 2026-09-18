@@ -3,6 +3,7 @@ import * as Blockly from 'blockly';
 import 'blockly/blocks';
 import { useEffect, useLayoutEffect, useRef } from 'react';
 import type { Library } from '../../core/library';
+import type { SlotKind } from '../../core/model';
 import { blockDefinitions, fieldValidators } from './blocks';
 import { toolbox } from './toolbox';
 import type { WorkspaceState } from './workspace';
@@ -11,20 +12,24 @@ interface Props {
   library: Library;
   /** Identifies what is being edited (the Slot); a new key loads `initialState`. */
   editKey: string;
+  /** Picks the toolbox: Pieces for the other kind of Slot are hidden. */
+  slotKind: SlotKind;
   initialState: WorkspaceState;
   onChange: (state: WorkspaceState) => void;
 }
 
 /** A Blockly workspace for one Slot at a time (zelos renderer, dark theme). */
-export function BlocklyEditor({ library, editKey, initialState, onChange }: Props) {
+export function BlocklyEditor({ library, editKey, slotKind, initialState, onChange }: Props) {
   const host = useRef<HTMLDivElement>(null);
   const workspace = useRef<Blockly.WorkspaceSvg | null>(null);
   const onChangeRef = useRef(onChange);
   const initialStateRef = useRef(initialState);
+  const slotKindRef = useRef(slotKind);
   // Layout effects run before the effects below, so they always see the latest props.
   useLayoutEffect(() => {
     onChangeRef.current = onChange;
     initialStateRef.current = initialState;
+    slotKindRef.current = slotKind;
   });
 
   useEffect(() => {
@@ -38,7 +43,7 @@ export function BlocklyEditor({ library, editKey, initialState, onChange }: Prop
       };
     }
     const ws = Blockly.inject(host.current!, {
-      toolbox: toolbox(library),
+      toolbox: toolbox(library, slotKindRef.current),
       renderer: 'zelos',
       theme: DarkTheme,
       trashcan: true,
@@ -72,6 +77,10 @@ export function BlocklyEditor({ library, editKey, initialState, onChange }: Prop
       Blockly.Events.enable();
     }
   }, [editKey, library]);
+
+  useEffect(() => {
+    workspace.current?.updateToolbox(toolbox(library, slotKind));
+  }, [slotKind, library]);
 
   return <div className="blockly-host" ref={host} />;
 }

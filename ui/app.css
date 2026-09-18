@@ -165,7 +165,7 @@ button {
 
 .slot-row {
   display: grid;
-  grid-template-columns: 12px 1fr;
+  grid-template-columns: 12px auto 1fr;
   gap: 8px;
   align-items: center;
   padding: 6px 12px;
@@ -248,4 +248,27 @@ button:disabled {
   white-space: nowrap;
   direction: rtl;
   text-align: left;
+}
+
+.slot-row .summary {
+  color: var(--muted);
+  font-size: 12px;
+  font-style: italic;
+}
+
+.advanced-toggle {
+  margin: 6px 12px;
+  font-size: 12px;
+  color: var(--muted);
+  background: transparent;
+  border-style: dashed;
+}
+
+.edhead .link,
+.edhead .hint {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  font-size: 12px;
+  color: var(--muted);
 }

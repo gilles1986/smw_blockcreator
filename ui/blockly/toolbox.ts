@@ -1,6 +1,7 @@
 // Blockly toolbox (JSON) built from the Library: Logic first, then Piece categories.
 
 import type { Library } from '../../core/library';
+import { fitsSlot, type SlotKind } from '../../core/model';
 import { pieceBlockType } from './blocks';
 import { categoryColour, categoryName, KNOWN_CATEGORIES, type Colour } from './categories';
 import { fieldCodec, type FieldValue } from './fields';
@@ -37,9 +38,11 @@ const LOGIC: ToolboxCategory = {
   ],
 };
 
-export function toolbox(library: Library): Toolbox {
+/** The toolbox for a Slot of the given kind: Pieces for the other kind are left out. */
+export function toolbox(library: Library, kind: SlotKind): Toolbox {
   const byCategory = new Map<string, { name: string; block: ToolboxBlock }[]>();
   for (const { manifest } of library.pieces.values()) {
+    if (!fitsSlot(manifest.slots, kind)) continue;
     const blocks = byCategory.get(manifest.category) ?? [];
     // Explicit defaults: a dropdown would otherwise start on its first option.
     const fields = Object.fromEntries(

@@ -29,7 +29,8 @@ export function parse(text: string): ParseResult {
   const lines = withoutBom.split('\n');
   const line = (i: number) => (lines[i] ?? '').replace(/\r$/, '');
   const format = headerValue(line(0), HEADER.format, /^\d+$/);
-  const model = headerValue(line(1), HEADER.model, /^.*$/);
+  // [\s\S], not `.`: JSON leaves U+2028 / U+2029 unescaped, and `.` does not match them.
+  const model = headerValue(line(1), HEADER.model, /^[\s\S]*$/);
   const checksum = headerValue(line(2), HEADER.checksum, /^[0-9a-f]{8}$/);
   if (format === undefined || model === undefined || checksum === undefined) {
     return { ok: false, reason: 'not-blockcreator', message: 'Not a BlockCreator block.' };

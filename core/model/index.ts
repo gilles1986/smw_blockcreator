@@ -6,9 +6,40 @@ import type { Value } from '../template';
 /** Version of the header format and the model JSON inside it; bump it with a migration. */
 export const MODEL_FORMAT = 1;
 
-/** Slots the generator knows so far (ticket 07 adds sides, sprites and advanced Slots). */
-export const SLOT_IDS = ['marioTop', 'marioBottom', 'marioInside'] as const;
+/** Slots are Block sides (CONTEXT.md), not GPS offsets; the generator maps them onto offsets. */
+export const SLOT_IDS = [
+  'marioTop',
+  'marioBottom',
+  'marioLeft',
+  'marioRight',
+  'marioInside',
+  'marioTopCorner',
+  'marioHeadInside',
+  'marioBodyInside',
+  'marioCape',
+  'marioFireball',
+  'marioWallFeet',
+  'marioWallBody',
+  'spriteTop',
+  'spriteBottom',
+  'spriteLeft',
+  'spriteRight',
+] as const;
 export type SlotId = (typeof SLOT_IDS)[number];
+
+/** Who touches the Block in a Slot; Pieces declare which of these they work for. */
+export type SlotKind = 'mario' | 'sprite';
+
+export function slotKind(slot: SlotId): SlotKind {
+  return slot.startsWith('sprite') ? 'sprite' : 'mario';
+}
+
+export const SLOT_KIND_NAMES: Record<SlotKind, string> = { mario: 'Mario', sprite: 'Sprite' };
+
+/** Whether a Piece made for `slots` (its manifest field) may be used in a Slot of `kind`. */
+export function fitsSlot(slots: SlotKind | 'any', kind: SlotKind): boolean {
+  return slots === 'any' || slots === kind;
+}
 
 export interface BlockProperties {
   /** Also the file name. */
@@ -43,5 +74,21 @@ export interface BlockModel {
   properties: BlockProperties;
   /** Empty or missing Slots generate a bare `RTL`. */
   slots: Partial<Record<SlotId, Statement[]>>;
+  /**
+   * While the Top corner Slot is empty, it does what Top does (default `true`, also when
+   * absent). `false` leaves the corner doing nothing. A filled Top corner Slot always wins.
+   */
+  topCornerFollowsTop?: boolean;
 }
+
+/** Whether a Slot has any statements. */
+export function slotFilled(model: BlockModel, slot: SlotId): boolean {
+  return (model.slots[slot]?.length ?? 0) > 0;
+}
+
+/** True while the Top corner Slot is empty and does what Top does (the default link). */
+export function cornerFollowsTop(model: BlockModel): boolean {
+  return model.topCornerFollowsTop !== false && !slotFilled(model, 'marioTopCorner');
+}
+
 export { checkPieces } from './check';

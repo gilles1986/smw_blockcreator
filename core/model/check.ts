@@ -3,12 +3,20 @@
 
 import type { Library, ParamSpec } from '../library';
 import type { Value } from '../template';
-import type { BlockModel, PieceRef, Statement } from './index';
+import {
+  fitsSlot,
+  SLOT_KIND_NAMES,
+  slotKind,
+  type BlockModel,
+  type PieceRef,
+  type SlotId,
+  type Statement,
+} from './index';
 
 /** Problems as "slot path: message" lines; empty when the model can be edited and generated. */
 export function checkPieces(model: BlockModel, library: Library): string[] {
   const problems: string[] = [];
-  const piece = (ref: PieceRef, kind: 'action' | 'condition', where: string) => {
+  const piece = (ref: PieceRef, kind: 'action' | 'condition', slot: SlotId, where: string) => {
     const found = library.pieces.get(ref.id);
     if (!found) {
       problems.push(`${where}: Piece '${ref.id}' is not in the Library.`);
@@ -20,6 +28,11 @@ export function checkPieces(model: BlockModel, library: Library): string[] {
       );
       return;
     }
+    const { slots } = found.manifest;
+    if (slots !== 'any' && !fitsSlot(slots, slotKind(slot))) {
+      problems.push(`${where}: Piece '${ref.id}' only works in ${SLOT_KIND_NAMES[slots]} Slots.`);
+      return;
+    }
     for (const param of found.manifest.params) {
       const value = ref.params[param.name];
       const problem = value === undefined ? undefined : valueProblem(param, value);
@@ -27,17 +40,19 @@ export function checkPieces(model: BlockModel, library: Library): string[] {
         problems.push(`${where}: '${param.name}' = ${JSON.stringify(value)} ${problem}.`);
     }
   };
-  const statements = (list: Statement[], where: string) =>
+  const statements = (list: Statement[], slot: SlotId, where: string) =>
     list.forEach((statement, i) => {
       const path = `${where}/${i}`;
-      if (statement.type === 'action') return piece(statement.piece, 'action', path);
+      if (statement.type === 'action') return piece(statement.piece, 'action', slot, path);
       statement.branches.forEach((branch, b) => {
-        piece(branch.condition.piece, 'condition', `${path}/branches/${b}/condition`);
-        statements(branch.body, `${path}/branches/${b}/body`);
+        piece(branch.condition.piece, 'condition', slot, `${path}/branches/${b}/condition`);
+        statements(branch.body, slot, `${path}/branches/${b}/body`);
       });
-      if (statement.else) statements(statement.else, `${path}/else`);
+      if (statement.else) statements(statement.else, slot, `${path}/else`);
     });
-  for (const [slot, list] of Object.entries(model.slots)) statements(list ?? [], `${slot} `);
+  for (const [slot, list] of Object.entries(model.slots) as [SlotId, Statement[]][]) {
+    statements(list, slot, `${slot} `);
+  }
   return problems;
 }
 

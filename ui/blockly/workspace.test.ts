@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { generate } from '../../core/generator';
 import type { Statement } from '../../core/model';
-import { statements } from '../../core/testing/arbitraries';
+import { marioStatements } from '../../core/testing/arbitraries';
 import { builtInLibrary } from '../../core/testing/library';
 import {
   statementsToWorkspace,
@@ -153,7 +153,7 @@ describe('statementsToWorkspace', () => {
 
   it('round-trips any valid statements (model → workspace → model)', () => {
     fc.assert(
-      fc.property(statements, (s) => {
+      fc.property(marioStatements, (s) => {
         expect(workspaceToStatements(statementsToWorkspace(s, library), library)).toEqual(s);
       }),
       { numRuns: 300 },

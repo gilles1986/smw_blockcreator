@@ -8,3 +8,7 @@ Human in the loop: insert all presets into a test project via GPS and check them
 
 **Done when**
 - The user signs off a checklist per preset; research open points are closed or re-scoped.
+
+**Notes from 07 (all Slots)**
+- Confirm `$93`: 0 = Mario touches the block from its left (corrected from the research doc via disassembly `CODE_00EB77`). Test with `core/generator/golden/side_split.asm` (solid from the left, air from the right).
+- WallFeet vs WallBody mapping is still unverified (research doc, open question 1).

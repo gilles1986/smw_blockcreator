@@ -29,9 +29,9 @@ SMW hackers using GPS, from beginners (never wrote ASM) to experienced (want spe
 |---|---|---|
 | Mario Top | MarioAbove | — |
 | Mario Bottom | MarioBelow | — |
-| Mario Left / Right | MarioSide | `$93` (1 = Mario left of block) |
+| Mario Left / Right | MarioSide | `$93` (0 = Mario left of the block, 1 = right; disassembly `CODE_00EB77`) |
 | Mario Inside | BodyInside + HeadInside | overridden by Head/Body inside if filled |
-| Mario Top corner (adv.) | TopCorner | linked to Top by default (`JMP MarioAbove`) |
+| Mario Top corner (adv.) | TopCorner | linked to Top by default while empty (`TopCorner:` label on the MarioAbove section; same effect as `JMP MarioAbove`) |
 | Mario Head inside / Body inside (adv.) | HeadInside / BodyInside | — |
 | Mario Cape / Fireball (adv.) | MarioCape / MarioFireball | — |
 | Mario Wall-run feet / body (adv.) | WallFeet / WallBody | only with header `db $37` |

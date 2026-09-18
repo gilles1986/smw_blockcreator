@@ -11,3 +11,6 @@ One-line summaries per Slot row (`core/summary`), hover "copy" and a "Copy to...
 
 **Notes from 05 (editor tracer)**
 - A minimal `PropertiesForm` (name, description, author, default act-as) exists in `ui/App.tsx`; polish and validate it here. Top-level stacks in a Slot run top to bottom by canvas position (`workspaceToStatements`) — consider showing that order or warning about several stacks.
+
+**Notes from 07 (all Slots)**
+- The "Top corner = Top" switch currently lives in the editor header (shown while Top corner is selected and empty); the sidebar row only shows a read-only "= Top" tag. The spec wants the link in the sidebar.

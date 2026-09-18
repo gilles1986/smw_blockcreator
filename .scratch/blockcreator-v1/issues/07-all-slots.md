@@ -1,6 +1,6 @@
 # All Slots: side splits, sprite Slots, advanced Slots, corner link, `db $37`
 
-Status: open
+Status: done
 Blocked by: 04, 05
 Spec: ../spec.md
 

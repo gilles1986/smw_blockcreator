@@ -1,6 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { generate } from '../generator';
+import { builtInLibrary } from '../testing/library';
 import { parse } from './index';
 
 const golden = readFileSync(
@@ -66,5 +68,22 @@ describe('parse', () => {
       message:
         'The ;@bc-model header is not a valid Block: slots.marioTop[0].type must be one of: action, if',
     });
+  });
+});
+
+describe('parse of unusual text', () => {
+  it('reads models whose strings contain line or paragraph separators (JSON leaves them raw)', () => {
+    for (const code of [0x2028, 0x2029, 0x85]) {
+      const odd = String.fromCharCode(code);
+      const model = {
+        properties: { name: `a${odd}b`, description: odd, author: odd, defaultActAs: 0 },
+        slots: {},
+      };
+      expect(parse(generate(model, builtInLibrary()).text)).toEqual({
+        ok: true,
+        model,
+        checksumOk: true,
+      });
+    }
   });
 });

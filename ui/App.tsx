@@ -1,7 +1,14 @@
 import { useMemo, useState } from 'react';
 import { generate, GenerateError } from '../core/generator';
 import { canonicalJson } from '../core/header';
-import { SLOT_IDS, type BlockModel, type BlockProperties, type SlotId } from '../core/model';
+import {
+  cornerFollowsTop,
+  slotFilled,
+  slotKind,
+  type BlockModel,
+  type BlockProperties,
+  type SlotId,
+} from '../core/model';
 import { BlocklyEditor } from './blockly/BlocklyEditor';
 import {
   slotsToWorkspaces,
@@ -12,16 +19,11 @@ import {
 import { DISCARD_QUESTION, HAND_EDIT_WARNING, openBlock, saveBlock } from './blockDocument';
 import { formatHex, parseHex } from './hex';
 import { builtInLibrary as library } from './library';
+import { SlotList } from './SlotList';
+import { groupName, SLOT_LABELS } from './slots';
 import { tauriFiles as files } from './tauriFiles';
 
 const TOOL_VERSION = import.meta.env.VITE_APP_VERSION ?? 'dev';
-
-/** Row labels; a Record so a new Slot in the model cannot be forgotten here. */
-const SLOT_LABELS: Record<SlotId, string> = {
-  marioTop: 'Top',
-  marioBottom: 'Bottom',
-  marioInside: 'Inside',
-};
 
 const NEW_BLOCK: BlockModel = {
   properties: { name: 'new_block', description: '', author: '', defaultActAs: 0x130 },
@@ -48,6 +50,7 @@ export function App() {
   const [properties, setProperties] = useState<BlockProperties>(NEW_BLOCK.properties);
   const [workspaces, setWorkspaces] = useState<Workspaces>({});
   const [selected, setSelected] = useState<SlotId>('marioTop');
+  const [topCornerFollowsTop, setTopCornerFollowsTop] = useState(true);
   const [file, setFile] = useState<OpenFile>({
     path: undefined,
     revision: 0,
@@ -56,8 +59,13 @@ export function App() {
   const [notice, setNotice] = useState<Notice | null>(null);
 
   const model: BlockModel = useMemo(
-    () => ({ properties, slots: workspacesToSlots(workspaces, library) }),
-    [properties, workspaces],
+    () => ({
+      properties,
+      slots: workspacesToSlots(workspaces, library),
+      // Written only when switched off, so the default stays out of the file.
+      ...(!topCornerFollowsTop && { topCornerFollowsTop }),
+    }),
+    [properties, workspaces, topCornerFollowsTop],
   );
 
   const generated = useMemo((): { text: string } | { error: string } => {
@@ -81,6 +89,7 @@ export function App() {
   function load(next: BlockModel, path: string | undefined) {
     setProperties(next.properties);
     setWorkspaces(slotsToWorkspaces(next.slots, library));
+    setTopCornerFollowsTop(next.topCornerFollowsTop !== false);
     setSelected('marioTop');
     setFile((current) => ({
       path,
@@ -129,21 +138,7 @@ export function App() {
     <div className="app">
       <aside className="sidebar" aria-label="Block">
         <PropertiesForm key={file.revision} properties={properties} onChange={setProperties} />
-        <section className="slots" aria-label="Slots">
-          <h2 className="group">Mario</h2>
-          {SLOT_IDS.map((id) => (
-            <button
-              key={id}
-              type="button"
-              className={`slot-row${id === selected ? ' selected' : ''}${model.slots[id] ? ' filled' : ''}`}
-              aria-pressed={id === selected}
-              onClick={() => setSelected(id)}
-            >
-              <span className="dot" aria-label={model.slots[id] ? 'has logic' : 'empty'} />
-              <span className="name">{SLOT_LABELS[id]}</span>
-            </button>
-          ))}
-        </section>
+        <SlotList model={model} selected={selected} onSelect={setSelected} />
         <section className="save" aria-label="File">
           {notice && (
             <p
@@ -176,13 +171,29 @@ export function App() {
       </aside>
       <main className="main">
         <header className="edhead">
-          <strong>Mario · {SLOT_LABELS[selected]}</strong>
+          <strong>
+            {groupName(selected)} · {SLOT_LABELS[selected]}
+          </strong>
+          {selected === 'marioTopCorner' && !slotFilled(model, 'marioTopCorner') && (
+            <label className="link">
+              <input
+                type="checkbox"
+                checked={topCornerFollowsTop}
+                onChange={(e) => setTopCornerFollowsTop(e.target.checked)}
+              />
+              While empty, do what Top does
+            </label>
+          )}
+          {selected === 'marioTopCorner' && cornerFollowsTop(model) && (
+            <span className="hint">Add blocks here to give the corner its own logic.</span>
+          )}
         </header>
         <div className="split">
           <section className="editor" aria-label="Logic editor">
             <BlocklyEditor
               library={library}
               editKey={`${file.revision}:${selected}`}
+              slotKind={slotKind(selected)}
               initialState={workspaces[selected] ?? {}}
               onChange={(state) => setWorkspaces((all) => ({ ...all, [selected]: state }))}
             />

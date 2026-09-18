@@ -1,23 +1,26 @@
 // Test support: fast-check generators for valid Block models built from the seed Pieces.
 import fc from 'fast-check';
-import { SLOT_IDS, type BlockModel, type Statement } from '../model';
+import { SLOT_IDS, slotKind, type BlockModel, type SlotKind, type Statement } from '../model';
 
 const text = fc.string({ unit: 'binary', maxLength: 40 });
 
-const action: fc.Arbitrary<Statement> = fc.oneof(
-  fc.integer({ min: 0, max: 0xffff }).map((tile): Statement => ({
-    type: 'action',
-    piece: { id: 'act_as', version: 1, params: { tile } },
-  })),
-  fc.constant<Statement>({ type: 'action', piece: { id: 'hurt_mario', version: 1, params: {} } }),
-);
+const actAs = fc.integer({ min: 0, max: 0xffff }).map((tile): Statement => ({
+  type: 'action',
+  piece: { id: 'act_as', version: 1, params: { tile } },
+}));
+const hurtMario = fc.constant<Statement>({
+  type: 'action',
+  piece: { id: 'hurt_mario', version: 1, params: {} },
+});
 const condition = fc.constantFrom(0, 1).map((position) => ({
   type: 'condition' as const,
   piece: { id: 'c_onoff', version: 1, params: { position } },
 }));
 
-export const { statements } = fc.letrec<{ statements: Statement[]; statement: Statement }>(
-  (tie) => ({
+/** Statements valid in a Slot of the given kind (hurt_mario works in Mario Slots only). */
+function statementsFor(kind: SlotKind): fc.Arbitrary<Statement[]> {
+  const action = kind === 'mario' ? fc.oneof(actAs, hurtMario) : actAs;
+  return fc.letrec<{ statements: Statement[]; statement: Statement }>((tie) => ({
     statements: fc.array(tie('statement'), { maxLength: 3 }),
     statement: fc.oneof(
       { depthSize: 'small', withCrossShrink: true },
@@ -36,17 +39,31 @@ export const { statements } = fc.letrec<{ statements: Statement[]; statement: St
             : { type: 'if', branches, else: otherwise },
         ),
     ),
-  }),
-);
+  })).statements;
+}
 
-export const model: fc.Arbitrary<BlockModel> = fc.record({
-  properties: fc.record({
-    name: text,
-    description: text,
-    author: text,
-    defaultActAs: fc.integer({ min: 0, max: 0xffff }),
-  }),
-  slots: fc.record(Object.fromEntries(SLOT_IDS.map((slot) => [slot, statements])), {
-    requiredKeys: [],
-  }),
-});
+export const marioStatements = statementsFor('mario');
+const spriteStatements = statementsFor('sprite');
+
+export const model: fc.Arbitrary<BlockModel> = fc
+  .record({
+    properties: fc.record({
+      name: text,
+      description: text,
+      author: text,
+      defaultActAs: fc.integer({ min: 0, max: 0xffff }),
+    }),
+    slots: fc.record(
+      Object.fromEntries(
+        SLOT_IDS.map((slot) => [
+          slot,
+          slotKind(slot) === 'mario' ? marioStatements : spriteStatements,
+        ]),
+      ),
+      { requiredKeys: [] },
+    ),
+    topCornerFollowsTop: fc.option(fc.boolean(), { nil: undefined }),
+  })
+  .map(({ topCornerFollowsTop, ...rest }) =>
+    topCornerFollowsTop === undefined ? rest : { ...rest, topCornerFollowsTop },
+  );

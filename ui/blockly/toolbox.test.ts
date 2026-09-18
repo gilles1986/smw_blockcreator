@@ -4,7 +4,7 @@ import { toolbox } from './toolbox';
 
 describe('toolbox', () => {
   it('starts with Logic, then one coloured category per Piece category in a fixed order', () => {
-    expect(toolbox(builtInLibrary())).toEqual({
+    expect(toolbox(builtInLibrary(), 'mario')).toEqual({
       kind: 'categoryToolbox',
       contents: [
         {
@@ -50,7 +50,7 @@ describe('toolbox', () => {
       ['aa', piece('aa', 'Anchor', 'kaizo_tricks')],
       ['bb', piece('bb', 'Bounce', 'physics')],
     ]);
-    const categories = toolbox({ ...library, pieces }).contents.map((c) => [
+    const categories = toolbox({ ...library, pieces }, 'mario').contents.map((c) => [
       c.name,
       c.contents.map((b) => b.type),
     ]);
@@ -77,7 +77,7 @@ describe('toolbox defaults', () => {
       ['c_onoff', offByDefault],
       ['act_as', library.pieces.get('act_as')!],
     ]);
-    const blocks = toolbox({ ...library, pieces }).contents.flatMap((c) => c.contents);
+    const blocks = toolbox({ ...library, pieces }, 'mario').contents.flatMap((c) => c.contents);
     expect(blocks.find((b) => b.type === 'piece_c_onoff')).toEqual({
       kind: 'block',
       type: 'piece_c_onoff',
@@ -88,5 +88,39 @@ describe('toolbox defaults', () => {
       type: 'piece_act_as',
       fields: { tile: '130' },
     });
+  });
+});
+
+describe('toolbox per Slot kind', () => {
+  const library = builtInLibrary();
+  const types = (kind: 'mario' | 'sprite') =>
+    toolbox(library, kind).contents.flatMap((c) => c.contents.map((b) => b.type));
+
+  it('hides Mario-only Pieces in Sprite Slots (and drops categories left empty)', () => {
+    expect(types('sprite')).not.toContain('piece_hurt_mario');
+    expect(toolbox(library, 'sprite').contents.map((c) => c.name)).toEqual([
+      'Logic',
+      'Conditions',
+      'Physics',
+    ]);
+  });
+
+  it('shows Mario-only and any-Slot Pieces in Mario Slots', () => {
+    expect(types('mario')).toEqual(
+      expect.arrayContaining(['piece_hurt_mario', 'piece_act_as', 'piece_c_onoff']),
+    );
+  });
+
+  it('hides Sprite-only Pieces in Mario Slots', () => {
+    const base = library.pieces.get('act_as')!;
+    const spriteOnly = {
+      ...base,
+      manifest: { ...base.manifest, id: 'turn', slots: 'sprite' as const },
+    };
+    const withTurn = { ...library, pieces: new Map([...library.pieces, ['turn', spriteOnly]]) };
+    const typesIn = (kind: 'mario' | 'sprite') =>
+      toolbox(withTurn, kind).contents.flatMap((c) => c.contents.map((b) => b.type));
+    expect(typesIn('mario')).not.toContain('piece_turn');
+    expect(typesIn('sprite')).toContain('piece_turn');
   });
 });

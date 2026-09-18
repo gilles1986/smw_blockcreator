@@ -180,8 +180,69 @@ describe('errors', () => {
     expect(text).toContain('\n; Author: me you\n');
   });
 
+  it('writes no raw line separators outside the model line (editors may break lines there)', () => {
+    const separators = [0x0d, 0x2028, 0x2029, 0x85].map((code) => String.fromCharCode(code));
+    const odd = separators.join('x');
+    const model: BlockModel = {
+      ...onOffCement,
+      properties: { name: odd, description: `one${odd}two`, author: odd, defaultActAs: 0 },
+    };
+    const lines = generate(model, library).text.split('\n');
+    const withoutModelLine = [lines[0], ...lines.slice(2)].join('\n');
+    for (const separator of separators) expect(withoutModelLine).not.toContain(separator);
+  });
+
   it('fills parameters the model lacks with the Piece defaults', () => {
     const model = withTop([{ type: 'action', piece: { id: 'act_as', version: 1, params: {} } }]);
     expect(generate(model, library).text).toContain('\tLDY #$01\n\tLDA #$30\n');
+  });
+});
+
+describe('all Slots', () => {
+  const model = (name: string): BlockModel =>
+    JSON.parse(golden(name).split('\n')[1]!.slice(';@bc-model '.length));
+
+  it.each(['side_split', 'sprite_platform', 'wall_run'])(
+    'writes %s exactly as its golden file',
+    (name) => {
+      expect(generate(model(name), library, { toolVersion: 'test' }).text).toBe(golden(name));
+    },
+  );
+
+  const codeOf = (m: BlockModel) =>
+    generate(m, library).text.split('JMP TopCorner : JMP BodyInside : JMP HeadInside\n\n')[1]!;
+  const base = { properties: onOffCement.properties };
+
+  it('lets a filled Head inside or Body inside Slot override Inside for its offset', () => {
+    const code = codeOf({
+      ...base,
+      slots: { marioInside: [actAs(0x25)], marioHeadInside: [actAs(0x130)] },
+    });
+    expect(code).toContain(
+      'BodyInside:\n\tLDY #$00\n\tLDA #$25\n\tSTA $1693|!addr\n\tRTL\n\nHeadInside:\n\tLDY #$01',
+    );
+  });
+
+  it('keeps Top corner empty when it does not follow Top, and uses its own Slot when filled', () => {
+    const unlinked = codeOf({
+      ...base,
+      slots: { marioTop: [actAs(0x130)] },
+      topCornerFollowsTop: false,
+    });
+    expect(unlinked).toContain('MarioAbove:\n\tLDY');
+    expect(unlinked).toContain('MarioFireball:\nTopCorner:\nBodyInside:');
+    const own = codeOf({
+      ...base,
+      slots: { marioTop: [actAs(0x130)], marioTopCorner: [actAs(0x25)] },
+    });
+    expect(own).toContain('MarioAbove:\n\tLDY #$01');
+    expect(own).toContain('TopCorner:\n\tLDY #$00');
+  });
+
+  it('refuses a Mario-only Piece in a Sprite Slot', () => {
+    const hurt: Statement = { type: 'action', piece: { id: 'hurt_mario', version: 1, params: {} } };
+    expect(() => generate({ ...base, slots: { spriteTop: [hurt] } }, library)).toThrow(
+      "spriteTop /0: Piece 'hurt_mario' only works in Mario Slots",
+    );
   });
 });

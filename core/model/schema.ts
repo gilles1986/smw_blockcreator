@@ -36,6 +36,7 @@ const modelSchema = {
       propertyNames: { enum: [...SLOT_IDS] },
       additionalProperties: { $ref: '#/definitions/statements' },
     },
+    topCornerFollowsTop: { type: 'boolean' },
   },
   definitions: {
     statements: { type: 'array', items: { $ref: '#/definitions/statement' } },
