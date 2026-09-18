@@ -9,3 +9,7 @@ Spec: ../spec.md
 **Done when**
 - Property test: random valid models survive generate -> parse unchanged.
 - Hand-editing a saved file and re-opening shows the warning; saving again requires confirmation.
+
+**Notes from 04 (generator tracer)**
+- Put `parse` in `core/header` next to `writeBlockFile`; compare the stored checksum with `bodyChecksum(textBelowLine3)` — it already normalises CRLF and trailing newlines, so a git/editor line-ending conversion is not reported as a hand edit.
+- The model JSON from a file is untrusted: validate it (shape of `BlockModel`, `;@bc-format` ≤ `MODEL_FORMAT`) and add the migration hook here; `core/model` has only types and `MODEL_FORMAT` so far.

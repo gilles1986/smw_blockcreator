@@ -9,3 +9,7 @@ Decide Asar distribution (bundle `asar.exe` vs. the project's `asar.dll`; check 
 **Done when**
 - A Custom ASM Piece with a typo shows the error on that Slot/Block in the editor.
 - A script assembles all golden files; later tickets use it.
+
+**Notes from 04 (generator tracer)**
+- Check whether Asar expands `!defines` inside `print "…"` strings; a description containing `!` may then fail to assemble. If so, escape or replace `!` in `tooltip()` (`core/generator/generate.ts`).
+- `lineMap` gives `{ slot, path }` (e.g. `/0/branches/1/condition`); add a small helper that resolves a path to its statement/PieceRef when mapping Asar errors.

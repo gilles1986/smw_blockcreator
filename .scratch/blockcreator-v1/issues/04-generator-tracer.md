@@ -1,6 +1,6 @@
 # Block model + generator tracer bullet (Mario Top/Bottom/Inside, if/else)
 
-Status: open
+Status: done
 Blocked by: 03
 Spec: ../spec.md
 
