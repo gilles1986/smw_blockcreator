@@ -1,6 +1,7 @@
 import { render, RESERVED_NAMES, TemplateError, type Value } from '../template';
 import type { Manifest, ManifestJson, ParamSpec } from './manifest';
-import { checkManifestSchema, type FieldError } from './validate';
+import type { FieldError } from '../validation';
+import { checkManifestSchema } from './validate';
 
 export type Origin = 'builtin' | 'user';
 

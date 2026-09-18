@@ -4,7 +4,7 @@
 import type { Library } from '../../core/library';
 import type { BlockModel, Branch, PieceRef, SlotId, Statement } from '../../core/model';
 import type { Value } from '../../core/template';
-import { pieceIdOf } from './blocks';
+import { pieceBlockType, pieceIdOf } from './blocks';
 import { fieldCodec } from './fields';
 import { IF_BLOCK } from './toolbox';
 
@@ -19,6 +19,8 @@ export interface BlockState {
   x?: number;
   y?: number;
   fields?: Record<string, unknown>;
+  /** Blockly's free-form string per block; Piece blocks keep the Piece version they were made with. */
+  data?: string;
   inputs?: Record<string, { block?: BlockState }>;
   next?: { block?: BlockState };
   extraState?: { elseIfCount?: number; hasElse?: boolean };
@@ -41,10 +43,14 @@ export function workspacesToSlots(
  * blocks and `if` branches without a Condition are left out, as they are still being edited.
  */
 export function workspaceToStatements(state: WorkspaceState, library: Library): Statement[] {
-  const tops = [...(state.blocks?.blocks ?? [])].sort(
+  return sortedTops(state).flatMap((top) => stack(top, library));
+}
+
+/** Top-level stacks in reading order: top to bottom, then left to right. */
+function sortedTops(state: WorkspaceState): BlockState[] {
+  return [...(state.blocks?.blocks ?? [])].sort(
     (a, b) => (a.y ?? 0) - (b.y ?? 0) || (a.x ?? 0) - (b.x ?? 0),
   );
-  return tops.flatMap((top) => stack(top, library));
 }
 
 /** A block and every block chained below it. */
@@ -94,5 +100,94 @@ function pieceRef(
     params[param.name] =
       (raw === undefined ? undefined : fieldCodec(param).fromField(raw)) ?? param.default;
   }
-  return { id: piece.manifest.id, version: piece.manifest.version, params };
+  const recorded = Number(block.data);
+  const version = Number.isInteger(recorded) && recorded >= 1 ? recorded : piece.manifest.version;
+  return { id: piece.manifest.id, version, params };
+}
+
+/** The workspace for a Slot's statements: one stack, top left (for opening a saved Block). */
+export function statementsToWorkspace(statements: Statement[], library: Library): WorkspaceState {
+  const first = chain(statements, library);
+  return { blocks: { languageVersion: 0, blocks: first ? [{ ...first, x: 20, y: 20 }] : [] } };
+}
+
+function chain(statements: Statement[], library: Library): BlockState | undefined {
+  return statements.reduceRight<BlockState | undefined>((next, statement) => {
+    const block = toBlock(statement, library);
+    return next ? { ...block, next: { block: next } } : block;
+  }, undefined);
+}
+
+function toBlock(statement: Statement, library: Library): BlockState {
+  if (statement.type === 'action') return pieceBlock(statement.piece, library);
+  const inputs: NonNullable<BlockState['inputs']> = {};
+  statement.branches.forEach((branch, i) => {
+    inputs[`IF${i}`] = { block: pieceBlock(branch.condition.piece, library) };
+    const body = chain(branch.body, library);
+    if (body) inputs[`DO${i}`] = { block: body };
+  });
+  const otherwise = statement.else && chain(statement.else, library);
+  if (otherwise) inputs.ELSE = { block: otherwise };
+  const elseIfCount = statement.branches.length - 1;
+  return {
+    type: IF_BLOCK,
+    extraState: {
+      ...(elseIfCount > 0 && { elseIfCount }),
+      ...(statement.else && { hasElse: true }),
+    },
+    inputs,
+  };
+}
+
+function pieceBlock(ref: PieceRef, library: Library): BlockState {
+  const params = library.pieces.get(ref.id)?.manifest.params ?? [];
+  const fields = Object.fromEntries(
+    params
+      .filter((param) => ref.params[param.name] !== undefined)
+      .map((param) => [param.name, fieldCodec(param).toField(ref.params[param.name]!)]),
+  );
+  return { type: pieceBlockType(ref.id), fields, data: String(ref.version) };
+}
+
+/**
+ * What `workspaceToStatements` would leave out, as messages for the user: saving is blocked
+ * until they are fixed, so no logic is lost silently.
+ */
+export function workspaceProblems(state: WorkspaceState, library: Library): string[] {
+  const problems = new Set<string>();
+  const visit = (block: BlockState | undefined, topLevel: boolean) => {
+    for (let current = block; current; current = current.next?.block, topLevel = false) {
+      const id = pieceIdOf(current.type);
+      if (id !== undefined) {
+        const piece = library.pieces.get(id);
+        if (!piece) problems.add(`Piece '${id}' is not in the Library.`);
+        else if (topLevel && piece.manifest.kind === 'condition') {
+          problems.add('A Condition is not attached to an if.');
+        }
+      }
+      if (current.type === IF_BLOCK) {
+        for (let i = 0; i <= (current.extraState?.elseIfCount ?? 0); i++) {
+          if (!current.inputs?.[`IF${i}`]?.block) {
+            problems.add('An if has a branch without a Condition.');
+          }
+        }
+      }
+      for (const input of Object.values(current.inputs ?? {})) visit(input.block, false);
+    }
+  };
+  for (const top of sortedTops(state)) visit(top, true);
+  return [...problems];
+}
+
+/** One workspace per filled Slot, for opening a saved Block (inverse of `workspacesToSlots`). */
+export function slotsToWorkspaces(
+  slots: BlockModel['slots'],
+  library: Library,
+): Partial<Record<SlotId, WorkspaceState>> {
+  return Object.fromEntries(
+    Object.entries(slots).map(([slot, statements]) => [
+      slot,
+      statementsToWorkspace(statements ?? [], library),
+    ]),
+  );
 }

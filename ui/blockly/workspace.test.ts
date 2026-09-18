@@ -1,10 +1,17 @@
+import fc from 'fast-check';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { generate } from '../../core/generator';
 import type { Statement } from '../../core/model';
+import { statements } from '../../core/testing/arbitraries';
 import { builtInLibrary } from '../../core/testing/library';
-import { workspaceToStatements, type WorkspaceState } from './workspace';
+import {
+  statementsToWorkspace,
+  workspaceProblems,
+  workspaceToStatements,
+  type WorkspaceState,
+} from './workspace';
 
 const library = builtInLibrary();
 
@@ -135,5 +142,73 @@ describe('workspaceToStatements', () => {
     expect(workspaceToStatements({ blocks: { languageVersion: 0, blocks: [] } }, library)).toEqual(
       [],
     );
+  });
+});
+
+describe('statementsToWorkspace', () => {
+  it('rebuilds a workspace that reads back as the same statements', () => {
+    const workspace = statementsToWorkspace(onOffStatements, library);
+    expect(workspaceToStatements(workspace, library)).toEqual(onOffStatements);
+  });
+
+  it('round-trips any valid statements (model → workspace → model)', () => {
+    fc.assert(
+      fc.property(statements, (s) => {
+        expect(workspaceToStatements(statementsToWorkspace(s, library), library)).toEqual(s);
+      }),
+      { numRuns: 300 },
+    );
+  });
+});
+
+describe('workspaceProblems', () => {
+  it('reports what saving would lose: if branches without a Condition, loose Conditions, unknown Pieces', () => {
+    const state: WorkspaceState = {
+      blocks: {
+        languageVersion: 0,
+        blocks: [
+          {
+            type: 'controls_if',
+            y: 0,
+            extraState: { elseIfCount: 1 },
+            inputs: { IF1: { block: { type: 'piece_c_onoff' } } },
+          },
+          { type: 'piece_c_onoff', y: 100 },
+          { type: 'piece_teleport', y: 200 },
+        ],
+      },
+    };
+    expect(workspaceProblems(state, library)).toEqual([
+      'An if has a branch without a Condition.',
+      'A Condition is not attached to an if.',
+      "Piece 'teleport' is not in the Library.",
+    ]);
+  });
+
+  it('finds nothing wrong with a complete workspace', () => {
+    expect(workspaceProblems(onOffWorkspace, library)).toEqual([]);
+  });
+});
+
+describe('Piece versions', () => {
+  it('keeps the version a Block was made with through the workspace, so updates can be noticed', () => {
+    const old: Statement[] = [
+      { type: 'action', piece: { id: 'act_as', version: 1, params: { tile: 0x25 } } },
+    ];
+    const base = library.pieces.get('act_as')!;
+    const newer = {
+      ...library,
+      pieces: new Map([['act_as', { ...base, manifest: { ...base.manifest, version: 2 } }]]),
+    };
+    expect(workspaceToStatements(statementsToWorkspace(old, newer), newer)).toEqual(old);
+  });
+
+  it('gives new blocks from the toolbox the Library version', () => {
+    const state: WorkspaceState = {
+      blocks: { languageVersion: 0, blocks: [{ type: 'piece_act_as', fields: { tile: '025' } }] },
+    };
+    expect(workspaceToStatements(state, library)).toEqual([
+      { type: 'action', piece: { id: 'act_as', version: 1, params: { tile: 0x25 } } },
+    ]);
   });
 });

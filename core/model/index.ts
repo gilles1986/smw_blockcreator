@@ -44,3 +44,4 @@ export interface BlockModel {
   /** Empty or missing Slots generate a bare `RTL`. */
   slots: Partial<Record<SlotId, Statement[]>>;
 }
+export { checkPieces } from './check';

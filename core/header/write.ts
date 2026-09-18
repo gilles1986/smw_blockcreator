@@ -1,4 +1,4 @@
-// Writing side of the machine header (ADR 1); ticket 06 adds `parse` next to it.
+// Writing side of the machine header (ADR 1); ./parse.ts reads it.
 //
 //   ;@bc-format <n>
 //   ;@bc-model <canonical JSON of the Block model>
@@ -16,12 +16,19 @@ export function bodyChecksum(body: string): string {
   return checksum(body.replace(/\r\n/g, '\n').replace(/\n*$/, '\n'));
 }
 
+/** Line prefixes of the machine header, in order; shared with ./parse.ts. */
+export const HEADER = {
+  format: ';@bc-format ',
+  model: ';@bc-model ',
+  checksum: ';@bc-checksum ',
+} as const;
+
 /** Prepends the machine header to `body`, the generated text below it. */
 export function writeBlockFile(model: BlockModel, body: string): string {
   const header = [
-    `;@bc-format ${MODEL_FORMAT}`,
-    `;@bc-model ${canonicalJson(model)}`,
-    `;@bc-checksum ${bodyChecksum(body)}`,
+    HEADER.format + MODEL_FORMAT,
+    HEADER.model + canonicalJson(model),
+    HEADER.checksum + bodyChecksum(body),
   ];
   return header.map((line) => line + '\n').join('') + body;
 }

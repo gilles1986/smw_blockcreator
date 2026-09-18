@@ -1,6 +1,6 @@
 # Save as / Open with header round-trip and hand-edit detection
 
-Status: open
+Status: done
 Blocked by: 05
 Spec: ../spec.md
 
