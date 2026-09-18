@@ -1,0 +1,13 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "hurt_mario",
+  "version": 1,
+  "kind": "action",
+  "category": "damage",
+  "name": "Hurt Mario",
+  "description": "Hurts Mario like an enemy does. Small Mario dies; nothing happens while Mario is invulnerable.",
+  "author": "BlockCreator",
+  "slots": "mario",
+  "params": [],
+  "clobbers": ["A", "X", "Y"]
+}

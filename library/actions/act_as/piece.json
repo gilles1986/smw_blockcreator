@@ -1,0 +1,13 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "act_as",
+  "version": 1,
+  "kind": "action",
+  "category": "physics",
+  "name": "Act as",
+  "description": "Makes the Block behave like another tile for this contact, e.g. 025 (air) or 130 (cement).",
+  "author": "BlockCreator",
+  "slots": "any",
+  "params": [{ "name": "tile", "label": "Tile", "type": "map16", "default": 304 }],
+  "clobbers": ["A"]
+}

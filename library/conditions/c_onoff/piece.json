@@ -1,0 +1,24 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "c_onoff",
+  "version": 1,
+  "kind": "condition",
+  "category": "conditions",
+  "name": "ON/OFF switch is",
+  "description": "True while the ON/OFF switch is in the chosen position.",
+  "author": "BlockCreator",
+  "slots": "any",
+  "params": [
+    {
+      "name": "position",
+      "label": "Position",
+      "type": "enum",
+      "options": [
+        { "value": 0, "label": "ON" },
+        { "value": 1, "label": "OFF" }
+      ],
+      "default": 0
+    }
+  ],
+  "clobbers": ["A"]
+}

@@ -1,6 +1,6 @@
 # Piece manifest schema + Library loader with three seed Pieces
 
-Status: open
+Status: done
 Blocked by: 02
 Spec: ../spec.md
 

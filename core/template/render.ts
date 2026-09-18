@@ -107,6 +107,9 @@ function stripStandaloneLines(tokens: Token[]): void {
 const HELPERS = ['hex', 'signed', 'lo', 'hi'] as const;
 type Helper = (typeof HELPERS)[number];
 
+/** Names a template cannot reference as params, because they are tags or helpers. */
+export const RESERVED_NAMES: readonly string[] = ['this', 'false', 'label', ...HELPERS];
+
 type Node =
   | { kind: 'text'; text: string }
   | { kind: 'value'; name: string; line: number }

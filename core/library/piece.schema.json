@@ -1,0 +1,234 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "BlockCreator Piece manifest (piece.json)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "version",
+    "kind",
+    "category",
+    "name",
+    "description",
+    "author",
+    "slots",
+    "params",
+    "clobbers"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "kind": {
+      "enum": ["action", "condition"]
+    },
+    "category": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "description": {
+      "type": "string"
+    },
+    "author": {
+      "type": "string",
+      "minLength": 1
+    },
+    "credits": {
+      "type": "string"
+    },
+    "icon": {
+      "type": "string"
+    },
+    "slots": {
+      "enum": ["mario", "sprite", "any"]
+    },
+    "params": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/param"
+      }
+    },
+    "once": {
+      "type": "boolean"
+    },
+    "removesBlock": {
+      "type": "boolean"
+    },
+    "clobbers": {
+      "type": "array",
+      "items": {
+        "enum": ["A", "X", "Y"]
+      },
+      "uniqueItems": true
+    },
+    "routines": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^bc_[a-z0-9_]+$"
+      },
+      "uniqueItems": true
+    }
+  },
+  "definitions": {
+    "param": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "label", "type", "default"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "enum": ["number", "enum", "bool", "map16", "sprite", "sound", "text", "multiline"]
+        },
+        "default": {
+          "type": ["number", "string", "boolean"]
+        },
+        "min": {
+          "type": "integer"
+        },
+        "max": {
+          "type": "integer"
+        },
+        "format": {
+          "enum": ["hex", "dec"]
+        },
+        "options": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["value", "label"],
+            "properties": {
+              "value": {
+                "type": ["number", "string"]
+              },
+              "label": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "number"
+              }
+            }
+          },
+          "then": {
+            "required": ["min", "max"],
+            "properties": {
+              "default": {
+                "type": "integer"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "enum"
+              }
+            }
+          },
+          "then": {
+            "required": ["options"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "bool"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "default": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "map16"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "default": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 65535
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": ["sprite", "sound"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "default": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": ["text", "multiline"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "default": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}
