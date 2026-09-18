@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { render } from '../template';
+import { render, type Value } from '../template';
 import { builtInLibrary } from '../testing/library';
 import type { Library } from './index';
 
 function renderPiece(
   library: Library,
   id: string,
-  params: Record<string, number>,
+  params: Record<string, Value>,
   falseLabel?: string,
 ) {
   const piece = library.pieces.get(id);

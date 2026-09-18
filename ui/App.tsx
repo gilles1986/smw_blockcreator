@@ -136,6 +136,7 @@ export function App() {
       setNotice({ kind: 'error', text: outcome.message });
       return;
     }
+    if (outcome.kind === 'cancelled') return;
     setFile({
       path: outcome.path,
       revision: file.revision + 1,
