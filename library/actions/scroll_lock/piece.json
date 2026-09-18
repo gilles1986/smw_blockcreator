@@ -1,0 +1,20 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "scroll_lock",
+  "version": 1,
+  "kind": "action",
+  "category": "level",
+  "name": "Scroll lock",
+  "description": "Locks or unlocks screen scrolling ($1411).",
+  "author": "BlockCreator",
+  "slots": "any",
+  "params": [
+    {
+      "name": "locked",
+      "label": "Lock scrolling",
+      "type": "bool",
+      "default": true
+    }
+  ],
+  "clobbers": ["A"]
+}

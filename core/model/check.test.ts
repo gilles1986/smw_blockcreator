@@ -82,4 +82,21 @@ describe('checkPieces', () => {
       'marioTop /3/branches/0/body/0: \'tile\' = "cement" is not a valid Map16 number.',
     ]);
   });
+
+  it('validates slotLinks (self-link, kind mismatch, circular links)', () => {
+    const model: BlockModel = {
+      ...withTop([]),
+      slotLinks: {
+        marioTop: 'marioTop', // self-link
+        marioLeft: 'spriteRight', // kind mismatch
+        spriteLeft: 'spriteRight', // cycle part 1
+        spriteRight: 'spriteLeft', // cycle part 2
+      },
+    };
+    expect(checkPieces(model, library)).toEqual([
+      "slotLinks: Slot 'marioTop' cannot link to itself.",
+      "slotLinks: Slot 'marioLeft' (Mario) cannot link to 'spriteRight' (Sprite).",
+      "slotLinks: Circular link detected involving Slot 'spriteRight'.",
+    ]);
+  });
 });

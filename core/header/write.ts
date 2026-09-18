@@ -18,9 +18,9 @@ export function bodyChecksum(body: string): string {
 
 /** Line prefixes of the machine header, in order; shared with ./parse.ts. */
 export const HEADER = {
-  format: ';@bc-format ',
-  model: ';@bc-model ',
-  checksum: ';@bc-checksum ',
+  format: ';bc-format ',
+  model: ';bc-model ',
+  checksum: ';bc-checksum ',
 } as const;
 
 /** Prepends the machine header to `body`, the generated text below it. */

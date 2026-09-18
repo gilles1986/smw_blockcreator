@@ -1,0 +1,24 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "change_music",
+  "version": 1,
+  "kind": "action",
+  "category": "sound",
+  "name": "Change music",
+  "description": "Changes the background music track.",
+  "author": "BlockCreator",
+  "slots": "any",
+  "params": [
+    {
+      "name": "track",
+      "label": "Music track ID",
+      "type": "number",
+      "format": "hex",
+      "min": 0,
+      "max": 255,
+      "default": 1
+    }
+  ],
+  "once": true,
+  "clobbers": ["A"]
+}

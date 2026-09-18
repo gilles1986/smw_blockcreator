@@ -1,0 +1,70 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "spawn_sprite",
+  "version": 1,
+  "kind": "action",
+  "category": "sprites",
+  "name": "Spawn sprite",
+  "description": "Spawns a vanilla or custom sprite at or relative to the Block.",
+  "author": "BlockCreator",
+  "slots": "any",
+  "params": [
+    {
+      "name": "custom",
+      "label": "Custom (PIXI) sprite",
+      "type": "bool",
+      "default": false
+    },
+    {
+      "name": "sprite_number",
+      "label": "Sprite number",
+      "type": "number",
+      "format": "hex",
+      "min": 0,
+      "max": 255,
+      "default": 116
+    },
+    {
+      "name": "position",
+      "label": "Spawn position",
+      "type": "enum",
+      "options": [
+        { "value": "inside", "label": "Inside block" },
+        { "value": "above", "label": "Above block" },
+        { "value": "below", "label": "Below block" }
+      ],
+      "default": "inside"
+    },
+    {
+      "name": "state",
+      "label": "Initial state",
+      "type": "enum",
+      "options": [
+        { "value": 8, "label": "Normal ($08)" },
+        { "value": 9, "label": "Stunned / carryable ($09)" },
+        { "value": 10, "label": "Kicked ($0A)" },
+        { "value": 11, "label": "Carried ($0B)" },
+        { "value": 1, "label": "Initial ($01)" }
+      ],
+      "default": 8
+    },
+    {
+      "name": "x_speed",
+      "label": "X speed (-128..127)",
+      "type": "number",
+      "min": -128,
+      "max": 127,
+      "default": 0
+    },
+    {
+      "name": "y_speed",
+      "label": "Y speed (-128..127)",
+      "type": "number",
+      "min": -128,
+      "max": 127,
+      "default": 0
+    }
+  ],
+  "once": true,
+  "clobbers": ["A", "X", "Y"]
+}

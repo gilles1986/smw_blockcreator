@@ -1,0 +1,23 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "shake_screen",
+  "version": 1,
+  "kind": "action",
+  "category": "effects",
+  "name": "Shake screen",
+  "description": "Shakes the screen for a given duration.",
+  "author": "BlockCreator",
+  "slots": "any",
+  "params": [
+    {
+      "name": "duration",
+      "label": "Duration (frames)",
+      "type": "number",
+      "min": 1,
+      "max": 255,
+      "default": 32
+    }
+  ],
+  "once": true,
+  "clobbers": ["A"]
+}

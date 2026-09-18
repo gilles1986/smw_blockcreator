@@ -1,0 +1,26 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "c_sprite_id",
+  "version": 1,
+  "kind": "condition",
+  "category": "conditions",
+  "name": "Touching sprite is",
+  "description": "True if the touching sprite matches the given sprite number.",
+  "author": "BlockCreator",
+  "slots": "sprite",
+  "params": [
+    {
+      "name": "sprite_number",
+      "label": "Sprite number",
+      "type": "sprite",
+      "default": 4
+    },
+    {
+      "name": "custom",
+      "label": "Custom (PIXI) sprite",
+      "type": "bool",
+      "default": false
+    }
+  ],
+  "clobbers": ["A"]
+}

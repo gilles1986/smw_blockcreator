@@ -1,0 +1,23 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "stun_mario",
+  "version": 1,
+  "kind": "action",
+  "category": "level",
+  "name": "Stun Mario",
+  "description": "Stuns Mario in place on the ground using the earthquake timer ($18BD).",
+  "author": "BlockCreator",
+  "slots": "mario",
+  "params": [
+    {
+      "name": "timer",
+      "label": "Timer (frames)",
+      "type": "number",
+      "min": 1,
+      "max": 255,
+      "default": 60
+    }
+  ],
+  "once": true,
+  "clobbers": ["A"]
+}

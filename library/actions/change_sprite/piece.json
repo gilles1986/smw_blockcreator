@@ -1,0 +1,60 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "change_sprite",
+  "version": 1,
+  "kind": "action",
+  "category": "sprites",
+  "name": "Change touching sprite",
+  "description": "Replaces the touching sprite with another sprite at the exact same position.",
+  "author": "BlockCreator",
+  "slots": "sprite",
+  "params": [
+    {
+      "name": "sprite_number",
+      "label": "Sprite number",
+      "type": "sprite",
+      "default": 4
+    },
+    {
+      "name": "custom",
+      "label": "Custom (PIXI) sprite",
+      "type": "bool",
+      "default": false
+    },
+    {
+      "name": "state",
+      "label": "Initial state",
+      "type": "enum",
+      "options": [
+        { "value": 8, "label": "Normal ($08)" },
+        { "value": 9, "label": "Stunned / carryable ($09)" },
+        { "value": 10, "label": "Kicked ($0A)" },
+        { "value": 11, "label": "Carried ($0B)" }
+      ],
+      "default": 8
+    },
+    {
+      "name": "x_speed",
+      "label": "X speed",
+      "type": "number",
+      "min": -128,
+      "max": 127,
+      "default": 0
+    },
+    {
+      "name": "y_speed",
+      "label": "Y speed",
+      "type": "number",
+      "min": -128,
+      "max": 127,
+      "default": 0
+    },
+    {
+      "name": "smoke",
+      "label": "Create smoke puff",
+      "type": "bool",
+      "default": true
+    }
+  ],
+  "clobbers": ["A", "X", "Y"]
+}

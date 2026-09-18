@@ -98,6 +98,14 @@ describe('render', () => {
       expect(render('A{{#if flag}}B{{/if}}C', ctx({ flag: false }))).toBe('AC');
     });
 
+    it('matches against an expected value when provided', () => {
+      const tpl =
+        '{{#if pos "above"}}ABOVE{{/if}}{{#if pos "below"}}BELOW{{/if}}{{#if pos "inside"}}INSIDE{{/if}}';
+      expect(render(tpl, ctx({ pos: 'above' }))).toBe('ABOVE');
+      expect(render(tpl, ctx({ pos: 'below' }))).toBe('BELOW');
+      expect(render(tpl, ctx({ pos: 'inside' }))).toBe('INSIDE');
+    });
+
     it('drops lines that hold only a block tag', () => {
       const tpl = [
         'LDA #$01',

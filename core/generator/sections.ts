@@ -1,7 +1,7 @@
 // Which GPS offset runs which Slot (spec "Slots → offsets"). Slots are Block sides; several
 // offsets can share one section, and some offsets split two Slots at runtime.
 
-import { cornerFollowsTop, slotFilled, type BlockModel, type SlotId } from '../model';
+import { cornerFollowsTop, effectiveSlot, slotFilled, type BlockModel, type SlotId } from '../model';
 
 /** GPS offsets in jump-table order; the last two exist only with the `db $37` header. */
 export const OFFSETS = [
@@ -91,24 +91,28 @@ export function planSections(model: BlockModel): SectionPlan {
   const slotOf = (offset: Offset): SlotId | undefined => {
     switch (offset) {
       case 'MarioBelow':
-        return 'marioBottom';
+        return effectiveSlot(model, 'marioBottom');
       case 'MarioAbove':
-        return 'marioTop';
+        return effectiveSlot(model, 'marioTop');
       case 'MarioCape':
-        return 'marioCape';
+        return effectiveSlot(model, 'marioCape');
       case 'MarioFireball':
-        return 'marioFireball';
+        return effectiveSlot(model, 'marioFireball');
       case 'TopCorner':
-        if (cornerFollowsTop(model)) return 'marioTop';
-        return filled('marioTopCorner') ? 'marioTopCorner' : undefined;
+        if (cornerFollowsTop(model)) return effectiveSlot(model, 'marioTop');
+        return filled('marioTopCorner') ? effectiveSlot(model, 'marioTopCorner') : undefined;
       case 'BodyInside':
-        return filled('marioBodyInside') ? 'marioBodyInside' : 'marioInside';
+        return filled('marioBodyInside')
+          ? effectiveSlot(model, 'marioBodyInside')
+          : effectiveSlot(model, 'marioInside');
       case 'HeadInside':
-        return filled('marioHeadInside') ? 'marioHeadInside' : 'marioInside';
+        return filled('marioHeadInside')
+          ? effectiveSlot(model, 'marioHeadInside')
+          : effectiveSlot(model, 'marioInside');
       case 'WallFeet':
-        return 'marioWallFeet';
+        return effectiveSlot(model, 'marioWallFeet');
       case 'WallBody':
-        return 'marioWallBody';
+        return effectiveSlot(model, 'marioWallBody');
       default:
         return undefined;
     }
@@ -119,9 +123,22 @@ export function planSections(model: BlockModel): SectionPlan {
   const empty: Offset[] = [];
   for (const offset of offsets) {
     const split = SPLITS[offset];
-    if (split && (filled(split.first) || filled(split.second))) {
-      sections.set(offset, { kind: 'split', offsets: [offset], split });
-      continue;
+    if (split) {
+      const firstFilled = filled(split.first);
+      const secondFilled = filled(split.second);
+      if (firstFilled || secondFilled) {
+        const effFirst = effectiveSlot(model, split.first);
+        const effSecond = effectiveSlot(model, split.second);
+        // If both sides run the exact same effective slot, NO SPLIT is needed!
+        if (firstFilled && secondFilled && effFirst === effSecond) {
+          const shared = sections.get(effFirst);
+          if (shared && shared.kind === 'slot') shared.offsets.push(offset);
+          else sections.set(effFirst, { kind: 'slot', offsets: [offset], slot: effFirst });
+          continue;
+        }
+        sections.set(offset, { kind: 'split', offsets: [offset], split });
+        continue;
+      }
     }
     const slot = slotOf(offset);
     if (slot === undefined || !filled(slot)) {
@@ -130,7 +147,7 @@ export function planSections(model: BlockModel): SectionPlan {
     }
     // Offsets running the same Slot share one section (stacked labels).
     const shared = sections.get(slot);
-    if (shared) shared.offsets.push(offset);
+    if (shared && shared.kind === 'slot') shared.offsets.push(offset);
     else sections.set(slot, { kind: 'slot', offsets: [offset], slot });
   }
   return { wallRun, offsets, sections: [...sections.values()], empty };

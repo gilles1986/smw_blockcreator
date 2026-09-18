@@ -29,13 +29,16 @@ export function fieldCodec(param: ParamSpec): FieldCodec {
   switch (param.type) {
     case 'map16':
       return hexCodec(name, 3, 0, 0xffff);
-    case 'number':
+    case 'number': {
+      const max = param.max ?? 0;
+      const digits = Math.max(2, max.toString(16).length);
       return param.format === 'hex'
-        ? hexCodec(name, 2, param.min ?? 0, param.max ?? 0)
-        : numberCodec(name, param.min ?? 0, param.max ?? 0);
+        ? hexCodec(name, digits, param.min ?? 0, max)
+        : numberCodec(name, param.min ?? 0, max);
+    }
     case 'sprite':
     case 'sound':
-      return numberCodec(name, 0, 0xff);
+      return hexCodec(name, 2, 0, 0xff);
     case 'enum': {
       const options = param.options ?? [];
       return {

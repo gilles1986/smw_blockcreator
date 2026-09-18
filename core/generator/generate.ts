@@ -1,6 +1,8 @@
 import { writeBlockFile } from '../header';
 import type { Library, Manifest, Piece, Register } from '../library';
 import {
+  effectiveSlot,
+  effectiveSlotStatements,
   fitsSlot,
   SLOT_KIND_NAMES,
   slotKind,
@@ -56,12 +58,75 @@ export function generate(
   const labels = createLabelAllocator();
   const emitter = new Emitter(library, code, labels);
   const plan = planSections(model);
+
+  // Count how many times each effective slot is executed across all sections
+  const slotReferences = new Map<SlotId, number>();
+  for (const section of plan.sections) {
+    if (section.kind === 'slot') {
+      const eff = effectiveSlot(model, section.slot);
+      if (effectiveSlotStatements(model, eff).length > 0) {
+        slotReferences.set(eff, (slotReferences.get(eff) ?? 0) + 1);
+      }
+    } else {
+      const effFirst = effectiveSlot(model, section.split.first);
+      if (effectiveSlotStatements(model, effFirst).length > 0) {
+        slotReferences.set(effFirst, (slotReferences.get(effFirst) ?? 0) + 1);
+      }
+      const effSecond = effectiveSlot(model, section.split.second);
+      if (effectiveSlotStatements(model, effSecond).length > 0) {
+        slotReferences.set(effSecond, (slotReferences.get(effSecond) ?? 0) + 1);
+      }
+    }
+  }
+
+  // Create shared labels for slots referenced > 1 times
+  const sharedLabels = new Map<SlotId, string>();
+  for (const [slot, count] of slotReferences.entries()) {
+    if (count > 1) {
+      sharedLabels.set(slot, labels.instance()('shared_' + slot));
+    }
+  }
+
+  // Choose home section for each shared slot:
+  // Prefer section.kind === 'slot' if one exists, otherwise the first section that references it.
+  const effHome = new Map<SlotId, Section>();
+  for (const [eff] of sharedLabels) {
+    const slotSec = plan.sections.find(
+      (s) => s.kind === 'slot' && effectiveSlot(model, s.slot) === eff,
+    );
+    if (slotSec) {
+      effHome.set(eff, slotSec);
+    } else {
+      const splitSec = plan.sections.find(
+        (s) =>
+          s.kind === 'split' &&
+          (effectiveSlot(model, s.split.first) === eff ||
+            effectiveSlot(model, s.split.second) === eff),
+      );
+      if (splitSec) effHome.set(eff, splitSec);
+    }
+  }
+
   for (const section of plan.sections) {
     for (const offset of section.offsets) code.label(offset);
     if (section.kind === 'slot') {
-      emitter.statements(model.slots[section.slot]!, { slot: section.slot, path: '' });
+      if (section.offsets.some((o) => o === 'SpriteV' || o === 'SpriteH')) {
+        code.line('%sprite_block_position()');
+      }
+      const eff = effectiveSlot(model, section.slot);
+      const sharedLabel = sharedLabels.get(eff);
+      if (sharedLabel) {
+        if (effHome.get(eff) === section) {
+          code.label(sharedLabel);
+          emitter.statements(effectiveSlotStatements(model, eff), { slot: eff, path: '' });
+        } else {
+          code.line(`BRA ${sharedLabel}`);
+        }
+      } else {
+        emitter.statements(effectiveSlotStatements(model, eff), { slot: eff, path: '' });
+      }
     } else {
-      emitter.split(section.split, model);
+      emitter.split(section.split, model, sharedLabels, effHome, section);
     }
     code.line('RTL');
     code.blank();
@@ -140,9 +205,15 @@ const LINE_BREAKS = new RegExp(
   'g',
 );
 
-/** `print` shows the description as the Block's tooltip in Lunar Magic. */
+/**
+ * `print` shows the description as the Block's tooltip in Lunar Magic. Asar expands `!name`
+ * defines even inside strings, so `!` is escaped as `\!` (verified with Asar 1.91).
+ */
 function tooltip(description: string): string[] {
-  const text = oneLine(description).replace(/\s+/g, ' ').replace(/"/g, "'");
+  const text = oneLine(description)
+    .replace(/\s+/g, ' ')
+    .replace(/"/g, "'")
+    .replace(/!/g, '\\!');
   return text ? ['', `print "${text}"`] : [];
 }
 
@@ -205,15 +276,68 @@ class Emitter {
   }
 
   /** Two Slots on one offset: setup, runtime test, first Slot, then the second at its label. */
-  split(split: Split, model: BlockModel): void {
+  split(
+    split: Split,
+    model: BlockModel,
+    sharedLabels: Map<SlotId, string> = new Map(),
+    effHome: Map<SlotId, Section> = new Map(),
+    section?: Section,
+  ): void {
     const label = this.labels.instance();
+    const effFirst = effectiveSlot(model, split.first);
+    const effSecond = effectiveSlot(model, split.second);
+    const firstHasCode = effectiveSlotStatements(model, effFirst).length > 0;
+    const secondHasCode = effectiveSlotStatements(model, effSecond).length > 0;
+
+    const firstSharedLabel = sharedLabels.get(effFirst);
+    const secondSharedLabel = sharedLabels.get(effSecond);
+
+    const firstIsHome = Boolean(firstSharedLabel && effHome.get(effFirst) === section);
+    const secondIsHome = Boolean(secondSharedLabel && effHome.get(effSecond) === section);
+
     for (const line of split.setup) this.out.line(line);
     this.out.line(split.test);
+
+    // If second has a shared label elsewhere, branch directly to it!
+    if (secondSharedLabel && !secondIsHome) {
+      this.out.line(`${split.branch} ${secondSharedLabel}`);
+      if (firstHasCode) {
+        if (firstSharedLabel) {
+          if (firstIsHome) {
+            this.out.label(firstSharedLabel);
+            this.statements(effectiveSlotStatements(model, effFirst), { slot: effFirst, path: '' });
+          } else {
+            this.out.line(`BRA ${firstSharedLabel}`);
+          }
+        } else {
+          this.statements(effectiveSlotStatements(model, effFirst), { slot: effFirst, path: '' });
+        }
+      }
+      return;
+    }
+
+    // Normal split or second is home here
     this.out.line(`${split.branch} ${label(split.secondLabel)}`);
-    this.statements(model.slots[split.first] ?? [], { slot: split.first, path: '' });
+    if (firstHasCode) {
+      if (firstSharedLabel) {
+        if (firstIsHome) {
+          this.out.label(firstSharedLabel);
+          this.statements(effectiveSlotStatements(model, effFirst), { slot: effFirst, path: '' });
+        } else {
+          this.out.line(`BRA ${firstSharedLabel}`);
+        }
+      } else {
+        this.statements(effectiveSlotStatements(model, effFirst), { slot: effFirst, path: '' });
+      }
+    }
     this.out.line('RTL');
     this.out.label(label(split.secondLabel));
-    this.statements(model.slots[split.second] ?? [], { slot: split.second, path: '' });
+    if (secondHasCode) {
+      if (secondSharedLabel && secondIsHome) {
+        this.out.label(secondSharedLabel);
+      }
+      this.statements(effectiveSlotStatements(model, effSecond), { slot: effSecond, path: '' });
+    }
   }
 
   statements(statements: Statement[], parent: LineOrigin): void {

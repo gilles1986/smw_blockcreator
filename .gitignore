@@ -3,6 +3,7 @@ dist/
 *.local
 .vite/
 coverage/
+.dependencies
 
 # Tauri / Rust
 src-tauri/target/

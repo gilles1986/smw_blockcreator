@@ -147,9 +147,9 @@ describe('saveBlock', () => {
 
 describe('openBlock checks', () => {
   it('refuses a Block that uses Pieces this Library does not have', async () => {
-    const model = JSON.parse(golden.split('\n')[1]!.slice(';@bc-model '.length));
+    const model = JSON.parse(golden.split('\n')[1]!.replace(/^;@?bc-model /, ''));
     model.slots.marioTop[0].else[0].piece.id = 'teleport';
-    const text = golden.replace(/^;@bc-model .*$/m, `;@bc-model ${JSON.stringify(model)}`);
+    const text = golden.replace(/^;@?bc-model .*$/m, `;bc-model ${JSON.stringify(model)}`);
     const { files, state } = fakeFiles({ 'b.asm': text });
     state.choose = 'b.asm';
     expect(await openBlock(files, { library })).toEqual({
@@ -172,7 +172,7 @@ describe('openBlock checks', () => {
 
 describe('saveBlock over a newer Block', () => {
   it('says the file is from a newer BlockCreator instead of calling it foreign', async () => {
-    const newer = golden.replace(';@bc-format 1', ';@bc-format 2');
+    const newer = golden.replace(/^;@?bc-format 1/m, ';bc-format 2');
     const { files, asked, state } = fakeFiles({ 'a.asm': newer });
     state.answers = [false];
     await saveBlock(files, { ...doc, path: 'a.asm' });

@@ -1,0 +1,26 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "c_mario_powerup",
+  "version": 1,
+  "kind": "condition",
+  "category": "conditions",
+  "name": "Mario powerup is",
+  "description": "True if Mario has the specified powerup status.",
+  "author": "BlockCreator",
+  "slots": "mario",
+  "params": [
+    {
+      "name": "powerup",
+      "label": "Powerup",
+      "type": "enum",
+      "options": [
+        { "value": 0, "label": "Small Mario" },
+        { "value": 1, "label": "Super Mario (Big)" },
+        { "value": 2, "label": "Cape Mario" },
+        { "value": 3, "label": "Fire Mario" }
+      ],
+      "default": 1
+    }
+  ],
+  "clobbers": ["A"]
+}

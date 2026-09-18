@@ -1,0 +1,20 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "c_star",
+  "version": 1,
+  "kind": "condition",
+  "category": "conditions",
+  "name": "Mario has Star power",
+  "description": "True while Mario's star invulnerability timer is active ($1490).",
+  "author": "BlockCreator",
+  "slots": "mario",
+  "params": [
+    {
+      "name": "has_star",
+      "label": "Has star power",
+      "type": "bool",
+      "default": true
+    }
+  ],
+  "clobbers": ["A"]
+}

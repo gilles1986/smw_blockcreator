@@ -1,0 +1,26 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "set_powerup",
+  "version": 1,
+  "kind": "action",
+  "category": "level",
+  "name": "Set powerup",
+  "description": "Sets Mario's powerup state directly ($19).",
+  "author": "BlockCreator",
+  "slots": "mario",
+  "params": [
+    {
+      "name": "powerup",
+      "label": "Powerup",
+      "type": "enum",
+      "options": [
+        { "value": 0, "label": "Small" },
+        { "value": 1, "label": "Super (Big)" },
+        { "value": 2, "label": "Cape" },
+        { "value": 3, "label": "Fire" }
+      ],
+      "default": 1
+    }
+  ],
+  "clobbers": ["A"]
+}

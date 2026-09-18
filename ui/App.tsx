@@ -3,8 +3,10 @@ import { generate, GenerateError } from '../core/generator';
 import { canonicalJson } from '../core/header';
 import {
   cornerFollowsTop,
+  effectiveSlot,
   slotFilled,
   slotKind,
+  SLOT_IDS,
   type BlockModel,
   type BlockProperties,
   type SlotId,
@@ -33,7 +35,7 @@ const NEW_BLOCK: BlockModel = {
 type Workspaces = Partial<Record<SlotId, WorkspaceState>>;
 
 interface Notice {
-  kind: 'info' | 'warning' | 'error';
+  kind: 'warning' | 'error';
   text: string;
 }
 
@@ -49,6 +51,7 @@ interface OpenFile {
 export function App() {
   const [properties, setProperties] = useState<BlockProperties>(NEW_BLOCK.properties);
   const [workspaces, setWorkspaces] = useState<Workspaces>({});
+  const [slotLinks, setSlotLinks] = useState<Partial<Record<SlotId, SlotId>>>({});
   const [selected, setSelected] = useState<SlotId>('marioTop');
   const [topCornerFollowsTop, setTopCornerFollowsTop] = useState(true);
   const [file, setFile] = useState<OpenFile>({
@@ -57,15 +60,17 @@ export function App() {
     savedJson: canonicalJson(NEW_BLOCK),
   });
   const [notice, setNotice] = useState<Notice | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const model: BlockModel = useMemo(
     () => ({
       properties,
       slots: workspacesToSlots(workspaces, library),
+      ...(Object.keys(slotLinks).length > 0 && { slotLinks }),
       // Written only when switched off, so the default stays out of the file.
       ...(!topCornerFollowsTop && { topCornerFollowsTop }),
     }),
-    [properties, workspaces, topCornerFollowsTop],
+    [properties, workspaces, slotLinks, topCornerFollowsTop],
   );
 
   const generated = useMemo((): { text: string } | { error: string } => {
@@ -89,6 +94,7 @@ export function App() {
   function load(next: BlockModel, path: string | undefined) {
     setProperties(next.properties);
     setWorkspaces(slotsToWorkspaces(next.slots, library));
+    setSlotLinks(next.slotLinks ?? {});
     setTopCornerFollowsTop(next.topCornerFollowsTop !== false);
     setSelected('marioTop');
     setFile((current) => ({
@@ -128,24 +134,36 @@ export function App() {
     const outcome = await saveBlock(files, doc, { saveAs });
     if (outcome.kind === 'blocked' || outcome.kind === 'failed') {
       setNotice({ kind: 'error', text: outcome.message });
-    } else if (outcome.kind === 'saved') {
-      setFile((current) => ({ ...current, path: outcome.path, savedJson: canonicalJson(model) }));
-      setNotice({ kind: 'info', text: `Saved ${outcome.path}` });
+      return;
     }
+    setFile({
+      path: outcome.path,
+      revision: file.revision + 1,
+      savedJson: canonicalJson(model),
+    });
+    setNotice(null);
   }
+
+  const currentKind = slotKind(selected);
+  const eligibleLinkTargets = SLOT_IDS.filter(
+    (s) =>
+      s !== selected &&
+      slotKind(s) === currentKind &&
+      slotLinks[s] !== selected,
+  );
+  const activeLink = slotLinks[selected];
+  const activeSlot = effectiveSlot(model, selected);
 
   return (
     <div className="app">
-      <aside className="sidebar" aria-label="Block">
-        <PropertiesForm key={file.revision} properties={properties} onChange={setProperties} />
+      <aside className="sidebar">
+        <PropertiesForm properties={properties} onChange={setProperties} />
         <SlotList model={model} selected={selected} onSelect={setSelected} />
-        <section className="save" aria-label="File">
-          {notice && (
-            <p
-              className={`notice ${notice.kind}`}
-              role={notice.kind === 'info' ? 'status' : 'alert'}
-            >
-              {notice.text}
+        <section className="save">
+          {notice && <p className={`notice ${notice.kind}`}>{notice.text}</p>}
+          {unsavedChanges && (
+            <p className="notice warning" role="status">
+              Unsaved changes
             </p>
           )}
           {file.path && (
@@ -171,10 +189,51 @@ export function App() {
       </aside>
       <main className="main">
         <header className="edhead">
-          <strong>
-            {groupName(selected)} · {SLOT_LABELS[selected]}
-          </strong>
-          {selected === 'marioTopCorner' && !slotFilled(model, 'marioTopCorner') && (
+          <div className="slot-title">
+            <strong>
+              {groupName(selected)} · {SLOT_LABELS[selected]}
+            </strong>
+          </div>
+          <div className="slot-link-control">
+            <label className="link-select-label">
+              <span>Same logic as:</span>
+              <select
+                className="link-select"
+                value={activeLink ?? ''}
+                onChange={(e) => {
+                  const target = (e.target.value || undefined) as SlotId | undefined;
+                  setSlotLinks((all) => {
+                    const next = { ...all };
+                    if (target) {
+                      next[selected] = target;
+                    } else {
+                      delete next[selected];
+                    }
+                    return next;
+                  });
+                  if (!target && activeSlot) {
+                    setWorkspaces((all) => ({
+                      ...all,
+                      [selected]: all[activeSlot] ?? {},
+                    }));
+                  }
+                }}
+              >
+                <option value="">(Independent logic)</option>
+                {eligibleLinkTargets.map((s) => (
+                  <option key={s} value={s}>
+                    {SLOT_LABELS[s]}
+                  </option>
+                ))}
+              </select>
+            </label>
+            {activeLink && (
+              <span className="linked-indicator">
+                🔗 Uses {SLOT_LABELS[activeLink]}'s logic
+              </span>
+            )}
+          </div>
+          {selected === 'marioTopCorner' && !slotFilled(model, 'marioTopCorner') && !activeLink && (
             <label className="link">
               <input
                 type="checkbox"
@@ -184,7 +243,7 @@ export function App() {
               While empty, do what Top does
             </label>
           )}
-          {selected === 'marioTopCorner' && cornerFollowsTop(model) && (
+          {selected === 'marioTopCorner' && cornerFollowsTop(model) && !activeLink && (
             <span className="hint">Add blocks here to give the corner its own logic.</span>
           )}
         </header>
@@ -192,14 +251,34 @@ export function App() {
           <section className="editor" aria-label="Logic editor">
             <BlocklyEditor
               library={library}
-              editKey={`${file.revision}:${selected}`}
-              slotKind={slotKind(selected)}
-              initialState={workspaces[selected] ?? {}}
-              onChange={(state) => setWorkspaces((all) => ({ ...all, [selected]: state }))}
+              editKey={`${file.revision}:${activeSlot}`}
+              slotKind={slotKind(activeSlot)}
+              initialState={workspaces[activeSlot] ?? {}}
+              onChange={(state) => setWorkspaces((all) => ({ ...all, [activeSlot]: state }))}
             />
           </section>
           <section className="asm" aria-label="ASM preview">
-            <pre>{'text' in generated ? generated.text : `; ${generated.error}`}</pre>
+            <div className="asm-head">
+              <span className="asm-title">ASM Preview</span>
+              <button
+                type="button"
+                className="btn-copy"
+                onClick={async () => {
+                  if ('text' in generated) {
+                    await navigator.clipboard.writeText(generated.text);
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                  }
+                }}
+                disabled={!('text' in generated)}
+                title="Copy ASM code to clipboard"
+              >
+                {copied ? '✓ Copied!' : 'Copy ASM'}
+              </button>
+            </div>
+            <pre className="asm-code">
+              {'text' in generated ? generated.text : `; ${generated.error}`}
+            </pre>
           </section>
         </div>
       </main>

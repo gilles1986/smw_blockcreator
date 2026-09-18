@@ -1,0 +1,25 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "sprite_kicked",
+  "version": 1,
+  "kind": "condition",
+  "category": "conditions",
+  "name": "Sprite is kicked / thrown",
+  "description": "True if the touching sprite was kicked or thrown (status $09/$0A with speed).",
+  "author": "BlockCreator",
+  "slots": "sprite",
+  "params": [
+    {
+      "name": "direction",
+      "label": "Direction",
+      "type": "enum",
+      "options": [
+        { "value": "any", "label": "Any direction (horizontal or vertical)" },
+        { "value": "horizontal", "label": "Horizontal only (thrown from side)" },
+        { "value": "vertical", "label": "Vertical only (thrown upward)" }
+      ],
+      "default": "any"
+    }
+  ],
+  "clobbers": ["A"]
+}

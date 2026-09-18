@@ -1,0 +1,13 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "kill_mario",
+  "version": 1,
+  "kind": "action",
+  "category": "damage",
+  "name": "Kill Mario",
+  "description": "Kills Mario instantly, triggering the death animation and music.",
+  "author": "BlockCreator",
+  "slots": "mario",
+  "params": [],
+  "clobbers": ["A", "X", "Y"]
+}

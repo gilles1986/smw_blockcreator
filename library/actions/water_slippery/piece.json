@@ -1,0 +1,26 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "water_slippery",
+  "version": 1,
+  "kind": "action",
+  "category": "level",
+  "name": "Water / slippery level",
+  "description": "Sets the water level flag ($85) and slippery physics flag ($86).",
+  "author": "BlockCreator",
+  "slots": "any",
+  "params": [
+    {
+      "name": "water",
+      "label": "Water physics",
+      "type": "bool",
+      "default": false
+    },
+    {
+      "name": "slippery",
+      "label": "Slippery physics",
+      "type": "bool",
+      "default": false
+    }
+  ],
+  "clobbers": ["A"]
+}

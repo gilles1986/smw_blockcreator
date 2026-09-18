@@ -36,6 +36,11 @@ const modelSchema = {
       propertyNames: { enum: [...SLOT_IDS] },
       additionalProperties: { $ref: '#/definitions/statements' },
     },
+    slotLinks: {
+      type: 'object',
+      propertyNames: { enum: [...SLOT_IDS] },
+      additionalProperties: { enum: [...SLOT_IDS] },
+    },
     topCornerFollowsTop: { type: 'boolean' },
   },
   definitions: {

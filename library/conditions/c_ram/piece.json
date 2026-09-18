@@ -1,0 +1,44 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "c_ram",
+  "version": 1,
+  "kind": "condition",
+  "category": "conditions",
+  "name": "RAM check",
+  "description": "Compare the byte at a RAM address against a value.",
+  "author": "BlockCreator",
+  "slots": "any",
+  "params": [
+    {
+      "name": "address",
+      "label": "RAM Address (hex)",
+      "type": "number",
+      "min": 0,
+      "max": 16777215,
+      "format": "hex",
+      "default": 5295
+    },
+    {
+      "name": "comparison",
+      "label": "Comparison",
+      "type": "enum",
+      "options": [
+        { "value": "equal", "label": "Equal (==)" },
+        { "value": "not_equal", "label": "Not Equal (!=)" },
+        { "value": "less", "label": "Less than (<)" },
+        { "value": "greater_equal", "label": "Greater or equal (>=)" }
+      ],
+      "default": "equal"
+    },
+    {
+      "name": "value",
+      "label": "Value (hex)",
+      "type": "number",
+      "min": 0,
+      "max": 255,
+      "format": "hex",
+      "default": 0
+    }
+  ],
+  "clobbers": ["A"]
+}

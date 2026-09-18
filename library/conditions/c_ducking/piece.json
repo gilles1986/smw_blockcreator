@@ -1,0 +1,20 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "c_ducking",
+  "version": 1,
+  "kind": "condition",
+  "category": "conditions",
+  "name": "Mario is ducking",
+  "description": "True if Mario is currently ducking ($73).",
+  "author": "BlockCreator",
+  "slots": "mario",
+  "params": [
+    {
+      "name": "ducking",
+      "label": "Ducking",
+      "type": "bool",
+      "default": true
+    }
+  ],
+  "clobbers": ["A"]
+}

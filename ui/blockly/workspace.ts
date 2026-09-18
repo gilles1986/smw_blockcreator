@@ -50,7 +50,42 @@ export function workspacesToSlots(
  * blocks and `if` branches without a Condition are left out, as they are still being edited.
  */
 export function workspaceToStatements(state: WorkspaceState, library: Library): Statement[] {
-  return sortedTops(state).flatMap((top) => stack(top, library));
+  return new Reader(library).statements(state);
+}
+
+/**
+ * The Blockly block behind each statement and Condition path (`/0/branches/1/condition`), as
+ * the generator's line map names them; to show Asar errors on the block they come from.
+ */
+export function blockIdsByPath(state: WorkspaceState, library: Library): Map<string, string> {
+  const reader = new Reader(library);
+  const ids = new Map<string, string>();
+  const note = (node: object, path: string) => {
+    const id = reader.sources.get(node);
+    if (id !== undefined) ids.set(path, id);
+  };
+  const condition = (expr: ConditionExpr, path: string): void => {
+    note(expr, path);
+    if (expr.type === 'and' || expr.type === 'or') {
+      condition(expr.left, `${path}/left`);
+      condition(expr.right, `${path}/right`);
+    } else if (expr.type === 'not') {
+      condition(expr.condition, `${path}/condition`);
+    }
+  };
+  const statements = (list: Statement[], path: string): void =>
+    list.forEach((statement, i) => {
+      const at = `${path}/${i}`;
+      note(statement, at);
+      if (statement.type !== 'if') return;
+      statement.branches.forEach((branch, b) => {
+        condition(branch.condition, `${at}/branches/${b}/condition`);
+        statements(branch.body, `${at}/branches/${b}/body`);
+      });
+      if (statement.else) statements(statement.else, `${at}/else`);
+    });
+  statements(reader.statements(state), '');
+  return ids;
 }
 
 /** Top-level stacks in reading order: top to bottom, then left to right. */
@@ -60,50 +95,66 @@ function sortedTops(state: WorkspaceState): BlockState[] {
   );
 }
 
-/** A block and every block chained below it. */
-function stack(first: BlockState | undefined, library: Library): Statement[] {
-  const statements: Statement[] = [];
-  for (let block = first; block; block = block.next?.block) {
-    const statement = toStatement(block, library);
-    if (statement) statements.push(statement);
-  }
-  return statements;
-}
+/** Reads Blockly JSON into statements; `sources` remembers which block each node came from. */
+class Reader {
+  readonly sources = new WeakMap<object, string>();
 
-function toStatement(block: BlockState, library: Library): Statement | undefined {
-  if (block.type === IF_BLOCK) return ifStatement(block, library);
-  const piece = pieceRef(block, library, 'action');
-  return piece && { type: 'action', piece };
-}
+  constructor(private readonly library: Library) {}
 
-function ifStatement(block: BlockState, library: Library): Statement | undefined {
-  const input = (name: string) => block.inputs?.[name]?.block;
-  const branches: Branch[] = [];
-  for (let i = 0; i <= (block.extraState?.elseIfCount ?? 0); i++) {
-    const condition = conditionExpr(input(`IF${i}`), library);
-    if (!condition) continue;
-    branches.push({ condition, body: stack(input(`DO${i}`), library) });
+  statements(state: WorkspaceState): Statement[] {
+    return sortedTops(state).flatMap((top) => this.stack(top));
   }
-  if (branches.length === 0) return undefined;
-  if (!block.extraState?.hasElse) return { type: 'if', branches };
-  return { type: 'if', branches, else: stack(input('ELSE'), library) };
-}
 
-/** A Condition block, or AND / OR / NOT over them; undefined while any part is missing. */
-function conditionExpr(block: BlockState | undefined, library: Library): ConditionExpr | undefined {
-  if (!block) return undefined;
-  const input = (name: string) => conditionExpr(block.inputs?.[name]?.block, library);
-  if (block.type === AND_OR_BLOCK) {
-    const [left, right] = AND_OR_INPUTS.map(input);
-    if (!left || !right) return undefined;
-    return { type: block.fields?.OP === 'OR' ? 'or' : 'and', left, right };
+  private from<T extends object>(node: T | undefined, block: BlockState): T | undefined {
+    if (node && block.id !== undefined) this.sources.set(node, block.id);
+    return node;
   }
-  if (block.type === NOT_BLOCK) {
-    const condition = input(NOT_INPUT);
-    return condition && { type: 'not', condition };
+
+  /** A block and every block chained below it. */
+  private stack(first: BlockState | undefined): Statement[] {
+    const statements: Statement[] = [];
+    for (let block = first; block; block = block.next?.block) {
+      const statement = this.statement(block);
+      if (statement) statements.push(statement);
+    }
+    return statements;
   }
-  const piece = pieceRef(block, library, 'condition');
-  return piece && { type: 'condition', piece };
+
+  private statement(block: BlockState): Statement | undefined {
+    if (block.type === IF_BLOCK) return this.from(this.ifStatement(block), block);
+    const piece = pieceRef(block, this.library, 'action');
+    return this.from(piece && { type: 'action', piece }, block);
+  }
+
+  private ifStatement(block: BlockState): Statement | undefined {
+    const input = (name: string) => block.inputs?.[name]?.block;
+    const branches: Branch[] = [];
+    for (let i = 0; i <= (block.extraState?.elseIfCount ?? 0); i++) {
+      const condition = this.condition(input(`IF${i}`));
+      if (!condition) continue;
+      branches.push({ condition, body: this.stack(input(`DO${i}`)) });
+    }
+    if (branches.length === 0) return undefined;
+    if (!block.extraState?.hasElse) return { type: 'if', branches };
+    return { type: 'if', branches, else: this.stack(input('ELSE')) };
+  }
+
+  /** A Condition block, or AND / OR / NOT over them; undefined while any part is missing. */
+  private condition(block: BlockState | undefined): ConditionExpr | undefined {
+    if (!block) return undefined;
+    const input = (name: string) => this.condition(block.inputs?.[name]?.block);
+    if (block.type === AND_OR_BLOCK) {
+      const [left, right] = AND_OR_INPUTS.map(input);
+      if (!left || !right) return undefined;
+      return this.from({ type: block.fields?.OP === 'OR' ? 'or' : 'and', left, right }, block);
+    }
+    if (block.type === NOT_BLOCK) {
+      const condition = input(NOT_INPUT);
+      return this.from(condition && { type: 'not', condition }, block);
+    }
+    const piece = pieceRef(block, this.library, 'condition');
+    return this.from(piece && { type: 'condition', piece }, block);
+  }
 }
 
 function pieceRef(

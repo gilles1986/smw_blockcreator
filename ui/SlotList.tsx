@@ -1,5 +1,11 @@
 import { useState } from 'react';
-import { cornerFollowsTop, slotFilled, type BlockModel, type SlotId } from '../core/model';
+import {
+  cornerFollowsTop,
+  slotFilled,
+  slotLinkTarget,
+  type BlockModel,
+  type SlotId,
+} from '../core/model';
 import { GROUPS, SLOT_LABELS } from './slots';
 
 interface Props {
@@ -13,7 +19,14 @@ export function SlotList({ model, selected, onSelect }: Props) {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const row = (slot: SlotId) => {
     const filled = slotFilled(model, slot);
-    const linked = slot === 'marioTopCorner' && cornerFollowsTop(model);
+    const linkTarget = slotLinkTarget(model, slot);
+    const linked = (slot === 'marioTopCorner' && cornerFollowsTop(model)) || linkTarget !== undefined;
+    const summary =
+      slot === 'marioTopCorner' && cornerFollowsTop(model)
+        ? '= Top'
+        : linkTarget
+          ? `= ${SLOT_LABELS[linkTarget]}`
+          : undefined;
     return (
       <button
         key={slot}
@@ -24,7 +37,7 @@ export function SlotList({ model, selected, onSelect }: Props) {
       >
         <span className="dot" aria-label={filled ? 'has logic' : 'empty'} />
         <span className="name">{SLOT_LABELS[slot]}</span>
-        {linked && <span className="summary">= Top</span>}
+        {summary && <span className="summary">{summary}</span>}
       </button>
     );
   };

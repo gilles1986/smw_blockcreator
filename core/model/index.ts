@@ -78,15 +78,41 @@ export interface BlockModel {
   /** Empty or missing Slots generate a bare `RTL`. */
   slots: Partial<Record<SlotId, Statement[]>>;
   /**
+   * Optional links between Slots of the same kind to share logic (e.g. spriteRight -> spriteLeft).
+   */
+  slotLinks?: Partial<Record<SlotId, SlotId>>;
+  /**
    * While the Top corner Slot is empty, it does what Top does (default `true`, also when
    * absent). `false` leaves the corner doing nothing. A filled Top corner Slot always wins.
    */
   topCornerFollowsTop?: boolean;
 }
 
-/** Whether a Slot has any statements. */
+/** Returns the target slot if `slot` is linked to another slot, otherwise undefined. */
+export function slotLinkTarget(model: BlockModel, slot: SlotId): SlotId | undefined {
+  return model.slotLinks?.[slot];
+}
+
+/** Resolves any link to find the root slot that holds the actual statements. */
+export function effectiveSlot(model: BlockModel, slot: SlotId): SlotId {
+  const visited = new Set<SlotId>();
+  let current: SlotId = slot;
+  while (model.slotLinks?.[current] && !visited.has(current)) {
+    visited.add(current);
+    current = model.slotLinks[current]!;
+  }
+  return current;
+}
+
+/** Statements for a Slot, following links if the Slot is linked. */
+export function effectiveSlotStatements(model: BlockModel, slot: SlotId): Statement[] {
+  const target = effectiveSlot(model, slot);
+  return model.slots[target] ?? [];
+}
+
+/** Whether a Slot has any statements (either directly or via a link). */
 export function slotFilled(model: BlockModel, slot: SlotId): boolean {
-  return (model.slots[slot]?.length ?? 0) > 0;
+  return effectiveSlotStatements(model, slot).length > 0;
 }
 
 /** True while the Top corner Slot is empty and does what Top does (the default link). */

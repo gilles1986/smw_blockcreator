@@ -28,10 +28,10 @@ export function parse(text: string): ParseResult {
   const withoutBom = text.startsWith(BYTE_ORDER_MARK) ? text.slice(1) : text;
   const lines = withoutBom.split('\n');
   const line = (i: number) => (lines[i] ?? '').replace(/\r$/, '');
-  const format = headerValue(line(0), HEADER.format, /^\d+$/);
+  const format = headerValue(line(0), 'format', /^\d+$/);
   // [\s\S], not `.`: JSON leaves U+2028 / U+2029 unescaped, and `.` does not match them.
-  const model = headerValue(line(1), HEADER.model, /^[\s\S]*$/);
-  const checksum = headerValue(line(2), HEADER.checksum, /^[0-9a-f]{8}$/);
+  const model = headerValue(line(1), 'model', /^[\s\S]*$/);
+  const checksum = headerValue(line(2), 'checksum', /^[0-9a-f]{8}$/);
   if (format === undefined || model === undefined || checksum === undefined) {
     return { ok: false, reason: 'not-blockcreator', message: 'Not a BlockCreator block.' };
   }
@@ -47,7 +47,7 @@ export function parse(text: string): ParseResult {
   try {
     json = JSON.parse(model);
   } catch (error) {
-    return invalid(`The ;@bc-model header is not valid JSON: ${(error as Error).message}`);
+    return invalid(`The ;bc-model header is not valid JSON: ${(error as Error).message}`);
   }
   for (let from = version; from < MODEL_FORMAT; from++) {
     const migrate = MIGRATIONS[from];
@@ -56,16 +56,19 @@ export function parse(text: string): ParseResult {
   }
   const [problem] = checkModel(json);
   if (problem) {
-    return invalid(`The ;@bc-model header is not a valid Block: ${describeFieldError(problem)}`);
+    return invalid(`The ;bc-model header is not a valid Block: ${describeFieldError(problem)}`);
   }
   const body = lines.slice(3).join('\n');
   return { ok: true, model: json as BlockModel, checksumOk: bodyChecksum(body) === checksum };
 }
 
 /** The value after `prefix` when `line` starts with it and the value has the expected shape. */
-function headerValue(line: string, prefix: string, shape: RegExp): string | undefined {
-  if (!line.startsWith(prefix)) return undefined;
-  const value = line.slice(prefix.length);
+function headerValue(line: string, key: keyof typeof HEADER, shape: RegExp): string | undefined {
+  const prefix = HEADER[key];
+  const legacyPrefix = ';@' + prefix.slice(1);
+  const matched = line.startsWith(prefix) ? prefix : line.startsWith(legacyPrefix) ? legacyPrefix : undefined;
+  if (!matched) return undefined;
+  const value = line.slice(matched.length);
   return shape.test(value) ? value : undefined;
 }
 

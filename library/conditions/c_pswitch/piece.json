@@ -1,0 +1,25 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "c_pswitch",
+  "version": 1,
+  "kind": "condition",
+  "category": "conditions",
+  "name": "P-Switch is active",
+  "description": "True while the blue or silver P-Switch timer is active.",
+  "author": "BlockCreator",
+  "slots": "any",
+  "params": [
+    {
+      "name": "switch_type",
+      "label": "Switch type",
+      "type": "enum",
+      "options": [
+        { "value": "blue", "label": "Blue P-Switch ($14AD)" },
+        { "value": "silver", "label": "Silver P-Switch ($14AE)" },
+        { "value": "any", "label": "Any P-Switch (Blue or Silver)" }
+      ],
+      "default": "blue"
+    }
+  ],
+  "clobbers": ["A"]
+}

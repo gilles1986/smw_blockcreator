@@ -1,0 +1,23 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "star_power",
+  "version": 1,
+  "kind": "action",
+  "category": "level",
+  "name": "Star power",
+  "description": "Grants Mario star invincibility for a given timer.",
+  "author": "BlockCreator",
+  "slots": "mario",
+  "params": [
+    {
+      "name": "timer",
+      "label": "Timer (frames)",
+      "type": "number",
+      "min": 1,
+      "max": 255,
+      "default": 255
+    }
+  ],
+  "once": true,
+  "clobbers": ["A"]
+}

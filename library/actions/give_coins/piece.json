@@ -1,0 +1,23 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "give_coins",
+  "version": 1,
+  "kind": "action",
+  "category": "level",
+  "name": "Give coins",
+  "description": "Gives coins to Mario and plays the coin sound.",
+  "author": "BlockCreator",
+  "slots": "any",
+  "params": [
+    {
+      "name": "amount",
+      "label": "Coin count (1..99)",
+      "type": "number",
+      "min": 1,
+      "max": 99,
+      "default": 1
+    }
+  ],
+  "once": true,
+  "clobbers": ["A", "X", "Y"]
+}

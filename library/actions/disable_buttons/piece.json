@@ -1,0 +1,22 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "disable_buttons",
+  "version": 1,
+  "kind": "action",
+  "category": "level",
+  "name": "Disable buttons",
+  "description": "Locks controller button inputs for a given duration ($0DAA).",
+  "author": "BlockCreator",
+  "slots": "mario",
+  "params": [
+    {
+      "name": "timer",
+      "label": "Timer (frames)",
+      "type": "number",
+      "min": 1,
+      "max": 255,
+      "default": 60
+    }
+  ],
+  "clobbers": ["A"]
+}

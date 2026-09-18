@@ -9,7 +9,7 @@ const golden = readFileSync(
   join(import.meta.dirname, '..', 'generator', 'golden', 'onoff_cement.asm'),
   'utf8',
 );
-const goldenModel = JSON.parse(golden.split('\n')[1]!.slice(';@bc-model '.length));
+const goldenModel = JSON.parse(golden.split('\n')[1]!.replace(/^;@?bc-model /, ''));
 
 describe('parse', () => {
   it('reads the model of a generated file and confirms its checksum', () => {
@@ -41,7 +41,7 @@ describe('parse', () => {
   });
 
   it('rejects files from a newer BlockCreator', () => {
-    expect(parse(golden.replace(';@bc-format 1', ';@bc-format 2'))).toEqual({
+    expect(parse(golden.replace(/^;@?bc-format 1/m, ';bc-format 2'))).toEqual({
       ok: false,
       reason: 'newer-format',
       message:
@@ -50,23 +50,23 @@ describe('parse', () => {
   });
 
   it('rejects a model header that is not JSON', () => {
-    const broken = golden.replace(/^;@bc-model .*$/m, ';@bc-model {"properties":');
+    const broken = golden.replace(/^;@?bc-model .*$/m, ';bc-model {"properties":');
     expect(parse(broken)).toMatchObject({
       ok: false,
       reason: 'invalid',
-      message: expect.stringMatching(/^The ;@bc-model header is not valid JSON: /),
+      message: expect.stringMatching(/^The ;bc-model header is not valid JSON: /),
     });
   });
 
   it('names the field of a model that does not fit the model schema', () => {
     const model = structuredClone(goldenModel);
     model.slots.marioTop[0].type = 'while';
-    const broken = golden.replace(/^;@bc-model .*$/m, `;@bc-model ${JSON.stringify(model)}`);
+    const broken = golden.replace(/^;@?bc-model .*$/m, `;bc-model ${JSON.stringify(model)}`);
     expect(parse(broken)).toEqual({
       ok: false,
       reason: 'invalid',
       message:
-        'The ;@bc-model header is not a valid Block: slots.marioTop[0].type must be one of: action, if',
+        'The ;bc-model header is not a valid Block: slots.marioTop[0].type must be one of: action, if',
     });
   });
 });

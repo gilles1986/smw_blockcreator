@@ -1,0 +1,24 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "kill_touching_sprite",
+  "version": 1,
+  "kind": "action",
+  "category": "damage",
+  "name": "Kill touching sprite",
+  "description": "Destroys the touching sprite with spin-kill puff and stars, or makes it fall off screen.",
+  "author": "BlockCreator",
+  "slots": "sprite",
+  "params": [
+    {
+      "name": "style",
+      "label": "Death style",
+      "type": "enum",
+      "options": [
+        { "value": 0, "label": "Spin-kill puff & stars" },
+        { "value": 1, "label": "Fall off screen" }
+      ],
+      "default": 0
+    }
+  ],
+  "clobbers": ["A", "X", "Y"]
+}

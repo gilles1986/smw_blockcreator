@@ -1,0 +1,29 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "set_sprite_state",
+  "version": 1,
+  "kind": "action",
+  "category": "physics",
+  "name": "Set sprite state",
+  "description": "Changes the touching sprite's status (!14C8,x).",
+  "author": "BlockCreator",
+  "slots": "sprite",
+  "params": [
+    {
+      "name": "state",
+      "label": "State",
+      "type": "enum",
+      "options": [
+        { "value": 8, "label": "Normal" },
+        { "value": 9, "label": "Stunned / carryable" },
+        { "value": 10, "label": "Kicked" },
+        { "value": 11, "label": "Carried" },
+        { "value": 1, "label": "Initial" },
+        { "value": 2, "label": "Falling off screen" },
+        { "value": 0, "label": "Erase immediately" }
+      ],
+      "default": 9
+    }
+  ],
+  "clobbers": ["A"]
+}

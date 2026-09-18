@@ -126,7 +126,7 @@ describe('lineMap', () => {
   });
 
   it('leaves headers, the jump table and offset labels unmapped', () => {
-    expect(originOf(';@bc-format 1')).toBeUndefined();
+    expect(originOf(';bc-format 1')).toBeUndefined();
     expect(originOf('db $42')).toBeUndefined();
     expect(originOf('MarioAbove:')).toBeUndefined();
   });
@@ -193,6 +193,14 @@ describe('errors', () => {
     for (const separator of separators) expect(withoutModelLine).not.toContain(separator);
   });
 
+  it('escapes ! in the tooltip, since Asar expands !defines inside print strings', () => {
+    const model: BlockModel = {
+      ...onOffCement,
+      properties: { ...onOffCement.properties, description: 'Hurts! Uses !addr.' },
+    };
+    expect(generate(model, library).text).toContain('\nprint "Hurts\\! Uses \\!addr."\n');
+  });
+
   it('fills parameters the model lacks with the Piece defaults', () => {
     const model = withTop([{ type: 'action', piece: { id: 'act_as', version: 1, params: {} } }]);
     expect(generate(model, library).text).toContain('\tLDY #$01\n\tLDA #$30\n');
@@ -201,7 +209,7 @@ describe('errors', () => {
 
 describe('all Slots', () => {
   const model = (name: string): BlockModel =>
-    JSON.parse(golden(name).split('\n')[1]!.slice(';@bc-model '.length));
+    JSON.parse(golden(name).split('\n')[1]!.replace(/^;@?bc-model /, ''));
 
   it.each(['side_split', 'sprite_platform', 'wall_run'])(
     'writes %s exactly as its golden file',
@@ -246,11 +254,44 @@ describe('all Slots', () => {
       "spriteTop /0: Piece 'hurt_mario' only works in Mario Slots",
     );
   });
+
+  it('unifies split offset when left and right are linked, skipping direction check', () => {
+    const model: BlockModel = {
+      ...base,
+      slots: { marioLeft: [actAs(0x130)] },
+      slotLinks: { marioRight: 'marioLeft' },
+    };
+    const code = codeOf(model);
+    expect(code).toContain('MarioSide:\n\tLDY #$01\n\tLDA #$30\n\tSTA $1693|!addr\n\tRTL');
+    expect(code).not.toContain('LDA $93');
+  });
+
+  it('deduplicates code when multiple offsets share the same logic via links', () => {
+    const erase: Statement = { type: 'action', piece: { id: 'erase_block', version: 1, params: {} } };
+    const model: BlockModel = {
+      ...base,
+      slots: { spriteLeft: [erase] },
+      slotLinks: {
+        spriteRight: 'spriteLeft',
+        spriteBottom: 'spriteLeft',
+      },
+    };
+    const code = codeOf(model);
+    // SpriteH should not split
+    expect(code).not.toContain('LDA !B6,x');
+    // SpriteV should branch directly to shared label
+    expect(code).toContain('SpriteV:\n\t%sprite_block_position()\n\tLDA !AA,x ; negative: moving up, touches the bottom\n\tBMI bc1_shared_spriteLeft\n\tRTL');
+    // SpriteH should be the home defining bc1_shared_spriteLeft
+    expect(code).toContain('SpriteH:\n\t%sprite_block_position()\nbc1_shared_spriteLeft:\n\tPHX\n\tPHY\n\t%erase_block()\n\tPLY\n\tPLX\n\tRTL');
+    // Only one instance of erase_block should be generated!
+    const occurrences = (code.match(/%erase_block\(\)/g) ?? []).length;
+    expect(occurrences).toBe(1);
+  });
 });
 
 describe('condition logic and long branches', () => {
   const modelOf = (name: string): BlockModel =>
-    JSON.parse(golden(name).split('\n')[1]!.slice(';@bc-model '.length));
+    JSON.parse(golden(name).split('\n')[1]!.replace(/^;@?bc-model /, ''));
 
   it.each(['or_switch', 'not_switch', 'nested_if', 'long_body'])(
     'writes %s exactly as its golden file',

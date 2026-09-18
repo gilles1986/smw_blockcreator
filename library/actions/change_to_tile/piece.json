@@ -1,0 +1,21 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "change_to_tile",
+  "version": 1,
+  "kind": "action",
+  "category": "effects",
+  "name": "Change to tile",
+  "description": "Replaces the Block with another Map16 tile in the level.",
+  "author": "BlockCreator",
+  "slots": "any",
+  "params": [
+    {
+      "name": "tile",
+      "label": "Map16 tile",
+      "type": "map16",
+      "default": 304
+    }
+  ],
+  "once": true,
+  "clobbers": ["A", "X", "Y"]
+}

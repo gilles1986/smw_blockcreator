@@ -1,0 +1,20 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "custom_asm",
+  "version": 1,
+  "kind": "action",
+  "category": "advanced",
+  "name": "Custom ASM",
+  "description": "Inserts raw 65816 assembly code.",
+  "author": "BlockCreator",
+  "slots": "any",
+  "params": [
+    {
+      "name": "code",
+      "label": "Code",
+      "type": "multiline",
+      "default": "; custom code here"
+    }
+  ],
+  "clobbers": ["A", "X", "Y"]
+}

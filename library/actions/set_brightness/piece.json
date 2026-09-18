@@ -1,0 +1,22 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "set_brightness",
+  "version": 1,
+  "kind": "action",
+  "category": "level",
+  "name": "Set brightness",
+  "description": "Sets the screen brightness register ($0DAE, range 0..15).",
+  "author": "BlockCreator",
+  "slots": "any",
+  "params": [
+    {
+      "name": "brightness",
+      "label": "Brightness (0..15)",
+      "type": "number",
+      "min": 0,
+      "max": 15,
+      "default": 15
+    }
+  ],
+  "clobbers": ["A"]
+}

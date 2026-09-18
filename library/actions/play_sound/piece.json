@@ -1,0 +1,32 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "play_sound",
+  "version": 1,
+  "kind": "action",
+  "category": "sound",
+  "name": "Play sound",
+  "description": "Plays a sound effect on the selected sound port.",
+  "author": "BlockCreator",
+  "slots": "any",
+  "params": [
+    {
+      "name": "port",
+      "label": "Sound port",
+      "type": "enum",
+      "options": [
+        { "value": "$1DF9", "label": "Sound port 1 ($1DF9)" },
+        { "value": "$1DFC", "label": "Sound port 2 ($1DFC)" },
+        { "value": "$1DFA", "label": "Sound port 3 ($1DFA)" }
+      ],
+      "default": "$1DF9"
+    },
+    {
+      "name": "sound",
+      "label": "Sound ID",
+      "type": "sound",
+      "default": 1
+    }
+  ],
+  "once": true,
+  "clobbers": ["A"]
+}

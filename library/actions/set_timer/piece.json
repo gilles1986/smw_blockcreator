@@ -1,0 +1,38 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "set_timer",
+  "version": 1,
+  "kind": "action",
+  "category": "level",
+  "name": "Set timer",
+  "description": "Sets the level timer digits ($0F31-$0F33).",
+  "author": "BlockCreator",
+  "slots": "any",
+  "params": [
+    {
+      "name": "hundreds",
+      "label": "Hundreds digit (0..9)",
+      "type": "number",
+      "min": 0,
+      "max": 9,
+      "default": 3
+    },
+    {
+      "name": "tens",
+      "label": "Tens digit (0..9)",
+      "type": "number",
+      "min": 0,
+      "max": 9,
+      "default": 0
+    },
+    {
+      "name": "ones",
+      "label": "Ones digit (0..9)",
+      "type": "number",
+      "min": 0,
+      "max": 9,
+      "default": 0
+    }
+  ],
+  "clobbers": ["A"]
+}

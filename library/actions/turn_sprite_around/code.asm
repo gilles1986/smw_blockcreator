@@ -1,0 +1,7 @@
+LDA !B6,x
+EOR #$FF
+INC
+STA !B6,x
+LDA !157C,x
+EOR #$01
+STA !157C,x

@@ -1,0 +1,14 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "glitter",
+  "version": 1,
+  "kind": "action",
+  "category": "effects",
+  "name": "Glitter",
+  "description": "Spawns a sparkle / glitter effect at the Block's position.",
+  "author": "BlockCreator",
+  "slots": "any",
+  "params": [],
+  "once": true,
+  "clobbers": ["A", "X", "Y"]
+}

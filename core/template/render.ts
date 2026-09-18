@@ -116,7 +116,7 @@ type Node =
   | { kind: 'helper'; helper: Helper; name: string; digits?: number; line: number }
   | { kind: 'label'; name: string }
   | { kind: 'false'; line: number }
-  | { kind: 'if'; name: string; line: number; then: Node[]; else: Node[] }
+  | { kind: 'if'; name: string; expected?: string; line: number; then: Node[]; else: Node[] }
   | { kind: 'each'; name: string; line: number; body: Node[] };
 
 interface OpenBlock {
@@ -127,6 +127,11 @@ interface OpenBlock {
 }
 
 const NAME = /^[A-Za-z_]\w*$/;
+
+function unquote(text: string): string {
+  const match = /^"([^"]*)"$/.exec(text);
+  return match ? match[1]! : text;
+}
 
 /** Read position in the token list, shared by the recursive `parseBlock` calls. */
 interface Cursor {
@@ -169,13 +174,22 @@ function parseBlock(
         if (open.afterElse) throw new TemplateError(`second {{else}} in ${blockTag(open)}`, line);
         return { nodes, stop: 'else' };
       case '#if': {
-        const block: OpenBlock = { head, name: requireName(head, args, line), line };
+        const name = requireName(head, args, line);
+        const expected = args[1] !== undefined ? unquote(args[1]) : undefined;
+        const block: OpenBlock = { head, name, line };
         const then = parseBlock(tokens, pos, block, each);
         const otherwise =
           then.stop === 'else'
             ? parseBlock(tokens, pos, { ...block, afterElse: true }, each)
             : { nodes: [] };
-        nodes.push({ kind: 'if', name: block.name, line, then: then.nodes, else: otherwise.nodes });
+        nodes.push({
+          kind: 'if',
+          name,
+          expected,
+          line,
+          then: then.nodes,
+          else: otherwise.nodes,
+        });
         break;
       }
       case '#each': {
@@ -338,12 +352,11 @@ function evaluateNode(node: Node, scope: Scope, ctx: RenderContext): string {
       return ctx.label(node.name);
     case 'false':
       return falseTarget(node.line, ctx);
-    case 'if':
-      return evaluate(
-        truthy(scope.lookup(node.name, node.line)) ? node.then : node.else,
-        scope,
-        ctx,
-      );
+    case 'if': {
+      const val = scope.lookup(node.name, node.line);
+      const condition = node.expected !== undefined ? String(val) === node.expected : truthy(val);
+      return evaluate(condition ? node.then : node.else, scope, ctx);
+    }
     case 'each':
       return list(node.name, node.line, scope)
         .map((item) => evaluate(node.body, scope.child(item), ctx))

@@ -1,0 +1,21 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "end_level",
+  "version": 1,
+  "kind": "action",
+  "category": "level",
+  "name": "End level",
+  "description": "Triggers the level complete sequence.",
+  "author": "BlockCreator",
+  "slots": "mario",
+  "params": [
+    {
+      "name": "secret",
+      "label": "Secret exit 1",
+      "type": "bool",
+      "default": false
+    }
+  ],
+  "once": true,
+  "clobbers": ["A"]
+}

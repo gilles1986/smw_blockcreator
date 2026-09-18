@@ -7,6 +7,7 @@ import type { Statement } from '../../core/model';
 import { marioStatements } from '../../core/testing/arbitraries';
 import { builtInLibrary } from '../../core/testing/library';
 import {
+  blockIdsByPath,
   statementsToWorkspace,
   workspaceProblems,
   workspaceToStatements,
@@ -276,5 +277,63 @@ describe('AND / OR / NOT', () => {
       'An AND / OR / NOT is missing a Condition.',
       'A Condition is not attached to an if.',
     ]);
+  });
+});
+
+describe('blockIdsByPath', () => {
+  it('finds the Blockly block behind each statement path, for showing errors on it', () => {
+    expect(blockIdsByPath(onOffWorkspace, library)).toEqual(
+      new Map([
+        ['/0', 'if'],
+        ['/0/branches/0/condition', 'c'],
+        ['/0/branches/0/body/0', 'a1'],
+        ['/0/else/0', 'a2'],
+      ]),
+    );
+  });
+
+  it('numbers statements the way workspaceToStatements does, skipping what it skips', () => {
+    const state: WorkspaceState = {
+      blocks: {
+        languageVersion: 0,
+        blocks: [
+          { type: 'piece_c_onoff', id: 'loose', y: 0 },
+          {
+            type: 'controls_if',
+            id: 'noCondition',
+            y: 10,
+            inputs: { DO0: { block: { type: 'piece_act_as', id: 'lost' } } },
+          },
+          {
+            type: 'piece_act_as',
+            id: 'first',
+            y: 20,
+            next: {
+              block: {
+                type: 'controls_if',
+                id: 'second',
+                inputs: {
+                  IF0: {
+                    block: {
+                      type: 'logic_negate',
+                      id: 'not',
+                      inputs: { BOOL: { block: { type: 'piece_c_onoff', id: 'inner' } } },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        ],
+      },
+    };
+    expect(blockIdsByPath(state, library)).toEqual(
+      new Map([
+        ['/0', 'first'],
+        ['/1', 'second'],
+        ['/1/branches/0/condition', 'not'],
+        ['/1/branches/0/condition/condition', 'inner'],
+      ]),
+    );
   });
 });

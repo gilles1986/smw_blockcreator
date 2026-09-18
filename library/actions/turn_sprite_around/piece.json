@@ -1,0 +1,13 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "turn_sprite_around",
+  "version": 1,
+  "kind": "action",
+  "category": "physics",
+  "name": "Turn sprite around",
+  "description": "Reverses the touching sprite's horizontal direction and speed.",
+  "author": "BlockCreator",
+  "slots": "sprite",
+  "params": [],
+  "clobbers": ["A"]
+}

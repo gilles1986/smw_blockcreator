@@ -1,0 +1,29 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "c_sprite_state",
+  "version": 1,
+  "kind": "condition",
+  "category": "conditions",
+  "name": "Touching sprite state is",
+  "description": "True if the touching sprite is in the specified state ($14C8).",
+  "author": "BlockCreator",
+  "slots": "sprite",
+  "params": [
+    {
+      "name": "state",
+      "label": "State",
+      "type": "enum",
+      "options": [
+        { "value": 8, "label": "Normal ($08)" },
+        { "value": 10, "label": "Kicked / Thrown ($0A)" },
+        { "value": 9, "label": "Carryable ($09)" },
+        { "value": 11, "label": "Carried by Mario ($0B)" },
+        { "value": 1, "label": "Stunned / Blind ($01)" },
+        { "value": 2, "label": "Killed / Falling ($02)" },
+        { "value": 4, "label": "Squashed / Puff ($04)" }
+      ],
+      "default": 10
+    }
+  ],
+  "clobbers": ["A"]
+}

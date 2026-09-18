@@ -66,4 +66,14 @@ describe('blockDefinitions', () => {
     });
     expect(typeof definitionOfBoost!.colour).toBe('number');
   });
+
+  it('turns sprite parameters into hex field_inputs supporting values like DA', () => {
+    const spawn = definition('piece_spawn_sprite');
+    expect(spawn).toMatchObject({
+      type: 'piece_spawn_sprite',
+      args0: expect.arrayContaining([
+        { type: 'field_input', name: 'sprite_number', text: '74' },
+      ]),
+    });
+  });
 });

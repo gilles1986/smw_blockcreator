@@ -66,6 +66,35 @@ export function checkPieces(model: BlockModel, library: Library): string[] {
   for (const [slot, list] of Object.entries(model.slots) as [SlotId, Statement[]][]) {
     statements(list, slot, `${slot} `);
   }
+  if (model.slotLinks) {
+    const reportedCycles = new Set<SlotId>();
+    for (const [source, target] of Object.entries(model.slotLinks) as [SlotId, SlotId][]) {
+      if (source === target) {
+        problems.push(`slotLinks: Slot '${source}' cannot link to itself.`);
+        continue;
+      }
+      if (slotKind(source) !== slotKind(target)) {
+        problems.push(
+          `slotLinks: Slot '${source}' (${SLOT_KIND_NAMES[slotKind(source)]}) cannot link to '${target}' (${SLOT_KIND_NAMES[slotKind(target)]}).`,
+        );
+      }
+      const visited = [source];
+      let curr: SlotId | undefined = target;
+      while (curr && model.slotLinks[curr]) {
+        const cycleIdx = visited.indexOf(curr);
+        if (cycleIdx >= 0) {
+          const cycleNodes = visited.slice(cycleIdx);
+          if (!cycleNodes.some((node) => reportedCycles.has(node))) {
+            problems.push(`slotLinks: Circular link detected involving Slot '${curr}'.`);
+            cycleNodes.forEach((node) => reportedCycles.add(node));
+          }
+          break;
+        }
+        visited.push(curr);
+        curr = model.slotLinks[curr];
+      }
+    }
+  }
   return problems;
 }
 

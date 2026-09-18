@@ -1,0 +1,20 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "c_spinjump",
+  "version": 1,
+  "kind": "condition",
+  "category": "conditions",
+  "name": "Mario is spin jumping",
+  "description": "True if Mario is currently performing a spin jump ($140D).",
+  "author": "BlockCreator",
+  "slots": "mario",
+  "params": [
+    {
+      "name": "spinning",
+      "label": "Spin jumping",
+      "type": "bool",
+      "default": true
+    }
+  ],
+  "clobbers": ["A"]
+}

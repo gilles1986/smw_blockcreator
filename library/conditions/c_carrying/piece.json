@@ -1,0 +1,20 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "c_carrying",
+  "version": 1,
+  "kind": "condition",
+  "category": "conditions",
+  "name": "Mario is carrying item",
+  "description": "True if Mario is currently holding an item or sprite ($148F / $1470).",
+  "author": "BlockCreator",
+  "slots": "mario",
+  "params": [
+    {
+      "name": "carrying",
+      "label": "Carrying item",
+      "type": "bool",
+      "default": true
+    }
+  ],
+  "clobbers": ["A"]
+}

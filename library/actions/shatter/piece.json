@@ -1,0 +1,22 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "shatter",
+  "version": 1,
+  "kind": "action",
+  "category": "effects",
+  "name": "Shatter block",
+  "description": "Shatters the Block into four breaking pieces and removes it.",
+  "author": "BlockCreator",
+  "slots": "any",
+  "params": [
+    {
+      "name": "rainbow",
+      "label": "Rainbow pieces",
+      "type": "bool",
+      "default": false
+    }
+  ],
+  "once": true,
+  "removesBlock": true,
+  "clobbers": ["A", "X", "Y"]
+}

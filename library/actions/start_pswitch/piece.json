@@ -1,0 +1,33 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "start_pswitch",
+  "version": 1,
+  "kind": "action",
+  "category": "level",
+  "name": "Start P-switch",
+  "description": "Activates the blue or silver P-switch timer.",
+  "author": "BlockCreator",
+  "slots": "any",
+  "params": [
+    {
+      "name": "switch_type",
+      "label": "Switch type",
+      "type": "enum",
+      "options": [
+        { "value": 0, "label": "Blue P-switch ($14AD)" },
+        { "value": 1, "label": "Silver P-switch ($14AE)" }
+      ],
+      "default": 0
+    },
+    {
+      "name": "timer",
+      "label": "Timer (frames)",
+      "type": "number",
+      "min": 1,
+      "max": 255,
+      "default": 176
+    }
+  ],
+  "once": true,
+  "clobbers": ["A"]
+}

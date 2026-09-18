@@ -4,41 +4,38 @@ import { toolbox } from './toolbox';
 
 describe('toolbox', () => {
   it('starts with Logic, then one coloured category per Piece category in a fixed order', () => {
-    expect(toolbox(builtInLibrary(), 'mario')).toEqual({
-      kind: 'categoryToolbox',
+    const box = toolbox(builtInLibrary(), 'mario');
+    expect(box.contents.map((c) => c.name)).toEqual([
+      'Logic',
+      'Conditions',
+      'Physics',
+      'Damage',
+      'Effects',
+      'Sound',
+      'Sprites',
+      'Level',
+      'Advanced',
+    ]);
+    expect(box.contents[0]).toEqual({
+      kind: 'category',
+      name: 'Logic',
+      colour: '#5b80a5',
       contents: [
-        {
-          kind: 'category',
-          name: 'Logic',
-          colour: '#5b80a5',
-          contents: [
-            { kind: 'block', type: 'controls_if' },
-            { kind: 'block', type: 'controls_if', extraState: { hasElse: true } },
-            { kind: 'block', type: 'logic_operation', fields: { OP: 'AND' } },
-            { kind: 'block', type: 'logic_operation', fields: { OP: 'OR' } },
-            { kind: 'block', type: 'logic_negate' },
-          ],
-        },
-        {
-          kind: 'category',
-          name: 'Conditions',
-          colour: 260,
-          contents: [{ kind: 'block', type: 'piece_c_onoff', fields: { position: '0' } }],
-        },
-        {
-          kind: 'category',
-          name: 'Physics',
-          colour: 210,
-          contents: [{ kind: 'block', type: 'piece_act_as', fields: { tile: '130' } }],
-        },
-        {
-          kind: 'category',
-          name: 'Damage',
-          colour: 0,
-          contents: [{ kind: 'block', type: 'piece_hurt_mario' }],
-        },
+        { kind: 'block', type: 'controls_if' },
+        { kind: 'block', type: 'controls_if', extraState: { hasElse: true } },
+        { kind: 'block', type: 'logic_operation', fields: { OP: 'AND' } },
+        { kind: 'block', type: 'logic_operation', fields: { OP: 'OR' } },
+        { kind: 'block', type: 'logic_negate' },
       ],
     });
+    expect(box.contents[1]?.colour).toBe(260);
+    expect(box.contents[2]?.colour).toBe(210);
+    expect(box.contents[3]?.colour).toBe(0);
+    expect(box.contents[4]?.colour).toBe(40);
+    expect(box.contents[5]?.colour).toBe(120);
+    expect(box.contents[6]?.colour).toBe(290);
+    expect(box.contents[7]?.colour).toBe(170);
+    expect(box.contents[8]?.colour).toBe('#5b6770');
   });
 
   it('adds community categories after the built-in ones, blocks sorted by name', () => {
@@ -104,10 +101,33 @@ describe('toolbox per Slot kind', () => {
 
   it('hides Mario-only Pieces in Sprite Slots (and drops categories left empty)', () => {
     expect(types('sprite')).not.toContain('piece_hurt_mario');
-    expect(toolbox(library, 'sprite').contents.map((c) => c.name)).toEqual([
+    expect(types('sprite')).not.toContain('piece_kill_mario');
+    expect(types('sprite')).not.toContain('piece_boost_mario');
+    expect(types('sprite')).toContain('piece_kill_touching_sprite');
+    expect(types('sprite')).toContain('piece_push_sprite');
+
+    // A category whose pieces only work in Mario slots is dropped in Sprite slots
+    const marioOnlyCat = {
+      ...library,
+      pieces: new Map([
+        [
+          'mario_only',
+          {
+            ...library.pieces.get('hurt_mario')!,
+            manifest: {
+              ...library.pieces.get('hurt_mario')!.manifest,
+              id: 'mario_only',
+              category: 'exclusive',
+              slots: 'mario' as const,
+            },
+          },
+        ],
+      ]),
+    };
+    expect(toolbox(marioOnlyCat, 'sprite').contents.map((c) => c.name)).toEqual(['Logic']);
+    expect(toolbox(marioOnlyCat, 'mario').contents.map((c) => c.name)).toEqual([
       'Logic',
-      'Conditions',
-      'Physics',
+      'Exclusive',
     ]);
   });
 

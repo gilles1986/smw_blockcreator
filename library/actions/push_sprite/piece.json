@@ -1,0 +1,52 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "push_sprite",
+  "version": 1,
+  "kind": "action",
+  "category": "physics",
+  "name": "Push sprite",
+  "description": "Sets or adds to the touching sprite's horizontal and vertical speed.",
+  "author": "BlockCreator",
+  "slots": "sprite",
+  "params": [
+    {
+      "name": "mode",
+      "label": "Mode",
+      "type": "enum",
+      "options": [
+        { "value": 0, "label": "Set speed" },
+        { "value": 1, "label": "Add to speed" }
+      ],
+      "default": 0
+    },
+    {
+      "name": "change_x",
+      "label": "Change X speed",
+      "type": "bool",
+      "default": false
+    },
+    {
+      "name": "x_speed",
+      "label": "X speed (-128..127)",
+      "type": "number",
+      "min": -128,
+      "max": 127,
+      "default": 0
+    },
+    {
+      "name": "change_y",
+      "label": "Change Y speed",
+      "type": "bool",
+      "default": true
+    },
+    {
+      "name": "y_speed",
+      "label": "Y speed (-128..127)",
+      "type": "number",
+      "min": -128,
+      "max": 127,
+      "default": -64
+    }
+  ],
+  "clobbers": ["A"]
+}

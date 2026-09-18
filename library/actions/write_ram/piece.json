@@ -1,0 +1,32 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "write_ram",
+  "version": 1,
+  "kind": "action",
+  "category": "advanced",
+  "name": "Write RAM",
+  "description": "Writes an 8-bit value to a 24-bit RAM address.",
+  "author": "BlockCreator",
+  "slots": "any",
+  "params": [
+    {
+      "name": "address",
+      "label": "RAM address (24-bit)",
+      "type": "number",
+      "format": "hex",
+      "min": 0,
+      "max": 16777215,
+      "default": 3908
+    },
+    {
+      "name": "value",
+      "label": "Value (8-bit)",
+      "type": "number",
+      "format": "hex",
+      "min": 0,
+      "max": 255,
+      "default": 0
+    }
+  ],
+  "clobbers": ["A"]
+}

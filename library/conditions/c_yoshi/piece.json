@@ -1,0 +1,20 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "c_yoshi",
+  "version": 1,
+  "kind": "condition",
+  "category": "conditions",
+  "name": "Mario is riding Yoshi",
+  "description": "True if Mario is currently riding Yoshi ($187A).",
+  "author": "BlockCreator",
+  "slots": "mario",
+  "params": [
+    {
+      "name": "riding",
+      "label": "Riding Yoshi",
+      "type": "bool",
+      "default": true
+    }
+  ],
+  "clobbers": ["A"]
+}

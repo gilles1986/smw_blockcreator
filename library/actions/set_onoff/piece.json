@@ -1,0 +1,30 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "set_onoff",
+  "version": 1,
+  "kind": "action",
+  "category": "level",
+  "name": "Set ON/OFF",
+  "description": "Toggles or sets the global ON/OFF switch.",
+  "author": "BlockCreator",
+  "slots": "any",
+  "params": [
+    {
+      "name": "toggle",
+      "label": "Toggle switch",
+      "type": "bool",
+      "default": true
+    },
+    {
+      "name": "state",
+      "label": "State (when not toggling)",
+      "type": "enum",
+      "options": [
+        { "value": 0, "label": "ON" },
+        { "value": 1, "label": "OFF" }
+      ],
+      "default": 0
+    }
+  ],
+  "clobbers": ["A"]
+}

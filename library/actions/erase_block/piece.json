@@ -1,0 +1,15 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "erase_block",
+  "version": 1,
+  "kind": "action",
+  "category": "effects",
+  "name": "Erase block",
+  "description": "Erases the Block immediately, turning it into air (tile $025).",
+  "author": "BlockCreator",
+  "slots": "any",
+  "params": [],
+  "once": true,
+  "removesBlock": true,
+  "clobbers": ["A", "X", "Y"]
+}
