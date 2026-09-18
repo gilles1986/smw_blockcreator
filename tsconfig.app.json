@@ -5,5 +5,6 @@
     "jsx": "react-jsx",
     "types": ["vite/client"]
   },
-  "include": ["ui"]
+  "include": ["ui"],
+  "exclude": ["ui/**/*.test.ts"]
 }

@@ -4,6 +4,7 @@
   "references": [
     { "path": "./tsconfig.app.json" },
     { "path": "./core/tsconfig.json" },
+    { "path": "./tsconfig.uitest.json" },
     { "path": "./tsconfig.node.json" }
   ]
 }

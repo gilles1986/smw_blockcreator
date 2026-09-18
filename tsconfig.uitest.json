@@ -1,0 +1,10 @@
+{
+  // UI tests run in Node (Vitest) and may use the node:fs test helpers from core/testing.
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    "types": ["node", "vite/client"]
+  },
+  "include": ["ui/**/*.test.ts"]
+}

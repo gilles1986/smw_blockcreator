@@ -1,0 +1,139 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { describe, expect, it } from 'vitest';
+import { generate } from '../../core/generator';
+import type { Statement } from '../../core/model';
+import { builtInLibrary } from '../../core/testing/library';
+import { workspaceToStatements, type WorkspaceState } from './workspace';
+
+const library = builtInLibrary();
+
+/** What Blockly serialises after dragging together "if ON/OFF is ON: act as 130, else act as 025". */
+const onOffWorkspace: WorkspaceState = {
+  blocks: {
+    languageVersion: 0,
+    blocks: [
+      {
+        type: 'controls_if',
+        id: 'if',
+        x: 20,
+        y: 20,
+        extraState: { hasElse: true },
+        inputs: {
+          IF0: { block: { type: 'piece_c_onoff', id: 'c', fields: { position: '0' } } },
+          DO0: { block: { type: 'piece_act_as', id: 'a1', fields: { tile: '130' } } },
+          ELSE: { block: { type: 'piece_act_as', id: 'a2', fields: { tile: '025' } } },
+        },
+      },
+    ],
+  },
+};
+
+const onOffStatements: Statement[] = [
+  {
+    type: 'if',
+    branches: [
+      {
+        condition: {
+          type: 'condition',
+          piece: { id: 'c_onoff', version: 1, params: { position: 0 } },
+        },
+        body: [{ type: 'action', piece: { id: 'act_as', version: 1, params: { tile: 0x130 } } }],
+      },
+    ],
+    else: [{ type: 'action', piece: { id: 'act_as', version: 1, params: { tile: 0x25 } } }],
+  },
+];
+
+describe('workspaceToStatements', () => {
+  it('turns the ON/OFF workspace into the model statements', () => {
+    expect(workspaceToStatements(onOffWorkspace, library)).toEqual(onOffStatements);
+  });
+
+  it('gives the golden ASM of ticket 04 when generated', () => {
+    const golden = readFileSync(
+      join(import.meta.dirname, '..', '..', 'core', 'generator', 'golden', 'onoff_cement.asm'),
+      'utf8',
+    );
+    const model = {
+      properties: {
+        name: 'onoff_cement',
+        description: 'Mario can stand on it only while the switch is ON.',
+        author: 'BlockCreator',
+        defaultActAs: 0x130,
+      },
+      slots: { marioTop: workspaceToStatements(onOffWorkspace, library) },
+    };
+    expect(generate(model, library, { toolVersion: 'test' }).text).toBe(golden);
+  });
+
+  it('reads else-if branches, runs stacks top to bottom and skips what is still being edited', () => {
+    const actAs = (tile: string, y?: number) => ({
+      type: 'piece_act_as',
+      fields: { tile },
+      ...(y !== undefined && { y }),
+    });
+    const onOff = (position: string) => ({ type: 'piece_c_onoff', fields: { position } });
+    const state: WorkspaceState = {
+      blocks: {
+        languageVersion: 0,
+        blocks: [
+          { ...actAs('025', 300) },
+          { ...onOff('1'), y: 0 }, // loose Condition: ignored
+          {
+            type: 'controls_if',
+            y: 100,
+            extraState: { elseIfCount: 2 },
+            inputs: {
+              IF0: { block: onOff('0') },
+              DO0: { block: { ...actAs('130'), next: { block: actAs('12F') } } },
+              DO1: { block: actAs('1F0') }, // no Condition in IF1: branch skipped
+              IF2: { block: onOff('1') },
+              DO2: { block: actAs('100') },
+            },
+          },
+        ],
+      },
+    };
+    const tile = (t: number): Statement => ({
+      type: 'action',
+      piece: { id: 'act_as', version: 1, params: { tile: t } },
+    });
+    const cond = (position: number) => ({
+      type: 'condition' as const,
+      piece: { id: 'c_onoff', version: 1, params: { position } },
+    });
+    expect(workspaceToStatements(state, library)).toEqual([
+      {
+        type: 'if',
+        branches: [
+          { condition: cond(0), body: [tile(0x130), tile(0x12f)] },
+          { condition: cond(1), body: [tile(0x100)] },
+        ],
+      },
+      tile(0x25),
+    ]);
+  });
+
+  it('drops an if whose branches all lack a Condition, and falls back to defaults for bad input', () => {
+    const state: WorkspaceState = {
+      blocks: {
+        languageVersion: 0,
+        blocks: [
+          { type: 'controls_if', y: 0, inputs: { DO0: { block: { type: 'piece_act_as' } } } },
+          { type: 'piece_act_as', y: 50, fields: { tile: 'xyz' } },
+        ],
+      },
+    };
+    expect(workspaceToStatements(state, library)).toEqual([
+      { type: 'action', piece: { id: 'act_as', version: 1, params: { tile: 0x130 } } },
+    ]);
+  });
+
+  it('returns no statements for an empty workspace', () => {
+    expect(workspaceToStatements({}, library)).toEqual([]);
+    expect(workspaceToStatements({ blocks: { languageVersion: 0, blocks: [] } }, library)).toEqual(
+      [],
+    );
+  });
+});

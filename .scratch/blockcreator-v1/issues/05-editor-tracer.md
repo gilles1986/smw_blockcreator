@@ -1,6 +1,6 @@
 # Editor tracer bullet: sidebar Slot rows + Blockly + live ASM
 
-Status: open
+Status: done
 Blocked by: 04
 Spec: ../spec.md
 

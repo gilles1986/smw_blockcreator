@@ -8,3 +8,6 @@ One-line summaries per Slot row (`core/summary`), hover "copy" and a "Copy to...
 
 **Done when**
 - Summaries match the prototype's wording for the preset blocks.
+
+**Notes from 05 (editor tracer)**
+- A minimal `PropertiesForm` (name, description, author, default act-as) exists in `ui/App.tsx`; polish and validate it here. Top-level stacks in a Slot run top to bottom by canvas position (`workspaceToStatements`) — consider showing that order or warning about several stacks.
