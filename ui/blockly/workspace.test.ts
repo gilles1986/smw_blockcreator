@@ -212,3 +212,69 @@ describe('Piece versions', () => {
     ]);
   });
 });
+
+describe('AND / OR / NOT', () => {
+  const onOff = (position: string) => ({ type: 'piece_c_onoff', fields: { position } });
+
+  it('reads nested AND / OR / NOT blocks into condition expressions', () => {
+    const state: WorkspaceState = {
+      blocks: {
+        languageVersion: 0,
+        blocks: [
+          {
+            type: 'controls_if',
+            inputs: {
+              IF0: {
+                block: {
+                  type: 'logic_operation',
+                  fields: { OP: 'OR' },
+                  inputs: {
+                    A: { block: onOff('0') },
+                    B: { block: { type: 'logic_negate', inputs: { BOOL: { block: onOff('1') } } } },
+                  },
+                },
+              },
+            },
+          },
+        ],
+      },
+    };
+    const cond = (position: number) => ({
+      type: 'condition' as const,
+      piece: { id: 'c_onoff', version: 1, params: { position } },
+    });
+    expect(workspaceToStatements(state, library)).toEqual([
+      {
+        type: 'if',
+        branches: [
+          {
+            condition: { type: 'or', left: cond(0), right: { type: 'not', condition: cond(1) } },
+            body: [],
+          },
+        ],
+      },
+    ]);
+  });
+
+  it('reports AND / OR / NOT blocks that are incomplete or not attached to an if', () => {
+    const state: WorkspaceState = {
+      blocks: {
+        languageVersion: 0,
+        blocks: [
+          {
+            type: 'controls_if',
+            y: 0,
+            inputs: {
+              IF0: { block: { type: 'logic_operation', inputs: { A: { block: onOff('0') } } } },
+            },
+          },
+          { type: 'logic_negate', y: 100, inputs: { BOOL: { block: onOff('0') } } },
+        ],
+      },
+    };
+    expect(workspaceProblems(state, library)).toEqual([
+      'An AND / OR / NOT is missing a Condition.',
+      'A Condition is not attached to an if.',
+    ]);
+  });
+});

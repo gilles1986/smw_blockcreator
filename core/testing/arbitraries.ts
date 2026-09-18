@@ -1,6 +1,13 @@
 // Test support: fast-check generators for valid Block models built from the seed Pieces.
 import fc from 'fast-check';
-import { SLOT_IDS, slotKind, type BlockModel, type SlotKind, type Statement } from '../model';
+import {
+  SLOT_IDS,
+  slotKind,
+  type BlockModel,
+  type ConditionExpr,
+  type SlotKind,
+  type Statement,
+} from '../model';
 
 const text = fc.string({ unit: 'binary', maxLength: 40 });
 
@@ -12,10 +19,27 @@ const hurtMario = fc.constant<Statement>({
   type: 'action',
   piece: { id: 'hurt_mario', version: 1, params: {} },
 });
-const condition = fc.constantFrom(0, 1).map((position) => ({
-  type: 'condition' as const,
+const onOff = fc.constantFrom(0, 1).map((position): ConditionExpr => ({
+  type: 'condition',
   piece: { id: 'c_onoff', version: 1, params: { position } },
 }));
+
+/** Conditions, also combined with AND / OR / NOT. */
+const condition = fc.letrec<{ expr: ConditionExpr }>((tie) => ({
+  // Shallow: AND / OR / NOT nest inside nested ifs, so deep trees would get huge.
+  expr: fc.oneof(
+    { maxDepth: 2, withCrossShrink: true },
+    onOff,
+    fc
+      .record({
+        type: fc.constantFrom('and' as const, 'or' as const),
+        left: tie('expr'),
+        right: tie('expr'),
+      })
+      .map((expr): ConditionExpr => expr),
+    tie('expr').map((inner): ConditionExpr => ({ type: 'not', condition: inner })),
+  ),
+})).expr;
 
 /** Statements valid in a Slot of the given kind (hurt_mario works in Mario Slots only). */
 function statementsFor(kind: SlotKind): fc.Arbitrary<Statement[]> {

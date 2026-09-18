@@ -39,6 +39,46 @@ const modelSchema = {
     topCornerFollowsTop: { type: 'boolean' },
   },
   definitions: {
+    // A Condition Piece, or Conditions combined with AND / OR / NOT.
+    condition: {
+      type: 'object',
+      additionalProperties: false,
+      required: ['type'],
+      properties: {
+        type: { enum: ['condition', 'and', 'or', 'not'] },
+        piece: pieceRef,
+        left: { $ref: '#/definitions/condition' },
+        right: { $ref: '#/definitions/condition' },
+        condition: { $ref: '#/definitions/condition' },
+      },
+      allOf: [
+        {
+          if: { properties: { type: { const: 'condition' } } },
+          then: {
+            required: ['piece'],
+            not: {
+              anyOf: [{ required: ['left'] }, { required: ['right'] }, { required: ['condition'] }],
+            },
+          },
+        },
+        {
+          if: { properties: { type: { enum: ['and', 'or'] } } },
+          then: {
+            required: ['left', 'right'],
+            not: { anyOf: [{ required: ['piece'] }, { required: ['condition'] }] },
+          },
+        },
+        {
+          if: { properties: { type: { const: 'not' } } },
+          then: {
+            required: ['condition'],
+            not: {
+              anyOf: [{ required: ['piece'] }, { required: ['left'] }, { required: ['right'] }],
+            },
+          },
+        },
+      ],
+    },
     statements: { type: 'array', items: { $ref: '#/definitions/statement' } },
     statement: {
       type: 'object',
@@ -55,12 +95,7 @@ const modelSchema = {
             additionalProperties: false,
             required: ['condition', 'body'],
             properties: {
-              condition: {
-                type: 'object',
-                additionalProperties: false,
-                required: ['type', 'piece'],
-                properties: { type: { enum: ['condition'] }, piece: pieceRef },
-              },
+              condition: { $ref: '#/definitions/condition' },
               body: { $ref: '#/definitions/statements' },
             },
           },

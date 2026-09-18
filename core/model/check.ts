@@ -8,6 +8,7 @@ import {
   SLOT_KIND_NAMES,
   slotKind,
   type BlockModel,
+  type ConditionExpr,
   type PieceRef,
   type SlotId,
   type Statement,
@@ -40,12 +41,24 @@ export function checkPieces(model: BlockModel, library: Library): string[] {
         problems.push(`${where}: '${param.name}' = ${JSON.stringify(value)} ${problem}.`);
     }
   };
+  const condition = (expr: ConditionExpr, slot: SlotId, path: string): void => {
+    switch (expr.type) {
+      case 'condition':
+        return piece(expr.piece, 'condition', slot, path);
+      case 'and':
+      case 'or':
+        condition(expr.left, slot, `${path}/left`);
+        return condition(expr.right, slot, `${path}/right`);
+      case 'not':
+        return condition(expr.condition, slot, `${path}/condition`);
+    }
+  };
   const statements = (list: Statement[], slot: SlotId, where: string) =>
     list.forEach((statement, i) => {
       const path = `${where}/${i}`;
       if (statement.type === 'action') return piece(statement.piece, 'action', slot, path);
       statement.branches.forEach((branch, b) => {
-        piece(branch.condition.piece, 'condition', slot, `${path}/branches/${b}/condition`);
+        condition(branch.condition, slot, `${path}/branches/${b}/condition`);
         statements(branch.body, slot, `${path}/branches/${b}/body`);
       });
       if (statement.else) statements(statement.else, slot, `${path}/else`);

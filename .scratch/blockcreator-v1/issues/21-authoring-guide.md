@@ -8,3 +8,7 @@ Spec: ../spec.md
 
 **Done when**
 - Following the guide, a new Piece (e.g. "Mario is on Yoshi and ducking") can be added without reading source code.
+
+**Notes from 08 (condition logic)**
+- Document for Piece authors: branches to `{{false}}` and `{{label}}` targets may be rewritten to inverted branch + `JMP` when far; code the generator cannot size (assembler directives such as `rep`, `if`, `org`) makes every branch across it long. `db` strings count their length. `$xx|!dp` and `$xxxx|!addr` count 3 bytes, `|!bank` 4.
+- Registers: list in `clobbers` what the Piece destroys as a side effect; Y is saved/restored around the Piece, X only in Sprite and Fireball Slots. A Piece that sets Y on purpose (act-as) must not list it.

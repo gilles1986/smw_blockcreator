@@ -14,6 +14,9 @@ describe('toolbox', () => {
           contents: [
             { kind: 'block', type: 'controls_if' },
             { kind: 'block', type: 'controls_if', extraState: { hasElse: true } },
+            { kind: 'block', type: 'logic_operation', fields: { OP: 'AND' } },
+            { kind: 'block', type: 'logic_operation', fields: { OP: 'OR' } },
+            { kind: 'block', type: 'logic_negate' },
           ],
         },
         {
@@ -55,7 +58,10 @@ describe('toolbox', () => {
       c.contents.map((b) => b.type),
     ]);
     expect(categories).toEqual([
-      ['Logic', ['controls_if', 'controls_if']],
+      [
+        'Logic',
+        ['controls_if', 'controls_if', 'logic_operation', 'logic_operation', 'logic_negate'],
+      ],
       ['Physics', ['piece_bb']],
       ['Kaizo tricks', ['piece_aa', 'piece_zz']],
     ]);

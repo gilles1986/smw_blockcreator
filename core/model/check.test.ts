@@ -19,6 +19,36 @@ describe('checkPieces', () => {
     ).toEqual([]);
   });
 
+  it('checks the Conditions inside AND / OR / NOT, naming their paths', () => {
+    const onOff = (position: number) => ({
+      type: 'condition' as const,
+      piece: { id: 'c_onoff', version: 1, params: { position } },
+    });
+    const model = withTop([
+      {
+        type: 'if',
+        branches: [
+          {
+            condition: {
+              type: 'or',
+              left: onOff(0),
+              right: {
+                type: 'not',
+                condition: { ...onOff(0), piece: { ...onOff(0).piece, id: 'act_as' } },
+              },
+            },
+            body: [],
+          },
+          { condition: { type: 'and', left: onOff(5), right: onOff(1) }, body: [] },
+        ],
+      },
+    ]);
+    expect(checkPieces(model, library)).toEqual([
+      "marioTop /0/branches/0/condition/right/condition: Piece 'act_as' is an Action, not a Condition.",
+      "marioTop /0/branches/1/condition/left: 'position' = 5 is not one of: 0, 1.",
+    ]);
+  });
+
   it('names Pieces used in a Slot of the wrong kind', () => {
     const model: BlockModel = { ...withTop([]), slots: { spriteTop: [action('hurt_mario')] } };
     expect(checkPieces(model, library)).toEqual([

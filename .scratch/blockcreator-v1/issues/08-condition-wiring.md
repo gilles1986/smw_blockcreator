@@ -1,6 +1,6 @@
 # Condition logic: AND / OR / NOT, long branches, register saves
 
-Status: open
+Status: done
 Blocked by: 04
 Spec: ../spec.md
 

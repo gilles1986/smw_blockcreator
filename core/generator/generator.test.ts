@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import type { BlockModel, PieceRef, Statement } from '../model';
 import { builtInLibrary } from '../testing/library';
+import { maxBytes } from './branches';
 import { generate, GenerateError } from './index';
 
 const library = builtInLibrary();
@@ -244,5 +245,190 @@ describe('all Slots', () => {
     expect(() => generate({ ...base, slots: { spriteTop: [hurt] } }, library)).toThrow(
       "spriteTop /0: Piece 'hurt_mario' only works in Mario Slots",
     );
+  });
+});
+
+describe('condition logic and long branches', () => {
+  const modelOf = (name: string): BlockModel =>
+    JSON.parse(golden(name).split('\n')[1]!.slice(';@bc-model '.length));
+
+  it.each(['or_switch', 'not_switch', 'nested_if', 'long_body'])(
+    'writes %s exactly as its golden file',
+    (name) => {
+      expect(generate(modelOf(name), library, { toolVersion: 'test' }).text).toBe(golden(name));
+    },
+  );
+});
+
+describe('register saves', () => {
+  const base = { properties: onOffCement.properties };
+  const hurt: Statement = { type: 'action', piece: { id: 'hurt_mario', version: 1, params: {} } };
+  const sectionOf = (m: BlockModel, lib = library) => {
+    const text = generate(m, lib).text;
+    return text.slice(text.indexOf('\n\n', text.indexOf('JMP HeadInside')) + 2);
+  };
+  /** The seed Library with one Piece's clobbers replaced. */
+  const withClobbers = (id: string, clobbers: ('A' | 'X' | 'Y')[]) => {
+    const piece = library.pieces.get(id)!;
+    const pieces = new Map(library.pieces);
+    pieces.set(id, { ...piece, manifest: { ...piece.manifest, clobbers } });
+    return { ...library, pieces };
+  };
+
+  it('keeps Y (the act-as high byte) around a Piece that destroys it', () => {
+    expect(sectionOf({ ...base, slots: { marioBottom: [hurt] } })).toMatch(
+      /^MarioBelow:\n\tPHY\n\tJSL \$00F5B7\|!bank\n\tPLY\n\tRTL\n/,
+    );
+  });
+
+  it('also keeps X where it is the sprite index: Sprite and Fireball Slots', () => {
+    const lib = withClobbers('act_as', ['A', 'X']);
+    const act = actAs(0x130);
+    expect(sectionOf({ ...base, slots: { marioFireball: [hurt] } })).toContain(
+      'MarioFireball:\n\tPHX\n\tPHY\n\tJSL $00F5B7|!bank\n\tPLY\n\tPLX\n\tRTL\n',
+    );
+    expect(sectionOf({ ...base, slots: { spriteTop: [act] } }, lib)).toContain(
+      '\tBMI bc1_bottom\n\tPHX\n\tLDY #$01\n\tLDA #$30\n\tSTA $1693|!addr\n\tPLX\n\tRTL\n',
+    );
+    expect(sectionOf({ ...base, slots: { marioBottom: [act] } }, lib)).toContain(
+      'MarioBelow:\n\tLDY #$01',
+    );
+  });
+
+  it('restores registers on both ways out of a Condition that destroys them', () => {
+    const lib = withClobbers('c_onoff', ['A', 'Y']);
+    const model: BlockModel = {
+      ...base,
+      slots: {
+        marioBottom: [
+          {
+            type: 'if',
+            branches: [{ condition: { type: 'condition', piece: onOff(0) }, body: [actAs(0x130)] }],
+          },
+        ],
+      },
+    };
+    const expected = [
+      'MarioBelow:',
+      '\tPHY',
+      '\tLDA $14AF|!addr',
+      '\tBNE bc2_restore',
+      '\tPLY',
+      '\tBRA bc2_pass',
+      'bc2_restore:',
+      '\tPLY',
+      '\tBRA bc1_end',
+      'bc2_pass:',
+      '\tLDY #$01',
+    ].join('\n');
+    expect(sectionOf(model, lib).startsWith(expected)).toBe(true);
+  });
+});
+
+describe('long branches', () => {
+  const base = { properties: onOffCement.properties };
+  const codeOf = (m: BlockModel, lib = library) => generate(m, lib).text;
+
+  it('widens a branch over code whose size is unknown (e.g. an assembler directive)', () => {
+    const actAsPiece = library.pieces.get('act_as')!;
+    const raw = {
+      ...actAsPiece,
+      manifest: { ...actAsPiece.manifest, id: 'raw', params: [] },
+      template: 'rep 3 : NOP\n',
+    };
+    const lib = { ...library, pieces: new Map([...library.pieces, ['raw', raw]]) };
+    const model: BlockModel = {
+      ...base,
+      slots: {
+        marioBottom: [
+          {
+            type: 'if',
+            branches: [
+              {
+                condition: { type: 'condition', piece: onOff(0) },
+                body: [{ type: 'action', piece: { id: 'raw', version: 1, params: {} } }],
+              },
+            ],
+          },
+        ],
+      },
+    };
+    expect(codeOf(model, lib)).toContain(
+      '\tLDA $14AF|!addr\n\tBEQ bc4_skip\n\tJMP bc1_end\nbc4_skip:\n\trep 3 : NOP\nbc1_end:',
+    );
+  });
+
+  it('widens the branch of a side split whose first half is long, and keeps lineMap in step', () => {
+    const model: BlockModel = {
+      ...base,
+      slots: {
+        marioLeft: Array.from({ length: 20 }, () => actAs(0x130)),
+        marioRight: [actAs(0x25)],
+      },
+    };
+    const { text, lineMap } = generate(model, library);
+    expect(text).toContain(
+      '\tLDA $93 ; 0: Mario is left of the block\n\tBEQ bc23_skip\n\tJMP bc1_right\nbc23_skip:\n',
+    );
+    const lines = text.split('\n');
+    const lastRight = lines.lastIndexOf('\tLDY #$00') + 1;
+    expect(lineMap.get(lastRight)).toEqual({ slot: 'marioRight', path: '/0' });
+  });
+});
+
+describe('long branches around code of unknown size', () => {
+  const base = { properties: onOffCement.properties };
+  const withRaw = (template: string) => {
+    const actAsPiece = library.pieces.get('act_as')!;
+    const raw = {
+      ...actAsPiece,
+      manifest: { ...actAsPiece.manifest, id: 'raw', params: [] },
+      template,
+    };
+    return { ...library, pieces: new Map([...library.pieces, ['raw', raw]]) };
+  };
+  const raw: Statement = { type: 'action', piece: { id: 'raw', version: 1, params: {} } };
+
+  it('does not hang when unknown code comes before both a branch and its target', () => {
+    const model: BlockModel = {
+      ...base,
+      slots: {
+        marioBottom: [
+          raw,
+          {
+            type: 'if',
+            branches: [{ condition: { type: 'condition', piece: onOff(0) }, body: [actAs(0x130)] }],
+          },
+        ],
+      },
+    };
+    expect(generate(model, withRaw('rep 3 : NOP\n')).text).toContain(
+      '\trep 3 : NOP\n\tLDA $14AF|!addr\n\tBNE bc2_end\n',
+    );
+  });
+
+  it('checks a branch in the middle of a line too', () => {
+    const lib = withRaw('LDA $00 : BEQ {{label "x"}} : NOP\nrep 3 : NOP\n{{label "x"}}:\n');
+    const text = generate({ ...base, slots: { marioBottom: [raw] } }, lib).text;
+    expect(text).toContain(
+      '\tLDA $00 : BNE bc2_skip\n\tJMP bc1_x\nbc2_skip:\n\tNOP\n\trep 3 : NOP\nbc1_x:\n',
+    );
+  });
+});
+
+describe('maxBytes', () => {
+  it.each([
+    ['\tdb "' + 'x'.repeat(140) + '"', 140],
+    ['\tdb $01, "AB", $02', 4],
+    ['\tLDA $00|!dp', 3],
+    ['\tSTA $1693|!addr', 3],
+    ['\tJSL $00F5B7|!bank', 4],
+    ['\tLDA $12+$3400', 4],
+    ['\tdb ";;;;" ; comment', 4],
+    ['bc1_x:', 0],
+    ['\t; only a comment', 0],
+  ])('%j is at most %i bytes', (line, bytes) => {
+    expect(maxBytes(line)).toBeGreaterThanOrEqual(bytes);
+    expect(maxBytes(line)).toBeLessThanOrEqual(Math.max(bytes, 4));
   });
 });

@@ -1,5 +1,5 @@
 import { writeBlockFile } from '../header';
-import type { Library, Manifest, Piece } from '../library';
+import type { Library, Manifest, Piece, Register } from '../library';
 import {
   fitsSlot,
   SLOT_KIND_NAMES,
@@ -11,6 +11,7 @@ import {
   type Statement,
 } from '../model';
 import { createLabelAllocator, render, TemplateError, type Value } from '../template';
+import { widenBranches } from './branches';
 import { JUMP_TABLE_ROWS, planSections, type Offset, type Split } from './sections';
 
 export interface GenerateOptions {
@@ -52,7 +53,8 @@ export function generate(
   options: GenerateOptions = {},
 ): GenerateResult {
   const code = new CodeWriter();
-  const emitter = new Emitter(library, code);
+  const labels = createLabelAllocator();
+  const emitter = new Emitter(library, code, labels);
   const plan = planSections(model);
   for (const section of plan.sections) {
     for (const offset of section.offsets) code.label(offset);
@@ -66,6 +68,7 @@ export function generate(
   }
   for (const offset of plan.empty) code.label(offset);
   code.line('RTL');
+  const widened = widenBranches(code.lines, code.origins, () => labels.instance());
 
   const beforeCode = [
     ...humanHeader(model, emitter.usedPieces(), options.toolVersion ?? 'dev'),
@@ -74,14 +77,14 @@ export function generate(
     ...jumpTable(plan.offsets),
     '',
   ];
-  const body = [...beforeCode, ...code.lines, ...tooltip(model.properties.description)];
+  const body = [...beforeCode, ...widened.lines, ...tooltip(model.properties.description)];
   const bodyText = body.map((line) => line + '\n').join('');
   const text = writeBlockFile(model, bodyText);
 
   const machineHeaderLines = lineCount(text) - lineCount(bodyText);
   const firstCodeLine = machineHeaderLines + beforeCode.length + 1;
   const lineMap = new Map<number, LineOrigin>();
-  code.origins.forEach((origin, i) => {
+  widened.origins.forEach((origin, i) => {
     if (origin) lineMap.set(firstCodeLine + i, origin);
   });
   return { text, lineMap };
@@ -177,6 +180,9 @@ class CodeWriter {
   }
 }
 
+/** Registers the generator keeps around a Piece; A is scratch. */
+type SavedRegister = Exclude<Register, 'A'>;
+
 const ARTICLE: Record<Manifest['kind'], string> = {
   action: 'an Action',
   condition: 'a Condition',
@@ -184,12 +190,13 @@ const ARTICLE: Record<Manifest['kind'], string> = {
 
 /** Walks a Slot's statements and writes their code. One label allocator per Block. */
 class Emitter {
-  private readonly labels = createLabelAllocator();
   private readonly used = new Map<string, Piece>();
 
   constructor(
     private readonly library: Library,
     private readonly out: CodeWriter,
+    /** One allocator per Block, shared with the branch rewrite so labels never collide. */
+    private readonly labels: ReturnType<typeof createLabelAllocator>,
   ) {}
 
   /** Pieces used so far, by id in code-unit order (locale-independent, so output is stable). */
@@ -215,7 +222,10 @@ class Emitter {
 
   private statement(statement: Statement, origin: LineOrigin): void {
     if (statement.type === 'action') {
+      const saves = this.savesFor(statement.piece, origin);
+      this.push(saves, origin);
       this.out.pieceCode(this.renderPiece(statement.piece, 'action', origin), origin);
+      this.pull(saves, origin);
       return;
     }
     const label = this.labels.instance();
@@ -236,10 +246,82 @@ class Emitter {
     this.out.label(label('end'), origin);
   }
 
+  /**
+   * Code that falls through when `expr` holds and jumps to `falseLabel` when it does not; the
+   * same contract as a single Condition Piece, so combinations nest freely.
+   */
   private condition(expr: ConditionExpr, origin: LineOrigin, falseLabel: string): void {
-    this.out.pieceCode(this.renderPiece(expr.piece, 'condition', origin, falseLabel), origin);
+    switch (expr.type) {
+      case 'condition':
+        return this.conditionPiece(expr.piece, origin, falseLabel);
+      case 'and':
+        this.condition(expr.left, at(origin, 'left'), falseLabel);
+        this.condition(expr.right, at(origin, 'right'), falseLabel);
+        return;
+      case 'or': {
+        // Left false: try right. Left true: skip right.
+        const label = this.labels.instance();
+        this.condition(expr.left, at(origin, 'left'), label('right'));
+        this.out.line(`BRA ${label('true')}`, origin);
+        this.out.label(label('right'), origin);
+        this.condition(expr.right, at(origin, 'right'), falseLabel);
+        this.out.label(label('true'), origin);
+        return;
+      }
+      case 'not': {
+        // Inner false: NOT holds, go on. Inner true: NOT fails.
+        const label = this.labels.instance();
+        this.condition(expr.condition, at(origin, 'condition'), label('pass'));
+        this.out.line(`BRA ${falseLabel}`, origin);
+        this.out.label(label('pass'), origin);
+        return;
+      }
+    }
   }
 
+  /**
+   * A Condition Piece. When it destroys registers that must survive, both ways out restore
+   * them: the true path falls through, the false path goes through its own restore.
+   */
+  private conditionPiece(ref: PieceRef, origin: LineOrigin, falseLabel: string): void {
+    const saves = this.savesFor(ref, origin);
+    if (saves.length === 0) {
+      this.out.pieceCode(this.renderPiece(ref, 'condition', origin, falseLabel), origin);
+      return;
+    }
+    const label = this.labels.instance();
+    this.push(saves, origin);
+    this.out.pieceCode(this.renderPiece(ref, 'condition', origin, label('restore')), origin);
+    this.pull(saves, origin);
+    this.out.line(`BRA ${label('pass')}`, origin);
+    this.out.label(label('restore'), origin);
+    this.pull(saves, origin);
+    this.out.line(`BRA ${falseLabel}`, origin);
+    this.out.label(label('pass'), origin);
+  }
+
+  /**
+   * Registers to keep around a Piece (spec "Generator rules"): Y always, as it is the act-as
+   * high byte; X in Sprite and Fireball Slots, where it is the sprite index. A is scratch.
+   */
+  private savesFor(ref: PieceRef, origin: LineOrigin): SavedRegister[] {
+    const clobbers = this.library.pieces.get(ref.id)?.manifest.clobbers ?? [];
+    const xMatters = slotKind(origin.slot) === 'sprite' || origin.slot === 'marioFireball';
+    return (['X', 'Y'] as const).filter(
+      (register) => clobbers.includes(register) && (register === 'Y' || xMatters),
+    );
+  }
+
+  private push(registers: SavedRegister[], origin: LineOrigin): void {
+    for (const register of registers) this.out.line(`PH${register}`, origin);
+  }
+
+  /** Pulls in reverse order of `push`. */
+  private pull(registers: SavedRegister[], origin: LineOrigin): void {
+    for (const register of [...registers].reverse()) this.out.line(`PL${register}`, origin);
+  }
+
+  /** The Piece's code with its parameter values filled in. */
   private renderPiece(
     ref: PieceRef,
     kind: Manifest['kind'],

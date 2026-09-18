@@ -8,6 +8,11 @@ import { fieldCodec, type FieldValue } from './fields';
 
 /** Blockly's built-in if / else if / else block. */
 export const IF_BLOCK = 'controls_if';
+/** Blockly's built-in AND / OR block and NOT block, with their input names. */
+export const AND_OR_BLOCK = 'logic_operation';
+export const AND_OR_INPUTS = ['A', 'B'] as const;
+export const NOT_BLOCK = 'logic_negate';
+export const NOT_INPUT = 'BOOL';
 
 export interface ToolboxBlock {
   kind: 'block';
@@ -35,6 +40,9 @@ const LOGIC: ToolboxCategory = {
   contents: [
     { kind: 'block', type: IF_BLOCK },
     { kind: 'block', type: IF_BLOCK, extraState: { hasElse: true } },
+    { kind: 'block', type: AND_OR_BLOCK, fields: { OP: 'AND' } },
+    { kind: 'block', type: AND_OR_BLOCK, fields: { OP: 'OR' } },
+    { kind: 'block', type: NOT_BLOCK },
   ],
 };
 

@@ -57,8 +57,11 @@ export interface PieceRef {
   params: Record<string, Value>;
 }
 
-/** Ticket 08 adds `and` / `or` / `not`. */
-export type ConditionExpr = { type: 'condition'; piece: PieceRef };
+/** A Condition Piece, or Conditions combined with AND / OR / NOT. */
+export type ConditionExpr =
+  | { type: 'condition'; piece: PieceRef }
+  | { type: 'and' | 'or'; left: ConditionExpr; right: ConditionExpr }
+  | { type: 'not'; condition: ConditionExpr };
 
 export interface Branch {
   condition: ConditionExpr;
