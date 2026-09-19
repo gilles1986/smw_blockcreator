@@ -1,0 +1,14 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "reverse_direction",
+  "version": 1,
+  "kind": "action",
+  "category": "physics",
+  "name": "Reverse direction",
+  "description": "Turns Mario around ($76) and flips his horizontal speed ($7B), so he moves back the way he came.",
+  "author": "BlockCreator",
+  "slots": "mario",
+  "params": [],
+  "once": true,
+  "clobbers": ["A"]
+}

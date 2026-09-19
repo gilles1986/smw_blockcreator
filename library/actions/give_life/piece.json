@@ -1,0 +1,14 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "give_life",
+  "version": 1,
+  "kind": "action",
+  "category": "level",
+  "name": "Give 1-Up",
+  "description": "Adds one life to the counter ($0DBE), capped at 99.",
+  "author": "BlockCreator",
+  "slots": "any",
+  "params": [],
+  "once": true,
+  "clobbers": ["A"]
+}

@@ -1,0 +1,2 @@
+LDA $76 : EOR #$01 : STA $76
+LDA $7B : EOR #$FF : INC : STA $7B

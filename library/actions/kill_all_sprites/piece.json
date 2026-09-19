@@ -1,0 +1,13 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "kill_all_sprites",
+  "version": 1,
+  "kind": "action",
+  "category": "sprites",
+  "name": "Kill all sprites",
+  "description": "Erases every sprite on the screen without an effect, including the touching one.",
+  "author": "BlockCreator",
+  "slots": "sprite",
+  "params": [],
+  "clobbers": ["A", "X"]
+}

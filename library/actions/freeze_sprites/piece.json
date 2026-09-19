@@ -1,0 +1,23 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "freeze_sprites",
+  "version": 1,
+  "kind": "action",
+  "category": "sprites",
+  "name": "Freeze sprites",
+  "description": "Locks all sprite animation and movement ($9D) for a given time. 255 frames are about 4 seconds.",
+  "author": "BlockCreator",
+  "slots": "any",
+  "params": [
+    {
+      "name": "duration",
+      "label": "Duration (frames)",
+      "type": "number",
+      "min": 1,
+      "max": 255,
+      "default": 255
+    }
+  ],
+  "once": true,
+  "clobbers": ["A"]
+}

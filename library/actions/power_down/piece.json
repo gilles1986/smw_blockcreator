@@ -1,0 +1,14 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "power_down",
+  "version": 1,
+  "kind": "action",
+  "category": "level",
+  "name": "Power down",
+  "description": "Makes Mario small ($19 = 0) without hurting him: no flash, no sound, no knockback.",
+  "author": "BlockCreator",
+  "slots": "mario",
+  "params": [],
+  "once": true,
+  "clobbers": []
+}
