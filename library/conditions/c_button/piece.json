@@ -1,11 +1,11 @@
 {
   "$schema": "../../../core/library/piece.schema.json",
   "id": "c_button",
-  "version": 1,
+  "version": 2,
   "kind": "condition",
   "category": "conditions",
   "name": "Controller button",
-  "description": "True while the chosen controller button is held or was just pressed ($15-$18).",
+  "description": "True while the chosen controller button is held or was just pressed ($15-$18). $15 and $16 count A as B and X as Y, so B and Y are read from controller 1 itself ($0DA2 held, $0DA6 pressed); with two controllers, that is the first one.",
   "author": "BlockCreator",
   "slots": "mario",
   "params": [

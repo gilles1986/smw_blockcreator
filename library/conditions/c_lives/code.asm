@@ -1,4 +1,5 @@
 LDA $0DBE|!addr
+INC
 CMP #{{hex value 2}}
 {{#if comparison "equal"}}
 BNE {{false}}

@@ -1,11 +1,11 @@
 {
   "$schema": "../../../core/library/piece.schema.json",
   "id": "c_sprite_id",
-  "version": 1,
+  "version": 2,
   "kind": "condition",
   "category": "conditions",
   "name": "Touching sprite is",
-  "description": "True if the touching sprite matches the given sprite number.",
+  "description": "True if the touching sprite is the given sprite. A vanilla sprite is compared by its number in !9E; a custom (PIXI) sprite by its own number in !7FAB9E, marked by bit 3 of !7FAB10, and a custom sprite that only acts like a vanilla one does not count as that vanilla sprite.",
   "author": "BlockCreator",
   "slots": "sprite",
   "params": [

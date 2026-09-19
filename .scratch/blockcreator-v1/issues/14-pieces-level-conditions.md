@@ -1,6 +1,6 @@
 # Library: Level Actions, all Conditions, Write RAM / RAM check / Custom ASM
 
-Status: open
+Status: done
 Blocked by: 08, 12
 Spec: ../spec.md
 
@@ -8,3 +8,12 @@ Level: set ON/OFF, water/slippery, brightness, coins, star, blink invulnerabilit
 
 **Done when**
 - All Pieces assemble in all allowed Slots; search finds them by name.
+
+**Result (2026-09-19)**
+- Every Piece of the list was already in the Library (tickets 12, 13, 23 and the first seed). What this ticket did is what "verified" asks for: each address of the Level Actions, the Conditions and the advanced Pieces was checked with the knowledge CLI (`smwcentral-ram`), the disassembly (`SMWSources`, bank 00 / 01 and `rammap.asm`) and the archive's blocks, and the Pieces that were wrong were fixed. `core/library/level.test.ts` holds each fact next to the code it checks.
+- Wrong and fixed: **Scroll lock** wrote 1 to `$1411` to lock (0 locks, 1 scrolls; version 2). **Water / slippery** wrote `$01` to `$86` (that is only half slippery; a slippery level is `$80`; version 2). **Disable buttons** treated `$0DAA` as a frame timer, but it is a mask of buttons the game takes as already held, so their next press is not new: rebuilt (version 2) with one switch per button, `TSB` into `$0DAA` / `$0DAC` and the controller 2 bytes `$0DAB` / `$0DAD`. It stops new presses only; a held button stays held (`$15`, `$17`), so holding a direction still walks. **Lives check** compared `$0DBE`, which holds one life less than the status bar shows (version 2, compares the shown number). **Touching sprite is** and **Mario holds sprite** compared `!9E` for a vanilla sprite, which a custom sprite that acts like it also has: the vanilla test now excludes custom sprites (bit 3 of `!7FAB10`; version 2 each). **Touching sprite state is**: `$01` is "not started yet", not "stunned", and `$03` (smushed) was missing. **Controller button**: `$15` / `$16` mix A into B and X into Y, so B and Y are read from `$0DA2` / `$0DA6` (version 2; controller 1 only). **Write RAM / RAM check** wrote a 24-bit `$00xxxx` address, which is wrong on SA-1: they use the new template helper `{{ram address}}` (`$85`, `$0F44|!addr`, also from `$7E0F44`; any other address as typed) (version 2).
+- Labels: the star and P-switch timers count down every 4 frames (they said "frames"), the stun timer every frame; the stun description called `$18BD` an earthquake timer.
+- Descriptions cite every fixed RAM address the code touches; `core/library/descriptions.test.ts` enforces it for the `level`, `conditions` and `advanced` categories (scratch RAM `$00`-`$0F` is exempt).
+- `npm run check:asar` assembles every Piece with its defaults in **every** Slot it allows (it did Top only), every option of every Level Action / Condition / advanced Piece, and Write RAM / RAM check at 13 addresses.
+- Search: `searchPieces(library, query, { slotKind })` in `core/library/search.ts` ranks exact name or id, names that start with the query, names that hold all the words, ids and categories, then descriptions; `search.test.ts` finds every built-in Piece first by its own name. The search box and the "Search" toolbox category stay in ticket 17.
+- Left out on purpose: the music of the star (`$1DFB` = `$0D`), the P-switch (`$0E`) and the level end (`$0C`, `$0DDA` = `$FF`, star timer cleared, as the goal tape does in `bank_01`): the Pieces work without, but the level music restarts when a star or P-switch runs out. Vertical scrolling (`$1412`) is not part of Scroll lock. Emulator checks are in ticket 19.

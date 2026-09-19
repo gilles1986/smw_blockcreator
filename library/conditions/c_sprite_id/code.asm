@@ -6,6 +6,9 @@ LDA !7FAB9E,x
 CMP #{{hex sprite_number 2}}
 BNE {{false}}
 {{else}}
+LDA !7FAB10,x
+AND #$08
+BNE {{false}}
 LDA !9E,x
 {{#if sprite_number "218"}}
 CMP #$04

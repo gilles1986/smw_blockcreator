@@ -5,7 +5,7 @@
   "kind": "condition",
   "category": "conditions",
   "name": "Touching sprite state is",
-  "description": "True if the touching sprite is in the specified state ($14C8).",
+  "description": "True if the touching sprite is in the specified state ($14C8): 8 is the normal one, 9 a stunned shell or block lying around, $0A kicked or thrown, $0B carried; 1 is a sprite that has not run its first frame yet, 2 to 4 are sprites that were just killed.",
   "author": "BlockCreator",
   "slots": "sprite",
   "params": [
@@ -15,12 +15,13 @@
       "type": "enum",
       "options": [
         { "value": 8, "label": "Normal ($08)" },
-        { "value": 10, "label": "Kicked / Thrown ($0A)" },
-        { "value": 9, "label": "Carryable ($09)" },
+        { "value": 10, "label": "Kicked / thrown ($0A)" },
+        { "value": 9, "label": "Stunned / carryable ($09)" },
         { "value": 11, "label": "Carried by Mario ($0B)" },
-        { "value": 1, "label": "Stunned / Blind ($01)" },
-        { "value": 2, "label": "Killed / Falling ($02)" },
-        { "value": 4, "label": "Squashed / Puff ($04)" }
+        { "value": 1, "label": "Initial, not started yet ($01)" },
+        { "value": 2, "label": "Killed, falling off screen ($02)" },
+        { "value": 3, "label": "Smushed ($03)" },
+        { "value": 4, "label": "Spin-killed, puff of smoke ($04)" }
       ],
       "default": 10
     }

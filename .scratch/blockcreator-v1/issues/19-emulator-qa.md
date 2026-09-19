@@ -22,3 +22,8 @@ Human in the loop: insert all presets into a test project via GPS and check them
 **Notes from 13 (sprite Pieces)**
 - The "kicked shell flying up-right" case: Spawn sprite with a shell (04-07 or DA-DD), state Kicked ($0A), a positive X speed and a negative Y speed, facing right, from a block Mario hits from below. Check the shell's direction and speed, that the state 'Stunned' leaves it lying, and that a custom sprite gets its extra bit and bytes (and none left over from another sprite).
 - Spawn positions left / right / offset next to and away from the block, in a Mario Slot and in a sprite Slot.
+
+**Notes from 14 (level Pieces)**
+- Pieces that changed after checking their addresses, to try in the emulator: **Disable buttons** (B and A: Mario cannot start a jump while he touches the block, and holding a direction still walks; controller 2 with `$0DA0` set), **Scroll lock** (locked: the screen stops following Mario, unlocked: it scrolls again), **Water / slippery** (`$80` is fully slippery; try one half slippery value with Write RAM), **Lives check** against the status bar with 1, 2 and 5 lives, **Touching sprite is** with a custom sprite that acts like a shell (a vanilla shell test must not match it), **Controller button** for B with A held (must not count), and for Y with X held.
+- Write RAM / RAM check on an SA-1 ROM (the archive's `$0DAA` blocks use `|!addr`): a direct page address (`$85`), one from `$0100` on (`$0F44`), and a `$7E` address typed from a RAM map.
+- Not done, may be worth a Piece: the star, P-switch and level end music (see ticket 14). Check what the level music does when a star or P-switch from these Pieces runs out.

@@ -1,11 +1,11 @@
 {
   "$schema": "../../../core/library/piece.schema.json",
   "id": "c_ram",
-  "version": 1,
+  "version": 2,
   "kind": "condition",
   "category": "conditions",
   "name": "RAM check",
-  "description": "Compare the byte at a RAM address against a value.",
+  "description": "Compares the byte at a RAM address with a value. An address of the game's RAM ($0000-$1FFF, or $7E0000-$7E1FFF as the RAM maps give it) is read so that SA-1 hacks work too; any other address (free RAM such as $7F0000, or SA-1's $400000) is used as typed.",
   "author": "BlockCreator",
   "slots": "any",
   "params": [

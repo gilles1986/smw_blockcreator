@@ -5,7 +5,7 @@
   "kind": "condition",
   "category": "conditions",
   "name": "Mario powerup is",
-  "description": "True if Mario has the specified powerup status.",
+  "description": "True if Mario has the specified powerup status ($19: 0 small, 1 super, 2 cape, 3 fire).",
   "author": "BlockCreator",
   "slots": "mario",
   "params": [

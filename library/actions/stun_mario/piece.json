@@ -5,7 +5,7 @@
   "kind": "action",
   "category": "level",
   "name": "Stun Mario",
-  "description": "Stuns Mario in place on the ground using the earthquake timer ($18BD).",
+  "description": "Stuns Mario ($18BD counts down the frames): he faces the screen and cannot move until it runs out.",
   "author": "BlockCreator",
   "slots": "mario",
   "params": [

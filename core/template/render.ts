@@ -4,6 +4,8 @@
 //   {{hex name [digits]}}     $-prefixed upper-case hex, padded to `digits` (default: even, ≥ 2)
 //   {{signed name}}           -128..127 as a two's-complement byte ($F0)
 //   {{lo name}} {{hi name}}   low / high byte of a 16-bit value ($30 / $01)
+//   {{ram name}}              an address of the game's RAM as GPS code must write it, SA-1 safe:
+//                             $85, $0F44|!addr (also from $7E0F44); any other address as $xxxxxx
 //   {{label "name"}}          label unique to this Piece instance (not allowed inside #each)
 //   {{false}}                 Conditions only: jump target when the Condition is false
 //   {{#if name}}…{{else}}…{{/if}}, {{#each name}}…{{this}}…{{/each}}
@@ -104,7 +106,7 @@ function stripStandaloneLines(tokens: Token[]): void {
 
 // ---------- tree ----------
 
-const HELPERS = ['hex', 'signed', 'lo', 'hi'] as const;
+const HELPERS = ['hex', 'signed', 'lo', 'hi', 'ram'] as const;
 type Helper = (typeof HELPERS)[number];
 
 /** Names a template cannot reference as params, because they are tags or helpers. */
@@ -421,7 +423,26 @@ function applyHelper(node: Extract<Node, { kind: 'helper' }>, scope: Scope): str
       }
       return formatHex(node.helper === 'lo' ? value & 0xff : value >> 8, 2);
     }
+    case 'ram': {
+      const value = unsigned(name, line, scope);
+      if (value > 0xffffff) {
+        throw new TemplateError(`'${name}' = ${value} does not fit in 24 bits`, line);
+      }
+      return ramOperand(value);
+    }
   }
+}
+
+/**
+ * The game's main RAM is $0000-$1FFF, and bank $7E shows it again. The SA-1 patch moves the direct
+ * page ($00-$FF) and the rest of it (through `!addr`), so these are written the portable way; an
+ * address anywhere else is left as the author typed it.
+ */
+function ramOperand(address: number): string {
+  const ram = address >= 0x7e0000 && address < 0x7e2000 ? address - 0x7e0000 : address;
+  if (ram < 0x100) return formatHex(ram, 2);
+  if (ram < 0x2000) return `${formatHex(ram, 4)}|!addr`;
+  return formatHex(address, 6);
 }
 
 function formatHex(value: number, digits: number): string {

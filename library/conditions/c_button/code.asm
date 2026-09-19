@@ -8,9 +8,9 @@ BIT #$80
 {{/if}}
 {{#if button "b"}}
 {{#if mode "pressed"}}
-LDA $16
+LDA $0DA6|!addr
 {{else}}
-LDA $15
+LDA $0DA2|!addr
 {{/if}}
 BIT #$80
 {{/if}}
@@ -24,9 +24,9 @@ BIT #$40
 {{/if}}
 {{#if button "y"}}
 {{#if mode "pressed"}}
-LDA $16
+LDA $0DA6|!addr
 {{else}}
-LDA $15
+LDA $0DA2|!addr
 {{/if}}
 BIT #$40
 {{/if}}

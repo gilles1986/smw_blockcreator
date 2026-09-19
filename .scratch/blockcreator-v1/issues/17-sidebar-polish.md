@@ -14,3 +14,6 @@ One-line summaries per Slot row (`core/summary`), hover "copy" and a "Copy to...
 
 **Notes from 07 (all Slots)**
 - The "Top corner = Top" switch currently lives in the editor header (shown while Top corner is selected and empty); the sidebar row only shows a read-only "= Top" tag. The spec wants the link in the sidebar.
+
+**Notes from 14 (level Pieces)**
+- The ranking is done: `searchPieces(library, query, { slotKind })` in `core/library/search.ts` (tested by `search.test.ts`). What is left here is the search box in the editor header and the "Search" category at the top of the toolbox that shows its result; pass the kind of the selected Slot as `slotKind`.

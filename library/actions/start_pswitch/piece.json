@@ -5,7 +5,7 @@
   "kind": "action",
   "category": "level",
   "name": "Start P-switch",
-  "description": "Activates the blue or silver P-switch timer.",
+  "description": "Starts the blue ($14AD) or the silver ($14AE) P-switch timer. It runs down by 1 every 4 frames: 176, the value of a vanilla switch, lasts about 12 seconds. The switch music is not started.",
   "author": "BlockCreator",
   "slots": "any",
   "params": [
@@ -21,7 +21,7 @@
     },
     {
       "name": "timer",
-      "label": "Timer (frames)",
+      "label": "Timer (1 = 4 frames)",
       "type": "number",
       "min": 1,
       "max": 255,

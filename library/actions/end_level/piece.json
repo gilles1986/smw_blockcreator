@@ -5,7 +5,7 @@
   "kind": "action",
   "category": "level",
   "name": "End level",
-  "description": "Triggers the level complete sequence.",
+  "description": "Ends the level the way the goal sphere does: the end level timer ($1493) is set to $FF, and the goal type ($141C) to 0 for the normal exit or 1 for secret exit 1. The level clear music is not played.",
   "author": "BlockCreator",
   "slots": "mario",
   "params": [

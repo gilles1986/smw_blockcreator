@@ -1,4 +1,4 @@
-LDA {{hex address 6}}
+LDA {{ram address}}
 CMP #{{hex value 2}}
 {{#if comparison "equal"}}
 BNE {{false}}

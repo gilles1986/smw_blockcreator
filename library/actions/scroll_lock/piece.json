@@ -1,11 +1,11 @@
 {
   "$schema": "../../../core/library/piece.schema.json",
   "id": "scroll_lock",
-  "version": 1,
+  "version": 2,
   "kind": "action",
   "category": "level",
   "name": "Scroll lock",
-  "description": "Locks or unlocks screen scrolling ($1411).",
+  "description": "Locks or unlocks horizontal screen scrolling ($1411: 0 stops the screen from following Mario, 1 lets it scroll). Vertical scrolling ($1412) is left alone; Write RAM can set it.",
   "author": "BlockCreator",
   "slots": "any",
   "params": [

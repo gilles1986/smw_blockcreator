@@ -1,11 +1,11 @@
 {
   "$schema": "../../../core/library/piece.schema.json",
   "id": "write_ram",
-  "version": 1,
+  "version": 2,
   "kind": "action",
   "category": "advanced",
   "name": "Write RAM",
-  "description": "Writes an 8-bit value to a 24-bit RAM address.",
+  "description": "Writes an 8-bit value to a RAM address. An address of the game's RAM ($0000-$1FFF, or $7E0000-$7E1FFF as the RAM maps give it) is written so that SA-1 hacks work too; any other address (free RAM such as $7F0000, or SA-1's $400000) is used as typed.",
   "author": "BlockCreator",
   "slots": "any",
   "params": [

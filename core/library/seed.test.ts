@@ -175,14 +175,15 @@ describe('built-in Library seed Pieces', () => {
   });
 
   it('c_sprite_id tests vanilla and custom sprite numbers', () => {
+    // A vanilla sprite is not a custom one that acts like it (ticket 14: level.test.ts).
     expect(
       renderPiece(library, 'c_sprite_id', { sprite_number: 4, custom: false }, 'L_false'),
-    ).toBe('LDA !9E,x\nCMP #$04\nBNE L_false\n');
+    ).toBe('LDA !7FAB10,x\nAND #$08\nBNE L_false\nLDA !9E,x\nCMP #$04\nBNE L_false\n');
 
     // Lunar Magic shell ID DA maps to runtime $04
     expect(
       renderPiece(library, 'c_sprite_id', { sprite_number: 0xda, custom: false }, 'L_false'),
-    ).toBe('LDA !9E,x\nCMP #$04\nBNE L_false\n');
+    ).toBe('LDA !7FAB10,x\nAND #$08\nBNE L_false\nLDA !9E,x\nCMP #$04\nBNE L_false\n');
 
     expect(
       renderPiece(library, 'c_sprite_id', { sprite_number: 0xda, custom: true }, 'L_false'),
@@ -202,7 +203,7 @@ describe('built-in Library seed Pieces', () => {
     for (const [id, sprite] of Object.entries(runtime)) {
       const sprite_number = Number(id);
       expect(renderPiece(library, 'c_sprite_id', { sprite_number, custom: false }, 'L_false')).toBe(
-        `LDA !9E,x\nCMP #$${sprite}\nBNE L_false\n`,
+        `LDA !7FAB10,x\nAND #$08\nBNE L_false\nLDA !9E,x\nCMP #$${sprite}\nBNE L_false\n`,
       );
       const change = { sprite_number, custom: false, state: 8, x_speed: 0, y_speed: 0 };
       expect(renderPiece(library, 'change_sprite', { ...change, smoke: false })).toContain(
@@ -473,7 +474,16 @@ describe('built-in Library seed Pieces', () => {
       const holds = (sprite_number: number, custom = false) =>
         render('c_holding_sprite_id', { sprite_number, custom }, 'L_false');
       expect(holds(0x80)).toBe(
-        lines('%bc_holding_sprite()', 'BCC L_false', 'LDA !9E,x', 'CMP #$80', 'BNE L_false'),
+        lines(
+          '%bc_holding_sprite()',
+          'BCC L_false',
+          'LDA !7FAB10,x',
+          'AND #$08',
+          'BNE L_false',
+          'LDA !9E,x',
+          'CMP #$80',
+          'BNE L_false',
+        ),
       );
       // The Lunar Magic shell numbers, as in c_sprite_id.
       expect(holds(0xda)).toContain('CMP #$04\n');

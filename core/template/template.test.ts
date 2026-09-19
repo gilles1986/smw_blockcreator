@@ -82,6 +82,37 @@ describe('render', () => {
     });
   });
 
+  describe('ram', () => {
+    it('writes an address of the game RAM the way GPS code must, so it works on SA-1 too', () => {
+      // $00-$FF is direct page and $0100-$1FFF absolute, both moved by the SA-1 patch; bank $7E
+      // mirrors them, and the RAM maps give the addresses that way.
+      const at = (address: number) => render('{{ram a}}', ctx({ a: address }));
+      expect(at(0x85)).toBe('$85');
+      expect(at(0x7e0085)).toBe('$85');
+      expect(at(0x100)).toBe('$0100|!addr');
+      expect(at(0x0f44)).toBe('$0F44|!addr');
+      expect(at(0x7e0f44)).toBe('$0F44|!addr');
+      expect(at(0x1fff)).toBe('$1FFF|!addr');
+    });
+
+    it('leaves every other address as a 24-bit one, which the author has to get right', () => {
+      const at = (address: number) => render('{{ram a}}', ctx({ a: address }));
+      expect(at(0x2000)).toBe('$002000');
+      expect(at(0x7e2000)).toBe('$7E2000');
+      expect(at(0x7fab10)).toBe('$7FAB10');
+      expect(at(0x400000)).toBe('$400000');
+    });
+
+    it('rejects values that are no 24-bit address', () => {
+      expect(() => render('{{ram v}}', ctx({ v: 0x1000000 }))).toThrow(
+        "'v' = 16777216 does not fit in 24 bits",
+      );
+      expect(() => render('{{ram v}}', ctx({ v: -1 }))).toThrow(
+        "'v' must be a non-negative integer",
+      );
+    });
+  });
+
   describe('#if', () => {
     const tpl = '{{#if add}}ADC{{else}}LDA{{/if}} #$10';
 

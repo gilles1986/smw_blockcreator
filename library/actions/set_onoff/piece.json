@@ -5,7 +5,7 @@
   "kind": "action",
   "category": "level",
   "name": "Set ON/OFF",
-  "description": "Toggles or sets the global ON/OFF switch.",
+  "description": "Toggles or sets the global ON/OFF switch ($14AF: 0 is ON, any other value OFF).",
   "author": "BlockCreator",
   "slots": "any",
   "params": [

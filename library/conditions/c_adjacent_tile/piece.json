@@ -5,7 +5,7 @@
   "kind": "condition",
   "category": "conditions",
   "name": "Neighbour block is",
-  "description": "True if the block next to this one (above, below, left or right, 1 to 4 blocks away) is, or is not, the chosen Map16 tile. Outside the level it reads as tile FFFF.",
+  "description": "True if the block next to this one (above, below, left or right, 1 to 4 blocks away) is, or is not, the chosen Map16 tile. It moves the block position ($98 Y, $9A X) to look and puts it back. Outside the level it reads as tile FFFF.",
   "author": "BlockCreator",
   "slots": "any",
   "params": [

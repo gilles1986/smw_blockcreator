@@ -5,7 +5,7 @@
   "kind": "condition",
   "category": "conditions",
   "name": "ON/OFF switch is",
-  "description": "True while the ON/OFF switch is in the chosen position.",
+  "description": "True while the ON/OFF switch is in the chosen position ($14AF: 0 is ON, any other value OFF).",
   "author": "BlockCreator",
   "slots": "any",
   "params": [

@@ -12,7 +12,8 @@ import { checkBlock } from './index';
 const gps = findGpsFolder();
 const goldenDir = join(import.meta.dirname, '..', 'generator', 'golden');
 
-describe.skipIf(!gps)('Asar (GPS project asar.dll)', () => {
+// Every Piece in every Slot is a few thousand assemblies, which takes a while.
+describe.skipIf(!gps)('Asar (GPS project asar.dll)', { timeout: 120_000 }, () => {
   const run = nodeAsarRunner(gps!);
   const library = builtInLibrary();
   const routines = [...gpsRoutines(gps!), ...[...library.routines.keys()]];
@@ -75,7 +76,7 @@ describe.skipIf(!gps)('Asar (GPS project asar.dll)', () => {
     expect(generated.text.split('\n')[problems[0]!.line! - 1]).toBe('\tLDAX #$30');
   });
 
-  it('assembles every Library Piece with its defaults in each kind of Slot it allows', async () => {
+  it('assembles every Library Piece with its defaults in every Slot it allows', async () => {
     const failures: string[] = [];
     for (const { manifest } of library.pieces.values()) {
       const params = Object.fromEntries(manifest.params.map((p) => [p.name, p.default]));
@@ -84,7 +85,7 @@ describe.skipIf(!gps)('Asar (GPS project asar.dll)', () => {
         manifest.kind === 'action'
           ? { type: 'action', piece }
           : { type: 'if', branches: [{ condition: { type: 'condition', piece }, body: [] }] };
-      for (const slot of SLOT_IDS.filter((s) => s === 'marioTop' || s === 'spriteTop')) {
+      for (const slot of SLOT_IDS) {
         if (manifest.slots !== 'any' && manifest.slots !== slotKind(slot)) continue;
         const generated = generate({ properties, slots: { [slot]: [statement] } }, library);
         for (const problem of await checkBlock(generated, routines, run)) {
@@ -95,19 +96,16 @@ describe.skipIf(!gps)('Asar (GPS project asar.dll)', () => {
     expect(failures).toEqual([]);
   });
 
-  it('assembles every option of the extended Pieces, and what each Piece calls', async () => {
-    const ids = [
+  it('assembles every option of the Pieces of tickets 13, 14 and 23, and what each Piece calls', async () => {
+    // Ticket 14: every Level Action, Condition and advanced Piece.
+    const ticket14 = [...library.pieces.values()]
+      .filter(({ manifest }) => ['level', 'conditions', 'advanced'].includes(manifest.category))
+      .map(({ manifest }) => manifest.id);
+    const ids = new Set([
+      ...ticket14,
+      // Ticket 23: the neighbour Pieces (the rest of its Pieces are Level Actions and Conditions).
       'change_adjacent_block',
       'erase_adjacent_block',
-      'save_block_collected',
-      'teleport',
-      'set_item_box',
-      'drop_item_box',
-      'c_adjacent_tile',
-      'c_really_on_top',
-      'c_mario_speed',
-      'c_p_meter',
-      'c_holding_sprite_id',
       // Ticket 13: the sprite Pieces.
       'spawn_sprite',
       'change_sprite',
@@ -115,7 +113,7 @@ describe.skipIf(!gps)('Asar (GPS project asar.dll)', () => {
       'set_sprite_state',
       'turn_sprite_around',
       'kill_touching_sprite',
-    ];
+    ]);
     const failures: string[] = [];
     for (const id of ids) {
       const { manifest } = library.pieces.get(id)!;
@@ -144,6 +142,47 @@ describe.skipIf(!gps)('Asar (GPS project asar.dll)', () => {
           const generated = generate({ properties, slots: { [slot]: [statement] } }, library);
           for (const problem of await checkBlock(generated, routines, run)) {
             failures.push(`${id} ${JSON.stringify(params)} in ${slot}: ${problem.message}`);
+          }
+        }
+      }
+    }
+    expect(failures).toEqual([]);
+  });
+
+  it('assembles Write RAM and RAM check at every kind of RAM address', async () => {
+    const failures: string[] = [];
+    // Direct page, absolute, the bank $7E mirror, free RAM in bank $7F, and 24-bit addresses that
+    // are none of these: each kind is written another way (see the ram helper of the templates).
+    const addresses = [
+      0x00, 0x85, 0xff, 0x100, 0x0f44, 0x1fff, 0x2000, 0x7e0019, 0x7e1497, 0x7e2000, 0x7f9c7b,
+      0x400000, 0xffffff,
+    ];
+    for (const address of addresses) {
+      const write: Statement = {
+        type: 'action',
+        piece: { id: 'write_ram', version: 2, params: { address, value: 0x12 } },
+      };
+      const check: Statement = {
+        type: 'if',
+        branches: [
+          {
+            condition: {
+              type: 'condition',
+              piece: {
+                id: 'c_ram',
+                version: 2,
+                params: { address, comparison: 'equal', value: 1 },
+              },
+            },
+            body: [],
+          },
+        ],
+      };
+      for (const statement of [write, check]) {
+        for (const slot of ['marioTop', 'spriteTop'] as const) {
+          const generated = generate({ properties, slots: { [slot]: [statement] } }, library);
+          for (const problem of await checkBlock(generated, routines, run)) {
+            failures.push(`$${address.toString(16)} in ${slot}: ${problem.message}`);
           }
         }
       }

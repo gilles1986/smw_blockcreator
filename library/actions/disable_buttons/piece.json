@@ -1,21 +1,85 @@
 {
   "$schema": "../../../core/library/piece.schema.json",
   "id": "disable_buttons",
-  "version": 1,
+  "version": 2,
   "kind": "action",
   "category": "level",
   "name": "Disable buttons",
-  "description": "Locks controller button inputs for a given duration ($0DAA).",
+  "description": "Stops the chosen buttons from registering new presses while Mario touches the Block. The game counts a press as new only when the button was not held on the frame before, so this marks the buttons as already held: $0DAA (B, Y, Select, Start, D-pad) and $0DAC (A, X, L, R) for controller 1, $0DAB and $0DAD for controller 2, for the next frame. A button that is already held stays held ($15, $17), so holding a direction still walks.",
   "author": "BlockCreator",
   "slots": "mario",
   "params": [
     {
-      "name": "timer",
-      "label": "Timer (frames)",
-      "type": "number",
-      "min": 1,
-      "max": 255,
-      "default": 60
+      "name": "b",
+      "label": "B (jump)",
+      "type": "bool",
+      "default": true
+    },
+    {
+      "name": "a",
+      "label": "A (spin jump)",
+      "type": "bool",
+      "default": true
+    },
+    {
+      "name": "y",
+      "label": "Y (run, fire)",
+      "type": "bool",
+      "default": false
+    },
+    {
+      "name": "x",
+      "label": "X (run, fire)",
+      "type": "bool",
+      "default": false
+    },
+    {
+      "name": "select",
+      "label": "Select (drop item)",
+      "type": "bool",
+      "default": false
+    },
+    {
+      "name": "start",
+      "label": "Start (pause)",
+      "type": "bool",
+      "default": false
+    },
+    {
+      "name": "up",
+      "label": "Up",
+      "type": "bool",
+      "default": false
+    },
+    {
+      "name": "down",
+      "label": "Down",
+      "type": "bool",
+      "default": false
+    },
+    {
+      "name": "left",
+      "label": "Left",
+      "type": "bool",
+      "default": false
+    },
+    {
+      "name": "right",
+      "label": "Right",
+      "type": "bool",
+      "default": false
+    },
+    {
+      "name": "l",
+      "label": "L (scroll screen)",
+      "type": "bool",
+      "default": false
+    },
+    {
+      "name": "r",
+      "label": "R (scroll screen)",
+      "type": "bool",
+      "default": false
     }
   ],
   "clobbers": ["A"]

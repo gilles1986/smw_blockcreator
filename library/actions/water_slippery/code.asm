@@ -4,7 +4,7 @@ LDA #$01 : STA $85
 STZ $85
 {{/if}}
 {{#if slippery}}
-LDA #$01 : STA $86
+LDA #$80 : STA $86
 {{else}}
 STZ $86
 {{/if}}

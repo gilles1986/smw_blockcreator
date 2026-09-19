@@ -1,11 +1,11 @@
 {
   "$schema": "../../../core/library/piece.schema.json",
   "id": "c_lives",
-  "version": 1,
+  "version": 2,
   "kind": "condition",
   "category": "conditions",
   "name": "Lives check",
-  "description": "Compare Mario's current lives ($0DBE) against a value.",
+  "description": "Compares the lives shown on the status bar with a number. The game keeps one less in $0DBE (4 there means 5 lives), which the check adds back.",
   "author": "BlockCreator",
   "slots": "mario",
   "params": [
@@ -23,11 +23,11 @@
     },
     {
       "name": "value",
-      "label": "Value (hex)",
+      "label": "Lives (0..99)",
       "type": "number",
       "min": 0,
-      "max": 255,
-      "format": "hex",
+      "max": 99,
+      "format": "dec",
       "default": 1
     }
   ],
