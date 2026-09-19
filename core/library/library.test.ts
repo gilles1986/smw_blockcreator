@@ -309,6 +309,42 @@ describe('loadLibrary', () => {
         },
       ]);
     });
+
+    it('lets a template test the Slot, and checks the branches it does not take', () => {
+      const library = loadLibrary(
+        files({
+          'actions/act_as/piece.json': { ...actAs, slots: 'sprite' },
+          'actions/act_as/code.asm':
+            '{{#if slot "spriteTop" "spriteBottom"}}\nLDA #{{lo tile}}\n{{else}}\nLDA #{{lo tiel}}\n{{/if}}\n',
+        }),
+        'builtin',
+      );
+      expect(library.errors).toEqual([
+        {
+          origin: 'builtin',
+          file: 'actions/act_as/code.asm',
+          message: "line 4: unknown parameter 'tiel'",
+        },
+      ]);
+    });
+
+    it('keeps `slot` for the generator: a parameter cannot be called that', () => {
+      const library = loadLibrary(
+        files({
+          'actions/act_as/piece.json': { ...actAs, params: [{ ...actAs.params[0], name: 'slot' }] },
+          'actions/act_as/code.asm': 'LDA #$00\n',
+        }),
+        'builtin',
+      );
+      expect(library.errors).toEqual([
+        {
+          origin: 'builtin',
+          file: 'actions/act_as/piece.json',
+          field: 'params[0].name',
+          message: "'slot' is reserved in templates",
+        },
+      ]);
+    });
   });
 });
 

@@ -242,6 +242,8 @@ function checkTemplate(manifest: Manifest, template: string): string | undefined
     render(template, {
       params,
       label: (name) => name,
+      // Any Slot the Piece is allowed in, so that a template that tests the Slot can be checked.
+      slot: manifest.slots === 'sprite' ? 'spriteTop' : 'marioTop',
       ...(manifest.kind === 'condition' && { falseLabel: 'false_target' }),
     });
     return undefined;

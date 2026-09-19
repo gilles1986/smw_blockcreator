@@ -15,3 +15,6 @@ Settings: user Library path. Opening a Block with a missing Piece shows a greyed
 **Notes from 06 (open/save)**
 - Opening currently refuses Blocks with unknown Pieces, wrong kinds or invalid values (`checkPieces` in `core/model/check.ts`, used by `openBlock`). Replace the refusal for missing Pieces with placeholders here.
 - The recorded Piece version survives opening: `statementsToWorkspace` stores it in Blockly's per-block `data`, and `workspaceToStatements` reads it back (new toolbox blocks get the Library version). Compare it with `manifest.version` for the "newer Piece" notice.
+
+**Notes from 12 (Boost Mario, Push sprite)**
+- Version 2 of `boost_mario` and `push_sprite` renamed their parameters (`change_x` / `x_speed` became `x_direction` / `x_strength`, and the same for Y). A Block saved with version 1 still opens, but its values are not carried over: it generates the defaults (up by 96 / 64). The "newer Piece" notice should name this kind of change (old -> new version) before regenerating; there is no migration.

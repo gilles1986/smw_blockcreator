@@ -8,7 +8,11 @@
 //                             $85, $0F44|!addr (also from $7E0F44); any other address as $xxxxxx
 //   {{label "name"}}          label unique to this Piece instance (not allowed inside #each)
 //   {{false}}                 Conditions only: jump target when the Condition is false
-//   {{#if name}}…{{else}}…{{/if}}, {{#each name}}…{{this}}…{{/each}}
+//   {{slot}}                  the Slot id the Piece is rendered for, e.g. marioTop (see below)
+//   {{#if name}}…{{else}}…{{/if}}, {{#if name "a" "b"}} (equals a or b), {{#each name}}…{{/each}}
+//
+// `slot` is given by the generator, so a template can act differently per Slot ("away from the
+// block"); the Slot is the one whose code is written, which for linked Slots is the one linked to.
 //
 // A line holding only a block tag is dropped entirely. `this`, `false`, `label` and the helper
 // names are reserved: a param with such a name cannot be referenced.
@@ -29,6 +33,8 @@ export interface RenderContext {
   label: LabelFactory;
   /** Conditions only: where `{{false}}` jumps when the Condition is false. */
   falseLabel?: string;
+  /** The Slot id (`marioTop`, `spriteLeft`, …) the Piece is rendered for: `{{slot}}`. */
+  slot?: string;
 }
 
 export class TemplateError extends Error {
@@ -43,7 +49,7 @@ export class TemplateError extends Error {
 
 export function render(template: string, ctx: RenderContext): string {
   const nodes = parseBlock(tokenize(template), { i: 0 }).nodes;
-  const scope = new Scope(ctx.params);
+  const scope = new Scope(ctx.slot === undefined ? ctx.params : { ...ctx.params, slot: ctx.slot });
   checkReferences(nodes, scope, ctx);
   return evaluate(nodes, scope, ctx);
 }
@@ -110,7 +116,7 @@ const HELPERS = ['hex', 'signed', 'lo', 'hi', 'ram'] as const;
 type Helper = (typeof HELPERS)[number];
 
 /** Names a template cannot reference as params, because they are tags or helpers. */
-export const RESERVED_NAMES: readonly string[] = ['this', 'false', 'label', ...HELPERS];
+export const RESERVED_NAMES: readonly string[] = ['this', 'false', 'label', 'slot', ...HELPERS];
 
 type Node =
   | { kind: 'text'; text: string }
@@ -118,7 +124,7 @@ type Node =
   | { kind: 'helper'; helper: Helper; name: string; digits?: number; line: number }
   | { kind: 'label'; name: string }
   | { kind: 'false'; line: number }
-  | { kind: 'if'; name: string; expected?: string; line: number; then: Node[]; else: Node[] }
+  | { kind: 'if'; name: string; expected?: string[]; line: number; then: Node[]; else: Node[] }
   | { kind: 'each'; name: string; line: number; body: Node[] };
 
 interface OpenBlock {
@@ -177,7 +183,7 @@ function parseBlock(
         return { nodes, stop: 'else' };
       case '#if': {
         const name = requireName(head, args, line);
-        const expected = args[1] !== undefined ? unquote(args[1]) : undefined;
+        const expected = args.length > 1 ? args.slice(1).map(unquote) : undefined;
         const block: OpenBlock = { head, name, line };
         const then = parseBlock(tokens, pos, block, each);
         const otherwise =
@@ -299,6 +305,9 @@ class Scope {
     }
     if (Object.hasOwn(this.values, name)) return this.values[name]!;
     if (this.parent) return this.parent.lookup(name, line);
+    if (name === 'slot') {
+      throw new TemplateError("'slot' is only available when a Piece is rendered for a Slot", line);
+    }
     throw new TemplateError(`unknown parameter '${name}'`, line);
   }
 }
@@ -356,7 +365,8 @@ function evaluateNode(node: Node, scope: Scope, ctx: RenderContext): string {
       return falseTarget(node.line, ctx);
     case 'if': {
       const val = scope.lookup(node.name, node.line);
-      const condition = node.expected !== undefined ? String(val) === node.expected : truthy(val);
+      const condition =
+        node.expected !== undefined ? node.expected.includes(String(val)) : truthy(val);
       return evaluate(condition ? node.then : node.else, scope, ctx);
     }
     case 'each':

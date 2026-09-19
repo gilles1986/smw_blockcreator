@@ -503,6 +503,46 @@ describe('long branches around code of unknown size', () => {
   });
 });
 
+describe('the Slot a Piece is rendered for', () => {
+  const base = { properties: onOffCement.properties };
+  const probeLibrary = () => {
+    const actAsPiece = library.pieces.get('act_as')!;
+    const probe = {
+      ...actAsPiece,
+      manifest: { ...actAsPiece.manifest, id: 'probe', params: [], slots: 'any' as const },
+      template: '; in {{slot}}\n',
+    };
+    return { ...library, pieces: new Map([...library.pieces, ['probe', probe]]) };
+  };
+  const probe: Statement = { type: 'action', piece: { id: 'probe', version: 1, params: {} } };
+  const condition: Statement = {
+    type: 'if',
+    branches: [{ condition: { type: 'condition', piece: onOff(0) }, body: [probe] }],
+  };
+
+  it('is handed to every Piece, in Mario and in sprite Slots, and in the branches of an if', () => {
+    const model: BlockModel = {
+      ...base,
+      slots: { marioTop: [probe], marioBottom: [condition], spriteBottom: [probe] },
+    };
+    const text = generate(model, probeLibrary()).text;
+    expect(text).toContain('\t; in marioTop\n');
+    expect(text).toContain('\t; in marioBottom\n');
+    expect(text).toContain('\t; in spriteBottom\n');
+  });
+
+  it('is the Slot whose code is written, so a Slot that others link to renders once, as itself', () => {
+    const model: BlockModel = {
+      ...base,
+      slots: { marioLeft: [probe] },
+      slotLinks: { marioRight: 'marioLeft', marioTopCorner: 'marioLeft' },
+    };
+    const text = generate(model, probeLibrary()).text;
+    expect(text.match(/; in /g)).toHaveLength(1);
+    expect(text).toContain('\t; in marioLeft\n');
+  });
+});
+
 describe('maxBytes', () => {
   it.each([
     ['\tdb "' + 'x'.repeat(140) + '"', 140],

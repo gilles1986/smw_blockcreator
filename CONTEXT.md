@@ -38,7 +38,7 @@ _Avoid:_ "State" — it was used for Slots, Conditions and Actions alike.
 - Map16 picker: choose a Map16 page, then a dropdown (like Lunar Magic's Super GFX Bypass list) shows every number on that page with the file occupying it in `list.txt` or "free". No graphics.
 - Name lists: vanilla sprite and sound names ship with the tool; with a project open, the PIXI `list.txt` adds custom sprites by file name.
 - Block properties: name (= file name), description (header comment + `print "…"` for the Lunar Magic tooltip), author, default act-as; header type is derived from the Slots.
-- **Boost Mario**: 8 fixed directions or "away from block" (derived from the touched side); X/Y strength separately (`$00–$7F`) with presets (spring, note block, …); mode set or add. Writes `$7B` / `$7D`.
+- **Boost Mario**: one push per axis (none, left / right, up / down, or "away from block", derived from the Slot the code is in), each with its own strength (`$00–$7F`); mode set or add. The 8 directions are the two axes together. Writes `$7B` / `$7D`. Springs, note blocks and the like are presets (Blocks), not options of the Piece.
 - **Spawn sprite**: vanilla or PIXI custom (extra bit, extra bytes 1–4 for custom); position in/above/below/left/right of the Block or pixel offset (GPS `move_spawn_*`); initial state normal / carryable / kicked / carried; X/Y speed; facing (fixed, like Mario, away from Mario). Recommended states are hinted for vanilla sprites but not enforced.
 - **Touching-sprite Actions** (sprite Slots): set sprite speed (set / add / away from block), set sprite state, turn around; plus kill (see Library).
 - Emulator test integration is out of scope.

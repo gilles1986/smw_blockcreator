@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { createLabelAllocator, render, TemplateError, type RenderContext } from './index';
+import {
+  createLabelAllocator,
+  render,
+  RESERVED_NAMES,
+  TemplateError,
+  type RenderContext,
+} from './index';
 
 function ctx(
   params: RenderContext['params'] = {},
@@ -110,6 +116,43 @@ describe('render', () => {
       expect(() => render('{{ram v}}', ctx({ v: -1 }))).toThrow(
         "'v' must be a non-negative integer",
       );
+    });
+  });
+
+  describe('slot', () => {
+    // The Slot the Piece is rendered for, given by the generator: Top or Bottom, Mario or sprite.
+    it('is the Slot id, to print or to test', () => {
+      const tpl = '{{slot}}: {{#if slot "marioTop" "marioBottom"}}up or down{{else}}beside{{/if}}';
+      expect(render(tpl, ctx({}, { slot: 'marioTop' }))).toBe('marioTop: up or down');
+      expect(render(tpl, ctx({}, { slot: 'marioLeft' }))).toBe('marioLeft: beside');
+    });
+
+    it('is not there when nothing renders the Piece for a Slot', () => {
+      expect(() => render('{{slot}}', ctx())).toThrow(
+        "line 1: 'slot' is only available when a Piece is rendered for a Slot",
+      );
+      expect(() => render('{{#if slot "marioTop"}}x{{/if}}', ctx())).toThrow(
+        "'slot' is only available",
+      );
+    });
+
+    it('is reserved, so a param cannot hide it', () => {
+      expect(RESERVED_NAMES).toContain('slot');
+    });
+  });
+
+  describe('#if with several values', () => {
+    const tpl = '{{#if d "left" "right"}}sideways{{else}}vertical{{/if}}';
+
+    it('is true when the param is any of them', () => {
+      expect(render(tpl, ctx({ d: 'left' }))).toBe('sideways');
+      expect(render(tpl, ctx({ d: 'right' }))).toBe('sideways');
+      expect(render(tpl, ctx({ d: 'up' }))).toBe('vertical');
+    });
+
+    it('compares numbers and booleans as text, like a single value', () => {
+      expect(render('{{#if n "1" "2"}}y{{else}}n{{/if}}', ctx({ n: 2 }))).toBe('y');
+      expect(render('{{#if n "1" "2"}}y{{else}}n{{/if}}', ctx({ n: 3 }))).toBe('n');
     });
   });
 

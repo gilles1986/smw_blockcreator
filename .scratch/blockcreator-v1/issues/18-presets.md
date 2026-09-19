@@ -16,3 +16,6 @@ Spec: ../spec.md
 
 **Notes from 12 (muncher)**
 - The muncher preset uses Kill / Hurt Mario with `side_hitbox` on in Left, Right and Inside, and the top edge guarded by a falling check (see ticket 23, `c_really_on_top`).
+
+**Notes from 12 (Boost Mario, Push sprite)**
+- The "boost block (away)" preset is possible now: Boost Mario with Horizontal push and Vertical push both "Away from the block", one Slot each for Top, Bottom, Left (Right linked to Left works: `$93` decides). Springs and note blocks are the same Piece with an upward push; their strengths are for the emulator (ticket 19).

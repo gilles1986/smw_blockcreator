@@ -23,3 +23,7 @@ Spec: ../spec.md
 - Cite every fixed RAM address the code touches in the description or a label of the Piece (`$1490`, `$0F31-$0F33`, `!14C8`); `descriptions.test.ts` checks it for the `level`, `conditions` and `advanced` categories. Address in the RAM map (SMWCentral) or the disassembly, not from memory: the first pass over the Library (ticket 14) found ten Pieces that read, wrote or named the wrong thing.
 - Raise `version` whenever the generated code changes, not for a new label or description.
 - Sprite numbers: `!9E` holds the number a custom sprite acts like, so a vanilla sprite test must also check that bit 3 of `!7FAB10` is clear.
+
+**Notes from 12 (the Slot in templates)**
+- `{{slot}}` is the id of the Slot the Piece is rendered for (`marioTop` … `spriteRight`), for Pieces whose code depends on the side: `{{#if slot "marioTop" "marioTopCorner"}}`. It is the Slot whose code is written, so it is the Slot other Slots are linked to. It is reserved: a parameter cannot be called `slot`. `{{#if name "a" "b"}}` is true when `name` is any of the values.
+- Negative immediates in templates: `LDA #-{{hex strength 2}}` is fine, Asar takes `#-$30`.

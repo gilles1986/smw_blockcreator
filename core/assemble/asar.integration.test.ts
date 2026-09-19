@@ -149,6 +149,40 @@ describe.skipIf(!gps)('Asar (GPS project asar.dll)', { timeout: 120_000 }, () =>
     expect(failures).toEqual([]);
   });
 
+  it('assembles Boost Mario and Push sprite in every Slot, with every push together', async () => {
+    // Ticket 12. "Away from the block" is written differently per Slot, so each one is tried.
+    const failures: string[] = [];
+    for (const id of ['boost_mario', 'push_sprite']) {
+      const { manifest } = library.pieces.get(id)!;
+      for (const slot of SLOT_IDS.filter((s) => slotKind(s) === manifest.slots)) {
+        for (const x_direction of ['none', 'left', 'right', 'away']) {
+          for (const y_direction of ['none', 'up', 'down', 'away']) {
+            for (const mode of [0, 1]) {
+              for (const strength of [0, 127]) {
+                const params = {
+                  mode,
+                  x_direction,
+                  y_direction,
+                  x_strength: strength,
+                  y_strength: strength,
+                };
+                const statement: Statement = {
+                  type: 'action',
+                  piece: { id, version: manifest.version, params },
+                };
+                const generated = generate({ properties, slots: { [slot]: [statement] } }, library);
+                for (const problem of await checkBlock(generated, routines, run)) {
+                  failures.push(`${id} ${JSON.stringify(params)} in ${slot}: ${problem.message}`);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    expect(failures).toEqual([]);
+  });
+
   it('assembles Write RAM and RAM check at every kind of RAM address', async () => {
     const failures: string[] = [];
     // Direct page, absolute, the bank $7E mirror, free RAM in bank $7F, and 24-bit addresses that

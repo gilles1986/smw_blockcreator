@@ -481,6 +481,7 @@ class Emitter {
       return render(piece.template, {
         params,
         label: this.labels.instance(),
+        slot: origin.slot,
         ...(falseLabel !== undefined && { falseLabel }),
       });
     } catch (error) {

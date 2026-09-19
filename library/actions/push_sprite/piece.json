@@ -1,11 +1,11 @@
 {
   "$schema": "../../../core/library/piece.schema.json",
   "id": "push_sprite",
-  "version": 1,
+  "version": 2,
   "kind": "action",
   "category": "physics",
   "name": "Push sprite",
-  "description": "Sets or adds to the touching sprite's horizontal and vertical speed.",
+  "description": "Pushes the touching sprite: sets or adds to its horizontal speed (!B6) and vertical speed (!AA). Each push has a strength from 0 to 127, in 1/16 pixel per frame. 'Away from the block' follows the side the sprite touches: in Top it is sent up, in Bottom down, in Left to the left and in Right to the right.",
   "author": "BlockCreator",
   "slots": "sprite",
   "params": [
@@ -14,38 +14,80 @@
       "label": "Mode",
       "type": "enum",
       "options": [
-        { "value": 0, "label": "Set speed" },
-        { "value": 1, "label": "Add to speed" }
+        {
+          "value": 0,
+          "label": "Set speed"
+        },
+        {
+          "value": 1,
+          "label": "Add to speed"
+        }
       ],
       "default": 0
     },
     {
-      "name": "change_x",
-      "label": "Change X speed",
-      "type": "bool",
-      "default": false
+      "name": "x_direction",
+      "label": "Horizontal push",
+      "type": "enum",
+      "options": [
+        {
+          "value": "none",
+          "label": "None"
+        },
+        {
+          "value": "left",
+          "label": "Left"
+        },
+        {
+          "value": "right",
+          "label": "Right"
+        },
+        {
+          "value": "away",
+          "label": "Away from the block"
+        }
+      ],
+      "default": "none"
     },
     {
-      "name": "x_speed",
-      "label": "X speed (-128..127)",
+      "name": "x_strength",
+      "label": "X strength (0..127)",
       "type": "number",
-      "min": -128,
+      "min": 0,
       "max": 127,
-      "default": 0
+      "default": 48
     },
     {
-      "name": "change_y",
-      "label": "Change Y speed",
-      "type": "bool",
-      "default": true
+      "name": "y_direction",
+      "label": "Vertical push",
+      "type": "enum",
+      "options": [
+        {
+          "value": "none",
+          "label": "None"
+        },
+        {
+          "value": "up",
+          "label": "Up"
+        },
+        {
+          "value": "down",
+          "label": "Down"
+        },
+        {
+          "value": "away",
+          "label": "Away from the block"
+        }
+      ],
+      "default": "up"
     },
     {
-      "name": "y_speed",
-      "label": "Y speed (-128..127)",
+      "name": "y_strength",
+      "label": "Y strength (0..127)",
       "type": "number",
-      "min": -128,
+      "min": 0,
       "max": 127,
-      "default": -64
+      "default": 64
     }
   ],
   "clobbers": ["A"]
