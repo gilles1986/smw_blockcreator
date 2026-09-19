@@ -32,3 +32,12 @@ Human in the loop: insert all presets into a test project via GPS and check them
 - Boost Mario "away from the block" in Top (up), Bottom (down), Left and Right (sideways away from Mario's side, also with Right linked to Left) and Inside; then in the Top corner (both ways). Check the sign in each, and that Set and Add both work. Try strength 127 in Add mode (the byte wraps around at 128).
 - Push sprite in the four sprite Slots with a shell and a walking sprite; a sprite Slot that another is linked to only knows its own side.
 - Confirm `$93` for "away" (same open point as the Left / Right split above): 0 must push Mario left.
+
+**Notes from 18 (Presets): one line to try per Preset**
+- `onoff_solid`: solid with the switch ON and passable with it OFF, for Mario and for a sprite, from every side; flip the switch while standing on it.
+- `mario_passable` / `sprite_passable`: the one walks through, the other is stopped; try the corner and standing inside (Mario) and a shell (sprite).
+- `one_way`: jump up through it from below, land on it, walk into its sides, drop through the corner; a shell stands on it and passes it from below.
+- `boost_away`: from the top, the bottom and both sides; are 48 / 96 a good push, and does Right (linked to Left) push right?
+- `kicked_shell_spawner`: the shell's direction and speed (see the note from 13), and the used block afterwards; `coin_once`: one coin, coin sound, used block. Both once only, not once per frame.
+- `water_toggle`: Up flips the level between water and dry, one flip per press; does Mario swim right away?
+- `muncher_sprite_killer`: Mario is hurt as by `muncher`; a sprite from any side is killed (puff and stars).
