@@ -1,5 +1,6 @@
 mod asar;
 mod project;
+mod userlibrary;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -14,7 +15,13 @@ pub fn run() {
       project::pixi_folder_ok,
       project::pixi_read_list,
       project::project_read,
-      project::project_write
+      project::project_write,
+      userlibrary::archive_read,
+      userlibrary::archive_write,
+      userlibrary::user_piece_delete,
+      userlibrary::user_piece_write,
+      userlibrary::user_pieces_dir,
+      userlibrary::user_pieces_read_all
     ])
     .setup(|app| {
       if cfg!(debug_assertions) {

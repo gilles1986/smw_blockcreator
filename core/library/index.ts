@@ -4,3 +4,4 @@ export type { EnumOption, Manifest, ParamSpec, ParamType, Register } from './man
 export { mergeLibraries } from './merge';
 export { searchPieces } from './search';
 export type { SearchOptions } from './search';
+export { ArchiveError, packPieces, unpackPieces } from './archive';

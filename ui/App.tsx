@@ -40,10 +40,11 @@ import {
   type CheckOutcome,
   type Notice,
 } from './checkView';
-import { builtInLibrary as library } from './library';
+import { mergeLibraries, type Library } from '../core/library';
+import { builtInLibrary } from './library';
 import { onceWarnings } from './onceWarnings';
-import { PresetDialog } from './PresetDialog';
 import { openNotice } from './openNotice';
+import { PresetDialog } from './PresetDialog';
 import { presetList, type Preset } from './presets';
 import { saveToProject, type ListChoice, type RoutineFile } from './projectSave';
 import { routineFilesNote, savedToProjectNotice } from './routineNotes';
@@ -57,6 +58,7 @@ import { gpsAsar, gpsFolder } from './tauriAsar';
 import { tauriFiles as files } from './tauriFiles';
 import { loadPixiSprites } from './tauriNames';
 import { projectFiles } from './tauriProject';
+import { loadUserLibrary, userLibrarySupported } from './userLibrary';
 
 const TOOL_VERSION = import.meta.env.VITE_APP_VERSION ?? 'dev';
 
@@ -125,7 +127,13 @@ export function App() {
   const [checking, setChecking] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [presetsOpen, setPresetsOpen] = useState(false);
-  const presets = useMemo(() => presetList(library), []);
+  /** The user's own Pieces, loaded from the app's data dir; null until read (browser: never). */
+  const [userLibrary, setUserLibrary] = useState<Library | null>(null);
+  const library = useMemo(
+    () => (userLibrary ? mergeLibraries(builtInLibrary, userLibrary) : builtInLibrary),
+    [userLibrary],
+  );
+  const presets = useMemo(() => presetList(library), [library]);
   /** The GPS folder the "Save to project" dialog is open for; undefined while it is closed. */
   const [projectFolder, setProjectFolder] = useState<string>();
   const project = useMemo(
@@ -139,6 +147,36 @@ export function App() {
     if (!settingsOpen) void loadPixiSprites();
   }, [settingsOpen]);
 
+  /** Shows the user Library's problems as a notice, when it has any. */
+  function reportLibraryErrors(user: Library) {
+    if (user.errors.length === 0) return;
+    const first = user.errors[0]!;
+    setNotice({
+      kind: 'error',
+      text: `Your Pieces: ${user.errors.length} problem${user.errors.length === 1 ? '' : 's'}, first: ${first.file}: ${first.message}`,
+    });
+  }
+
+  // Read the user's Pieces once at the start.
+  useEffect(() => {
+    if (!userLibrarySupported) return;
+    let current = true;
+    loadUserLibrary().then(
+      (user) => {
+        if (!current) return;
+        setUserLibrary(user);
+        reportLibraryErrors(user);
+      },
+      (error) => {
+        if (current)
+          setNotice({ kind: 'error', text: `Cannot read your Pieces: ${String(error)}` });
+      },
+    );
+    return () => {
+      current = false;
+    };
+  }, []);
+
   const model: BlockModel = useMemo(
     () => ({
       properties,
@@ -147,7 +185,7 @@ export function App() {
       // Written only when switched off, so the default stays out of the file.
       ...(!topCornerFollowsTop && { topCornerFollowsTop }),
     }),
-    [properties, workspaces, slotLinks, topCornerFollowsTop],
+    [properties, workspaces, slotLinks, topCornerFollowsTop, library],
   );
 
   const generated = useMemo((): GenerateResult | { error: string } => {
@@ -157,13 +195,13 @@ export function App() {
       if (error instanceof GenerateError) return { error: error.message };
       throw error;
     }
-  }, [model]);
+  }, [model, library]);
 
   const problems = useMemo(
     () => [
       ...new Set(Object.values(workspaces).flatMap((state) => workspaceProblems(state, library))),
     ],
-    [workspaces],
+    [workspaces, library],
   );
 
   const unsavedChanges = canonicalJson(model) !== file.savedJson;
@@ -350,7 +388,7 @@ export function App() {
       }
     }
     return found.size > 0 ? found : undefined;
-  }, [checked, activeSlot, activeWorkspace]);
+  }, [checked, activeSlot, activeWorkspace, library]);
 
   return (
     <div className="app">
