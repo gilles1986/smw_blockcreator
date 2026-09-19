@@ -14,7 +14,8 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check:asar": "vitest run core/assemble/asar.integration.test.ts"
+    "check:asar": "vitest run core/assemble/asar.integration.test.ts",
+    "presets": "vitest run core/library/presets.test.ts -u"
   },
   "dependencies": {
     "@blockly/theme-dark": "^13.3.0",

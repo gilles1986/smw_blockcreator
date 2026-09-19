@@ -22,6 +22,15 @@ export function NewIcon() {
   );
 }
 
+/** Two pages, one behind the other: a Block to start from. */
+export function PresetIcon() {
+  return (
+    <Icon>
+      <path d="M8 3h9a2 2 0 0 1 2 2v11M5 7h9a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2zM7 12h5M7 16h5" />
+    </Icon>
+  );
+}
+
 export function OpenIcon() {
   return (
     <Icon>

@@ -73,7 +73,7 @@ body,
 .icon-btn {
   display: inline-grid;
   place-items: center;
-  width: 34px;
+  width: 32px;
   height: 30px;
   padding: 0;
 }
@@ -198,6 +198,23 @@ body,
   background: var(--panel2);
   border: 1px solid var(--line);
   border-radius: 6px;
+}
+
+.preset-list {
+  display: grid;
+  gap: 6px;
+}
+
+.preset {
+  display: grid;
+  gap: 2px;
+  padding: 8px 10px;
+  text-align: left;
+}
+
+.preset:hover {
+  background: var(--line);
+  border-color: var(--accent2);
 }
 
 .tile-fields {

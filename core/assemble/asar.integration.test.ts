@@ -26,6 +26,11 @@ describe.skipIf(!gps)('Asar (GPS project asar.dll)', () => {
     },
   );
 
+  it.each([...library.presets.keys()])('assembles preset %s', async (name) => {
+    const text = library.presets.get(name)!.text;
+    expect(await checkBlock({ text, lineMap: new Map() }, routines, run)).toEqual([]);
+  });
+
   it('places a typo on the Slot and statement it comes from', async () => {
     const base = library.pieces.get('act_as')!;
     const typo = {

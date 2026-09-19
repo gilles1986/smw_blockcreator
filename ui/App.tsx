@@ -13,7 +13,15 @@ import {
 } from '../core/model';
 import { About } from './About';
 import { BlocklyEditor } from './blockly/BlocklyEditor';
-import { NewIcon, OpenIcon, ProjectIcon, SaveAsIcon, SaveIcon, SettingsIcon } from './icons';
+import {
+  NewIcon,
+  OpenIcon,
+  PresetIcon,
+  ProjectIcon,
+  SaveAsIcon,
+  SaveIcon,
+  SettingsIcon,
+} from './icons';
 import {
   slotsToWorkspaces,
   workspaceProblems,
@@ -34,6 +42,8 @@ import {
 } from './checkView';
 import { builtInLibrary as library } from './library';
 import { onceWarnings } from './onceWarnings';
+import { PresetDialog } from './PresetDialog';
+import { presetList, type Preset } from './presets';
 import { saveToProject, type ListChoice, type RoutineFile } from './projectSave';
 import { routineFilesNote, savedToProjectNotice } from './routineNotes';
 import { getFolder } from './settings';
@@ -113,6 +123,8 @@ export function App() {
   const [check, setCheck] = useState<{ text: string; problems: CheckProblem[] } | null>(null);
   const [checking, setChecking] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [presetsOpen, setPresetsOpen] = useState(false);
+  const presets = useMemo(() => presetList(library), []);
   /** The GPS folder the "Save to project" dialog is open for; undefined while it is closed. */
   const [projectFolder, setProjectFolder] = useState<string>();
   const project = useMemo(
@@ -195,14 +207,22 @@ export function App() {
     }));
   }
 
+  /** Asks first when there are unsaved changes; false when the user wants to keep them. */
+  async function mayDiscard(): Promise<boolean> {
+    if (!unsavedChanges) return true;
+    return files ? files.confirm(DISCARD_QUESTION) : window.confirm(DISCARD_QUESTION);
+  }
+
   async function newBlock() {
-    if (unsavedChanges) {
-      const discard = files
-        ? await files.confirm(DISCARD_QUESTION)
-        : window.confirm(DISCARD_QUESTION);
-      if (!discard) return;
-    }
+    if (!(await mayDiscard())) return;
     load(NEW_BLOCK, undefined);
+    setNotice(null);
+  }
+
+  /** Starts from a copy of a Preset; it has no file yet, so Save asks where it goes. */
+  async function newFromPreset(preset: Preset) {
+    if (!(await mayDiscard())) return;
+    load(preset.model, undefined);
     setNotice(null);
   }
 
@@ -366,6 +386,9 @@ export function App() {
             <IconButton label="New" onClick={newBlock}>
               <NewIcon />
             </IconButton>
+            <IconButton label="New from preset…" onClick={() => setPresetsOpen(true)}>
+              <PresetIcon />
+            </IconButton>
             <IconButton label={desktopOnly('Open…')} disabled={!files} onClick={openFile}>
               <OpenIcon />
             </IconButton>
@@ -401,6 +424,12 @@ export function App() {
             <About version={TOOL_VERSION} />
           </div>
           <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+          <PresetDialog
+            open={presetsOpen}
+            onClose={() => setPresetsOpen(false)}
+            presets={presets}
+            onPick={newFromPreset}
+          />
           {project && projectFolder !== undefined && (
             <SaveToProjectDialog
               open
