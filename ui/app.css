@@ -45,8 +45,14 @@ body,
   flex-direction: column;
   background: var(--panel);
   border-right: 1px solid var(--line);
-  overflow: auto;
+  overflow: hidden;
   height: 100%;
+}
+
+.sidebar-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .sidebar section {
@@ -61,6 +67,176 @@ body,
   margin: 0 0 8px;
   font-size: 15px;
   color: var(--accent);
+}
+
+/* Buttons that show only an icon (the sidebar's bottom bar). */
+.icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 30px;
+  padding: 0;
+}
+
+.icon-btn:hover:not(:disabled) {
+  background: var(--line);
+  border-color: var(--accent2);
+}
+
+.icon {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.icon .badge {
+  fill: var(--panel2);
+  stroke: none;
+}
+
+.push-right {
+  margin-left: auto;
+}
+
+.modal {
+  width: min(520px, 90vw);
+  max-height: 85vh;
+  padding: 0;
+  overflow: auto;
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
+}
+
+.modal::backdrop {
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.modal-body {
+  display: grid;
+  gap: 8px;
+  padding: 16px 20px;
+}
+
+.modal h2 {
+  margin: 0;
+  font-size: 18px;
+  color: var(--accent);
+}
+
+.modal p {
+  margin: 0;
+}
+
+.modal a {
+  color: var(--accent2);
+}
+
+.about-facts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 16px;
+  margin: 4px 0 0;
+}
+
+.about-facts dt {
+  color: var(--muted);
+}
+
+.about-facts dd {
+  margin: 0;
+}
+
+.about-notice {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.modal form,
+.modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.modal .hint {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.modal code {
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.modal label {
+  display: grid;
+  gap: 2px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.modal label.check {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  color: var(--text);
+  font-size: 14px;
+}
+
+.modal select {
+  padding: 4px 8px;
+  font: inherit;
+  color: inherit;
+  background: var(--panel2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+
+.tile-fields {
+  display: grid;
+  grid-template-columns: 90px 1fr 90px;
+  gap: 8px;
+}
+
+.folder-row {
+  display: grid;
+  gap: 4px;
+  padding: 8px 0;
+  border-top: 1px solid var(--line);
+}
+
+.folder-row .hint {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.folder-path {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.folder-path .path {
+  flex: 1;
+  min-width: 0;
+}
+
+.folder-ok {
+  font-size: 12px;
+  color: var(--filled);
+}
+
+.folder-bad {
+  font-size: 12px;
+  color: var(--danger);
 }
 
 .save {
@@ -217,6 +393,9 @@ button {
 }
 
 .group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
   margin: 0;
   padding: 10px 12px 4px;
   font-size: 12px;
@@ -226,17 +405,17 @@ button {
   color: var(--muted);
 }
 
+.group-icon {
+  width: 26px;
+  height: 26px;
+  image-rendering: pixelated;
+}
+
 .slot-row {
-  display: grid;
-  grid-template-columns: 12px auto 1fr;
-  gap: 8px;
-  align-items: center;
-  padding: 6px 12px;
-  border: 0;
+  position: relative;
+  display: flex;
+  align-items: stretch;
   border-left: 3px solid transparent;
-  background: transparent;
-  text-align: left;
-  cursor: pointer;
 }
 
 .slot-row:hover,
@@ -246,6 +425,21 @@ button {
 
 .slot-row.selected {
   border-left-color: var(--accent);
+}
+
+.slot-row .slot-pick {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 12px 22px auto 1fr;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 4px 6px 12px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
 }
 
 .slot-row .dot {
@@ -264,6 +458,57 @@ button {
   font-weight: 600;
 }
 
+/* Slot pictogram: the block in grey, the touched side in the accent colour, what touches it in white. */
+.glyph {
+  flex-shrink: 0;
+}
+
+.glyph .block {
+  fill: var(--panel);
+  stroke: var(--muted);
+  stroke-width: 1.2;
+}
+
+.glyph .hit,
+.glyph .mover {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.glyph .hit {
+  stroke: var(--accent);
+  stroke-width: 2.4;
+}
+
+.glyph .mover {
+  stroke: var(--text);
+  stroke-width: 1.6;
+}
+
+.glyph .fill {
+  fill: var(--accent);
+}
+
+.glyph .head {
+  fill: var(--text);
+}
+
+.slot-title {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.slot-text {
+  display: grid;
+}
+
+.slot-hint {
+  font-size: 12px;
+  color: var(--muted);
+}
+
 .blockly-host {
   position: absolute;
   inset: 0;
@@ -272,12 +517,18 @@ button {
 .save {
   display: grid;
   gap: 8px;
+  flex-shrink: 0;
+  border-top: 1px solid var(--line);
+}
+
+.sidebar .save {
+  padding: 8px 12px;
 }
 
 .save .buttons {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
   gap: 6px;
+  align-items: center;
 }
 
 button:disabled {
@@ -292,6 +543,10 @@ button:disabled {
   font-size: 12px;
   white-space: pre-wrap;
   background: var(--panel2);
+}
+
+.notice.info {
+  border-left: 3px solid var(--filled);
 }
 
 .notice.warning {
@@ -336,34 +591,67 @@ button:disabled {
   color: var(--muted);
 }
 
-.slot-link-control {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+.slot-row .link-btn {
+  padding: 0 10px;
+  border: 0;
+  background: transparent;
   font-size: 12px;
-  margin-left: auto;
+  cursor: pointer;
+  opacity: 0.3;
 }
 
-.link-select-label {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--muted);
+.slot-row:hover .link-btn,
+.slot-row .link-btn[aria-expanded='true'] {
+  opacity: 0.75;
 }
 
-.link-select {
+.slot-row .link-btn.active {
+  opacity: 1;
+}
+
+.link-menu {
+  position: absolute;
+  top: 100%;
+  right: 4px;
+  z-index: 20;
+  display: grid;
+  min-width: 150px;
+  padding: 4px;
   background: var(--panel2);
-  color: var(--fg);
   border: 1px solid var(--line);
+  border-radius: 6px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+}
+
+.link-menu button {
+  padding: 5px 8px;
+  border: 0;
   border-radius: 4px;
-  padding: 3px 8px;
+  background: transparent;
+  color: var(--text);
   font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.link-menu button:hover {
+  background: var(--accent2);
+  color: #fff;
+}
+
+.link-menu button.current {
+  color: var(--accent);
+}
+
+.link-menu button.current:hover {
+  color: #fff;
 }
 
 .linked-indicator {
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  margin-left: auto;
   padding: 3px 8px;
   border-radius: 4px;
   background: rgba(80, 160, 255, 0.15);

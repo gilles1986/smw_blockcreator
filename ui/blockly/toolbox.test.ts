@@ -23,6 +23,8 @@ describe('toolbox', () => {
       contents: [
         { kind: 'block', type: 'controls_if' },
         { kind: 'block', type: 'controls_if', extraState: { hasElse: true } },
+        { kind: 'block', type: 'controls_if', extraState: { elseIfCount: 1 } },
+        { kind: 'block', type: 'controls_if', extraState: { elseIfCount: 1, hasElse: true } },
         { kind: 'block', type: 'logic_operation', fields: { OP: 'AND' } },
         { kind: 'block', type: 'logic_operation', fields: { OP: 'OR' } },
         { kind: 'block', type: 'logic_negate' },
@@ -57,7 +59,15 @@ describe('toolbox', () => {
     expect(categories).toEqual([
       [
         'Logic',
-        ['controls_if', 'controls_if', 'logic_operation', 'logic_operation', 'logic_negate'],
+        [
+          'controls_if',
+          'controls_if',
+          'controls_if',
+          'controls_if',
+          'logic_operation',
+          'logic_operation',
+          'logic_negate',
+        ],
       ],
       ['Physics', ['piece_bb']],
       ['Kaizo tricks', ['piece_aa', 'piece_zz']],

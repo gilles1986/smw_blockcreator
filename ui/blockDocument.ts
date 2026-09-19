@@ -88,23 +88,27 @@ export async function saveBlock(
   return { kind: 'saved', path };
 }
 
-/** Asks first when the file on disk holds hand edits, is newer, or is not a BlockCreator Block. */
+/**
+ * What to ask before the file `existing` (the text on disk at `path`) is replaced: it holds hand
+ * edits, is newer, or is not a BlockCreator Block. Null when it can be replaced without asking.
+ */
+export function overwriteQuestion(existing: string, path: string): string | null {
+  const found = parse(existing);
+  if (found.ok) return found.checksumOk ? null : `${HAND_EDIT_WARNING} Save anyway?`;
+  if (found.reason === 'newer-format') {
+    return `${path} was made with a newer BlockCreator. Replace it with this older format?`;
+  }
+  return `${path} was not made by BlockCreator. Replace it?`;
+}
+
 async function mayOverwrite(files: FileAccess, path: string): Promise<boolean> {
   if (!(await files.exists(path))) return true;
-  const existing = parse(await files.read(path));
-  if (existing.ok) {
-    return existing.checksumOk || files.confirm(`${HAND_EDIT_WARNING} Save anyway?`);
-  }
-  if (existing.reason === 'newer-format') {
-    return files.confirm(
-      `${path} was made with a newer BlockCreator. Replace it with this older format?`,
-    );
-  }
-  return files.confirm(`${path} was not made by BlockCreator. Replace it?`);
+  const question = overwriteQuestion(await files.read(path), path);
+  return question === null || files.confirm(question);
 }
 
 /** The Block name as a file name: characters Windows forbids become `_`. */
-function fileName(name: string): string {
+export function fileName(name: string): string {
   return name.trim().replace(/[\\/:*?"<>|]/g, '_') || 'block';
 }
 

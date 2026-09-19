@@ -8,7 +8,7 @@ import { blockIdsByPath, type WorkspaceState } from './blockly/workspace';
 
 /** A message under the Slot list; `error` blocks nothing by itself, it only stands out. */
 export interface Notice {
-  kind: 'warning' | 'error';
+  kind: 'info' | 'warning' | 'error';
   text: string;
 }
 

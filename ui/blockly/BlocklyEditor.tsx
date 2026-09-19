@@ -4,9 +4,12 @@ import 'blockly/blocks';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { Library } from '../../core/library';
 import type { SlotKind } from '../../core/model';
+import { nameSource, onNamesChanged } from '../names';
 import { blockDefinitions, fieldValidators } from './blocks';
+import { refreshNameFields, setNameSource } from './nameField';
 import { enableMultiSelect, type MultiSelect } from './multiselect';
 import './multiselect.css';
+import './namepicker.css';
 import { SelectionBar } from './SelectionBar';
 import { toolbox } from './toolbox';
 import type { WorkspaceState } from './workspace';
@@ -50,6 +53,7 @@ export function BlocklyEditor({
   });
 
   useEffect(() => {
+    setNameSource(nameSource);
     Blockly.common.defineBlocksWithJsonArray(blockDefinitions(library));
     for (const { blockType, field, validator } of fieldValidators(library)) {
       const definition = Blockly.Blocks[blockType]!;
@@ -75,7 +79,10 @@ export function BlocklyEditor({
       onChangeRef.current(Blockly.serialization.workspaces.save(ws) as WorkspaceState);
     });
     multiSelect.current = enableMultiSelect(ws, setSelectedCount);
+    // The PIXI sprites are read after the editor starts, and again when the folder is changed.
+    const stopNames = onNamesChanged(() => refreshNameFields(ws));
     return () => {
+      stopNames();
       resize.disconnect();
       multiSelect.current?.dispose();
       multiSelect.current = null;

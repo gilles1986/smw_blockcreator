@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { checkBlock, type CheckProblem } from '../core/assemble';
 import { generate, GenerateError, type GenerateResult } from '../core/generator';
 import { canonicalJson } from '../core/header';
@@ -7,12 +7,13 @@ import {
   effectiveSlot,
   slotFilled,
   slotKind,
-  SLOT_IDS,
   type BlockModel,
   type BlockProperties,
   type SlotId,
 } from '../core/model';
+import { About } from './About';
 import { BlocklyEditor } from './blockly/BlocklyEditor';
+import { NewIcon, OpenIcon, ProjectIcon, SaveAsIcon, SaveIcon, SettingsIcon } from './icons';
 import {
   slotsToWorkspaces,
   workspaceProblems,
@@ -32,10 +33,16 @@ import {
   type Notice,
 } from './checkView';
 import { builtInLibrary as library } from './library';
+import { saveToProject, type ListChoice } from './projectSave';
+import { SaveToProjectDialog } from './SaveToProjectDialog';
+import { SettingsDialog } from './SettingsDialog';
 import { SlotList } from './SlotList';
-import { groupName, SLOT_LABELS } from './slots';
-import { gpsAsar } from './tauriAsar';
+import { SlotGlyph } from './SlotGlyph';
+import { groupName, SLOT_GLYPHS, SLOT_HINTS, SLOT_LABELS } from './slots';
+import { gpsAsar, gpsFolder } from './tauriAsar';
 import { tauriFiles as files } from './tauriFiles';
+import { loadPixiSprites } from './tauriNames';
+import { projectFiles } from './tauriProject';
 
 const TOOL_VERSION = import.meta.env.VITE_APP_VERSION ?? 'dev';
 
@@ -45,6 +52,37 @@ const NEW_BLOCK: BlockModel = {
 };
 
 type Workspaces = Partial<Record<SlotId, WorkspaceState>>;
+
+/** Tooltip of a button that needs the desktop app's file access. */
+const desktopOnly = (label: string) => (files ? label : `${label} (desktop app only)`);
+
+/** A sidebar button that shows only an icon; the label is its tooltip and accessible name. */
+function IconButton({
+  label,
+  disabled,
+  className = '',
+  onClick,
+  children,
+}: {
+  label: string;
+  disabled?: boolean;
+  className?: string;
+  onClick: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      className={`icon-btn ${className}`.trim()}
+      title={label}
+      aria-label={label}
+      disabled={disabled}
+      onClick={onClick}
+    >
+      {children}
+    </button>
+  );
+}
 
 /** The Block file being edited; `revision` changes whenever a Block is opened or created. */
 interface OpenFile {
@@ -71,6 +109,19 @@ export function App() {
   /** The last Asar check and the text it checked; it no longer applies once the text changes. */
   const [check, setCheck] = useState<{ text: string; problems: CheckProblem[] } | null>(null);
   const [checking, setChecking] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  /** The GPS folder the "Save to project" dialog is open for; undefined while it is closed. */
+  const [projectFolder, setProjectFolder] = useState<string>();
+  const project = useMemo(
+    () => (projectFolder === undefined ? undefined : projectFiles(projectFolder)),
+    [projectFolder],
+  );
+
+  // The custom sprite names come from the PIXI folder in the settings: read at the start, and
+  // again whenever the settings dialog has been closed (the folder may have changed).
+  useEffect(() => {
+    if (!settingsOpen) void loadPixiSprites();
+  }, [settingsOpen]);
 
   const model: BlockModel = useMemo(
     () => ({
@@ -185,12 +236,68 @@ export function App() {
     setNotice(verdict.notice);
   }
 
-  const currentKind = slotKind(selected);
-  const eligibleLinkTargets = SLOT_IDS.filter(
-    (s) => s !== selected && slotKind(s) === currentKind && slotLinks[s] !== selected,
-  );
+  /** Opens the "Save to project" dialog, asking for the GPS folder first if none is set. */
+  async function openProjectDialog() {
+    if ('error' in generated) {
+      setNotice({ kind: 'error', text: `Cannot save: ${generated.error}` });
+      return;
+    }
+    const { folder, message } = await gpsFolder();
+    if (folder === undefined) {
+      if (message !== undefined) setNotice({ kind: 'error', text: message });
+      return;
+    }
+    setProjectFolder(folder);
+  }
+
+  /** Checks the Block, then saves it into the GPS project (and into list.txt when `list` is set). */
+  async function saveToGpsProject(list: ListChoice | undefined) {
+    if (!project || 'error' in generated) return;
+    // Errors block the save; they stay on screen through `check`.
+    const verdict = saveVerdict(await runCheck());
+    if (!verdict.save) return;
+    const doc = { name: properties.name, text: generated.text, problems };
+    const outcome = await saveToProject(project, doc, list);
+    if (outcome.kind === 'blocked' || outcome.kind === 'failed') {
+      setNotice({ kind: 'error', text: outcome.message });
+      return;
+    }
+    if (outcome.kind === 'cancelled') return;
+    setFile((current) => ({ ...current, savedJson: canonicalJson(model) }));
+    const added =
+      outcome.listUpdated && list
+        ? ` and put it in list.txt at ${formatHex(list.tile, 4)} (the old list is list.txt.bak)`
+        : '';
+    const saved = `Saved ${outcome.path}${added}. Run GPS (or Callisto's Update) to insert it.`;
+    setNotice(
+      verdict.notice
+        ? { kind: 'warning', text: `${saved}\n${verdict.notice.text}` }
+        : { kind: 'info', text: saved },
+    );
+  }
+
   const activeLink = slotLinks[selected];
   const activeSlot = effectiveSlot(model, selected);
+
+  /** Links a Slot to another Slot's logic, or makes it individual again (keeping a copy). */
+  function setLink(slot: SlotId, target: SlotId | undefined) {
+    setSlotLinks((all) => {
+      const next = { ...all };
+      if (target) {
+        next[slot] = target;
+      } else {
+        delete next[slot];
+      }
+      return next;
+    });
+    if (!target) {
+      const source = effectiveSlot(model, slot);
+      setWorkspaces((all) => ({
+        ...all,
+        [slot]: all[source] ?? {},
+      }));
+    }
+  }
   const activeWorkspace = workspaces[activeSlot];
   const warnings = useMemo(
     () =>
@@ -203,13 +310,16 @@ export function App() {
   return (
     <div className="app">
       <aside className="sidebar">
-        <PropertiesForm properties={properties} onChange={setProperties} />
-        <SlotList
-          model={model}
-          selected={selected}
-          onSelect={setSelected}
-          errorSlots={checked ? slotsWithProblems(checked.problems) : undefined}
-        />
+        <div className="sidebar-scroll">
+          <PropertiesForm properties={properties} onChange={setProperties} />
+          <SlotList
+            model={model}
+            selected={selected}
+            onSelect={setSelected}
+            onLink={setLink}
+            errorSlots={checked ? slotsWithProblems(checked.problems) : undefined}
+          />
+        </div>
         <section className="save">
           {checked && checked.problems.length > 0 && (
             <p className="notice error">
@@ -228,66 +338,72 @@ export function App() {
               {file.path}
             </p>
           )}
-          <div className="buttons" title={files ? undefined : 'Only in the desktop app'}>
-            <button type="button" onClick={newBlock}>
-              New
-            </button>
-            <button type="button" disabled={!files} onClick={openFile}>
-              Open…
-            </button>
-            <button type="button" disabled={!files || checking} onClick={() => saveFile(false)}>
-              Save
-            </button>
-            <button type="button" disabled={!files || checking} onClick={() => saveFile(true)}>
-              Save as…
-            </button>
+          <div className="buttons">
+            <IconButton label="New" onClick={newBlock}>
+              <NewIcon />
+            </IconButton>
+            <IconButton label={desktopOnly('Open…')} disabled={!files} onClick={openFile}>
+              <OpenIcon />
+            </IconButton>
+            <IconButton
+              label={desktopOnly('Save')}
+              disabled={!files || checking}
+              onClick={() => saveFile(false)}
+            >
+              <SaveIcon />
+            </IconButton>
+            <IconButton
+              label={desktopOnly('Save as…')}
+              disabled={!files || checking}
+              onClick={() => saveFile(true)}
+            >
+              <SaveAsIcon />
+            </IconButton>
+            <IconButton
+              label={desktopOnly('Save to GPS project…')}
+              disabled={!files || checking}
+              onClick={openProjectDialog}
+            >
+              <ProjectIcon />
+            </IconButton>
+            <IconButton
+              label={desktopOnly('Settings')}
+              className="push-right"
+              disabled={!files}
+              onClick={() => setSettingsOpen(true)}
+            >
+              <SettingsIcon />
+            </IconButton>
+            <About version={TOOL_VERSION} />
           </div>
+          <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+          {project && projectFolder !== undefined && (
+            <SaveToProjectDialog
+              open
+              onClose={() => setProjectFolder(undefined)}
+              project={project}
+              gpsFolder={projectFolder}
+              name={properties.name}
+              defaultActAs={properties.defaultActAs}
+              onSave={saveToGpsProject}
+            />
+          )}
         </section>
       </aside>
       <main className="main">
         <header className="edhead">
           <div className="slot-title">
-            <strong>
-              {groupName(selected)} · {SLOT_LABELS[selected]}
-            </strong>
+            <SlotGlyph glyph={SLOT_GLYPHS[selected]} size={34} />
+            <div className="slot-text">
+              <strong>
+                {groupName(selected)} · {SLOT_LABELS[selected]}
+              </strong>
+              <span className="slot-hint">{SLOT_HINTS[selected]}</span>
+            </div>
           </div>
-          <div className="slot-link-control">
-            <label className="link-select-label">
-              <span>Same logic as:</span>
-              <select
-                className="link-select"
-                value={activeLink ?? ''}
-                onChange={(e) => {
-                  const target = (e.target.value || undefined) as SlotId | undefined;
-                  setSlotLinks((all) => {
-                    const next = { ...all };
-                    if (target) {
-                      next[selected] = target;
-                    } else {
-                      delete next[selected];
-                    }
-                    return next;
-                  });
-                  if (!target && activeSlot) {
-                    setWorkspaces((all) => ({
-                      ...all,
-                      [selected]: all[activeSlot] ?? {},
-                    }));
-                  }
-                }}
-              >
-                <option value="">(Independent logic)</option>
-                {eligibleLinkTargets.map((s) => (
-                  <option key={s} value={s}>
-                    {SLOT_LABELS[s]}
-                  </option>
-                ))}
-              </select>
-            </label>
-            {activeLink && (
-              <span className="linked-indicator">🔗 Uses {SLOT_LABELS[activeLink]}'s logic</span>
-            )}
-          </div>
+          {activeLink && (
+            <span className="linked-indicator">🔗 Uses {SLOT_LABELS[activeLink]}'s logic</span>
+          )}
           {selected === 'marioTopCorner' && !slotFilled(model, 'marioTopCorner') && !activeLink && (
             <label className="link">
               <input

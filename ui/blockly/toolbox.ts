@@ -40,6 +40,9 @@ const LOGIC: ToolboxCategory = {
   contents: [
     { kind: 'block', type: IF_BLOCK },
     { kind: 'block', type: IF_BLOCK, extraState: { hasElse: true } },
+    // Ready-made else-if branches, so the block's gear (mutator) is not needed for the common cases.
+    { kind: 'block', type: IF_BLOCK, extraState: { elseIfCount: 1 } },
+    { kind: 'block', type: IF_BLOCK, extraState: { elseIfCount: 1, hasElse: true } },
     { kind: 'block', type: AND_OR_BLOCK, fields: { OP: 'AND' } },
     { kind: 'block', type: AND_OR_BLOCK, fields: { OP: 'OR' } },
     { kind: 'block', type: NOT_BLOCK },
