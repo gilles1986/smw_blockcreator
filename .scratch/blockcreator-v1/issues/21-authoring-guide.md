@@ -15,3 +15,4 @@ Spec: ../spec.md
 
 **Notes from 15 (name lists)**
 - Document listParam on sprite / sound parameters: the other parameter of the Piece that picks the names shown (a `bool` for sprites, custom on = the PIXI list; an `enum` for sounds, the port). Every number 00-FF stays selectable, names are only labels.
+- `once`: one-shot Actions (sounds, coins, spawns, level changes) run again every frame the block is touched. The editor warns when the branch has no `removesBlock` Piece; a Piece that replaces or erases this block sets `"removesBlock": true`, one that changes another block does not.

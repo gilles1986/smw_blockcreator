@@ -33,6 +33,7 @@ import {
   type Notice,
 } from './checkView';
 import { builtInLibrary as library } from './library';
+import { onceWarnings } from './onceWarnings';
 import { saveToProject, type ListChoice, type RoutineFile } from './projectSave';
 import { routineFilesNote, savedToProjectNotice } from './routineNotes';
 import { getFolder } from './settings';
@@ -313,13 +314,22 @@ export function App() {
     }
   }
   const activeWorkspace = workspaces[activeSlot];
-  const warnings = useMemo(
-    () =>
-      checked
-        ? blockWarnings(checked.problems, activeSlot, activeWorkspace ?? {}, library)
-        : undefined,
-    [checked, activeSlot, activeWorkspace],
-  );
+  // Warning icons on blocks: one-shot Actions that would repeat, and Asar's errors when checked.
+  const warnings = useMemo(() => {
+    const found = onceWarnings(activeWorkspace ?? {}, library);
+    if (checked) {
+      for (const [id, text] of blockWarnings(
+        checked.problems,
+        activeSlot,
+        activeWorkspace ?? {},
+        library,
+      )) {
+        const earlier = found.get(id);
+        found.set(id, earlier ? `${earlier}\n${text}` : text);
+      }
+    }
+    return found.size > 0 ? found : undefined;
+  }, [checked, activeSlot, activeWorkspace]);
 
   return (
     <div className="app">

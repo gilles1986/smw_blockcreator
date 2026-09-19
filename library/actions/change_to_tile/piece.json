@@ -17,5 +17,6 @@
     }
   ],
   "once": true,
+  "removesBlock": true,
   "clobbers": ["A", "X", "Y"]
 }
