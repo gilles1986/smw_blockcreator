@@ -1,0 +1,52 @@
+/* Several blocks selected at once (multiselect.ts). */
+
+.blocklyDraggable.bc-multi-selected > .blocklyPath {
+  stroke: var(--accent2);
+  stroke-width: 3px;
+}
+
+.bc-marquee {
+  position: absolute;
+  z-index: 10;
+  border: 1px dashed var(--accent2);
+  background: rgba(90, 169, 255, 0.12);
+  pointer-events: none;
+}
+
+.selection-bar,
+.selection-hint {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  z-index: 5;
+  transform: translateX(-50%);
+}
+
+.selection-bar {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 4px 8px;
+  font-size: 12px;
+  background: var(--panel);
+  border: 1px solid var(--accent2);
+  border-radius: 8px;
+}
+
+.selection-count {
+  margin-right: 4px;
+  font-weight: 600;
+}
+
+.selection-bar button {
+  padding: 2px 8px;
+  font-size: 12px;
+}
+
+.selection-hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+  pointer-events: none;
+  white-space: nowrap;
+}

@@ -1,10 +1,13 @@
 import DarkTheme from '@blockly/theme-dark';
 import * as Blockly from 'blockly';
 import 'blockly/blocks';
-import { useEffect, useLayoutEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { Library } from '../../core/library';
 import type { SlotKind } from '../../core/model';
 import { blockDefinitions, fieldValidators } from './blocks';
+import { enableMultiSelect, type MultiSelect } from './multiselect';
+import './multiselect.css';
+import { SelectionBar } from './SelectionBar';
 import { toolbox } from './toolbox';
 import type { WorkspaceState } from './workspace';
 
@@ -34,6 +37,8 @@ export function BlocklyEditor({
 }: Props) {
   const host = useRef<HTMLDivElement>(null);
   const workspace = useRef<Blockly.WorkspaceSvg | null>(null);
+  const multiSelect = useRef<MultiSelect | null>(null);
+  const [selectedCount, setSelectedCount] = useState(0);
   const onChangeRef = useRef(onChange);
   const initialStateRef = useRef(initialState);
   const slotKindRef = useRef(slotKind);
@@ -69,8 +74,12 @@ export function BlocklyEditor({
       if (event.isUiEvent || ws.isDragging()) return;
       onChangeRef.current(Blockly.serialization.workspaces.save(ws) as WorkspaceState);
     });
+    multiSelect.current = enableMultiSelect(ws, setSelectedCount);
     return () => {
       resize.disconnect();
+      multiSelect.current?.dispose();
+      multiSelect.current = null;
+      setSelectedCount(0);
       ws.dispose();
       workspace.current = null;
     };
@@ -88,6 +97,8 @@ export function BlocklyEditor({
     } finally {
       Blockly.Events.enable();
     }
+    // The blocks that were selected belong to the Slot that was just left.
+    multiSelect.current?.clear();
   }, [editKey, library]);
 
   useEffect(() => {
@@ -109,5 +120,13 @@ export function BlocklyEditor({
     }
   }, [warnings, editKey, library]);
 
-  return <div className="blockly-host" ref={host} />;
+  return (
+    <>
+      <div className="blockly-host" ref={host} />
+      <SelectionBar
+        count={selectedCount}
+        run={(action) => multiSelect.current && action(multiSelect.current)}
+      />
+    </>
+  );
 }
