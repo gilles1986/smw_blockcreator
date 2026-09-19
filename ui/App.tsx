@@ -28,7 +28,7 @@ import {
   workspacesToSlots,
   type WorkspaceState,
 } from './blockly/workspace';
-import { DISCARD_QUESTION, HAND_EDIT_WARNING, openBlock, saveBlock } from './blockDocument';
+import { DISCARD_QUESTION, openBlock, saveBlock } from './blockDocument';
 import { formatHex, parseHex } from './hex';
 import { CheckResults } from './CheckResults';
 import {
@@ -43,6 +43,7 @@ import {
 import { builtInLibrary as library } from './library';
 import { onceWarnings } from './onceWarnings';
 import { PresetDialog } from './PresetDialog';
+import { openNotice } from './openNotice';
 import { presetList, type Preset } from './presets';
 import { saveToProject, type ListChoice, type RoutineFile } from './projectSave';
 import { routineFilesNote, savedToProjectNotice } from './routineNotes';
@@ -232,7 +233,7 @@ export function App() {
     if (outcome.kind === 'failed') setNotice({ kind: 'error', text: outcome.message });
     if (outcome.kind !== 'opened') return;
     load(outcome.model, outcome.path);
-    setNotice(outcome.handEdited ? { kind: 'warning', text: HAND_EDIT_WARNING } : null);
+    setNotice(openNotice(outcome));
   }
 
   async function saveFile(saveAs: boolean) {

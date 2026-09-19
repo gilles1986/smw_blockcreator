@@ -1,6 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import type { Library } from '../core/library';
+import type { PieceRef } from '../core/model';
 import { builtInLibrary } from '../core/testing/library';
 import { HAND_EDIT_WARNING, openBlock, saveBlock, type FileAccess } from './blockDocument';
 
@@ -34,6 +36,13 @@ function fakeFiles(initial: Record<string, string> = {}) {
 }
 
 const doc = { path: undefined, name: 'onoff_cement', text: golden, problems: [] };
+
+/** The part of the golden Block's model the tests change: if ON { act as 130 } else { act as 025 }. */
+interface GoldenModel {
+  slots: {
+    marioTop: [{ branches: [{ body: [{ piece: PieceRef }] }]; else: [{ piece: PieceRef }] }];
+  };
+}
 
 describe('openBlock', () => {
   it('opens a Block and reports it unedited', async () => {
@@ -146,19 +155,90 @@ describe('saveBlock', () => {
 });
 
 describe('openBlock checks', () => {
-  it('refuses a Block that uses Pieces this Library does not have', async () => {
-    const model = JSON.parse(golden.split('\n')[1]!.replace(/^;@?bc-model /, ''));
-    model.slots.marioTop[0].else[0].piece.id = 'time_machine';
-    const text = golden.replace(/^;@?bc-model .*$/m, `;bc-model ${JSON.stringify(model)}`);
+  /** The golden Block with its model changed, as a file (the checksum no longer matches). */
+  function changed(edit: (model: GoldenModel) => void): string {
+    const model = JSON.parse(golden.split('\n')[1]!.replace(/^;@?bc-model /, '')) as GoldenModel;
+    edit(model);
+    return golden.replace(/^;@?bc-model .*$/m, `;bc-model ${JSON.stringify(model)}`);
+  }
+  const open = async (text: string, lib: Library = library) => {
     const { files, state } = fakeFiles({ 'b.asm': text });
     state.choose = 'b.asm';
-    expect(await openBlock(files, { library })).toEqual({
-      kind: 'failed',
-      message:
-        "b.asm cannot be opened:\n- marioTop /0/else/0: Piece 'time_machine' is not in the Library.",
+    return openBlock(files, { library: lib });
+  };
+  /** The Library with one Piece made over: another version, other parameters. */
+  function reworked(id: string, version: number, params?: unknown[]): Library {
+    const piece = library.pieces.get(id)!;
+    const manifest = { ...piece.manifest, version, ...(params && { params: params as never }) };
+    return { ...library, pieces: new Map([...library.pieces, [id, { ...piece, manifest }]]) };
+  }
+
+  it('opens a Block that uses Pieces this Library does not have, keeps them and says which', async () => {
+    const text = changed((model) => {
+      model.slots.marioTop[0].else[0].piece.id = 'time_machine';
+    });
+    const outcome = await open(text);
+    expect(outcome).toMatchObject({ kind: 'opened', missing: ['time_machine'], upgraded: [] });
+    const opened = outcome as Extract<typeof outcome, { kind: 'opened' }>;
+    expect(opened.model.slots.marioTop![0]).toMatchObject({
+      else: [{ piece: { id: 'time_machine', version: 1 } }],
     });
   });
 
+  it('still refuses a Block whose Pieces are used wrongly, even with Pieces missing', async () => {
+    const text = changed((model) => {
+      model.slots.marioTop[0].else[0].piece.id = 'time_machine';
+      model.slots.marioTop[0].branches[0].body[0].piece.params.tile = 'cement';
+    });
+    expect(await open(text)).toEqual({
+      kind: 'failed',
+      message:
+        'b.asm cannot be opened:\n- marioTop /0/branches/0/body/0: \'tile\' = "cement" is not a valid Map16 number.',
+    });
+  });
+
+  it('brings Pieces up to the version of the Library and says what became of their values', async () => {
+    const outcome = await open(golden, reworked('act_as', 2));
+    expect(outcome).toMatchObject({
+      kind: 'opened',
+      missing: [],
+      ahead: [],
+      upgraded: [{ id: 'act_as', name: 'Act as', from: 1, to: 2, dropped: [], reset: [] }],
+    });
+    const opened = outcome as Extract<typeof outcome, { kind: 'opened' }>;
+    const [rule] = opened.model.slots.marioTop!;
+    expect(rule).toMatchObject({
+      branches: [
+        {
+          condition: { piece: { id: 'c_onoff', version: 1 } },
+          body: [{ piece: { id: 'act_as', version: 2, params: { tile: 304 } } }],
+        },
+      ],
+      else: [{ piece: { id: 'act_as', version: 2, params: { tile: 37 } } }],
+    });
+  });
+
+  it('opens an older Piece whose values no longer fit, with the default in their place', async () => {
+    const narrower = [
+      { name: 'tile', label: 'Tile', type: 'number', min: 0, max: 0x100, default: 0x25 },
+    ];
+    const outcome = await open(golden, reworked('act_as', 2, narrower));
+    expect(outcome).toMatchObject({
+      kind: 'opened',
+      upgraded: [{ id: 'act_as', from: 1, to: 2, dropped: [], reset: ['tile'] }],
+    });
+  });
+
+  it('names the Pieces that are newer in the Block than in this Library, and leaves them', async () => {
+    const text = changed((model) => {
+      model.slots.marioTop[0].branches[0].body[0].piece.version = 3;
+    });
+    expect(await open(text)).toMatchObject({
+      kind: 'opened',
+      upgraded: [],
+      ahead: [{ id: 'act_as', name: 'Act as', recorded: 3, installed: 1 }],
+    });
+  });
   it('asks before discarding unsaved changes, and stops when told no', async () => {
     const { files, asked, state } = fakeFiles({ 'a.asm': golden });
     state.choose = 'a.asm';

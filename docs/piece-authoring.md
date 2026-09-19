@@ -192,7 +192,7 @@ A Block that needs a routine says so in its header ("Needs GPS routines: …"). 
 
 ## Versions and credits
 
-Raise `version` whenever the code a Piece generates, or what its parameters mean, changes: a fix, a new parameter that changes what the defaults do, a renamed or removed parameter. Do not raise it for a new label or description. A Block remembers the version it was made with and is regenerated with the current template; a parameter it does not know is ignored and one it lacks gets its default, so keep parameter names stable, and add a new parameter with a default that keeps the old behaviour. (A notice for Blocks made with an older version is planned, ticket 16.)
+Raise `version` whenever the code a Piece generates, or what its parameters mean, changes: a fix, a new parameter that changes what the defaults do, a renamed or removed parameter. Do not raise it for a new label or description. A Block remembers the version of every Piece it was made with, and is always generated with the current template. When such a Block is opened, its older Pieces are brought up to date: a value for a parameter the Piece no longer has is dropped, a value that no longer fits (out of range, an option that is gone) becomes the default, and a new parameter gets its default. A notice names each Piece with its old and new version and the values that were lost, and saving writes the newer versions. So keep parameter names stable, and add a new parameter with a default that keeps the old behaviour; a renamed parameter loses the user's value.
 
 `credits` is for the rare Piece that is adapted from someone else's resource; Pieces are otherwise written from the RAM map and GPS's own routines, not copied.
 

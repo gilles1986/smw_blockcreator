@@ -3,7 +3,13 @@
 
 import { parse } from '../core/header';
 import type { Library } from '../core/library';
-import { checkPieces, type BlockModel } from '../core/model';
+import {
+  checkPieces,
+  upgradePieces,
+  type BlockModel,
+  type PieceAhead,
+  type PieceUpgrade,
+} from '../core/model';
 
 export interface FileAccess {
   /** Native "Open" dialog; null when cancelled. */
@@ -24,7 +30,22 @@ export const HAND_EDIT_WARNING = 'This file was edited by hand; saving will over
 export type OpenOutcome =
   | { kind: 'cancelled' }
   | { kind: 'failed'; message: string }
-  | { kind: 'opened'; path: string; model: BlockModel; handEdited: boolean };
+  | {
+      kind: 'opened';
+      path: string;
+      /** The Block as the editor gets it: older Pieces are already at the Library's version. */
+      model: BlockModel;
+      handEdited: boolean;
+      /** Ids of Pieces this Library does not have; they stay in the Block as placeholders. */
+      missing: string[];
+      /** Pieces that were older in the file than in this Library, and what became of their values. */
+      upgraded: PieceUpgrade[];
+      /** Pieces that are newer in the file than in this Library; saving loses what it lacks. */
+      ahead: PieceAhead[];
+    };
+
+/** A Block that was opened: what the editor gets, and what it should tell the user. */
+export type OpenedBlock = Extract<OpenOutcome, { kind: 'opened' }>;
 
 export async function openBlock(
   files: FileAccess,
@@ -41,12 +62,22 @@ export async function openBlock(
   }
   const result = parse(text);
   if (!result.ok) return { kind: 'failed', message: result.message };
-  // Until missing Pieces get placeholders (ticket 16), a Block this Library cannot edit is refused.
-  const problems = checkPieces(result.model, library);
+  // Older Pieces first: values that no longer fit become defaults instead of refusing the Block.
+  // A Piece the Library lacks is kept as a placeholder; anything else wrong still refuses it.
+  const { model, upgraded, ahead, missing } = upgradePieces(result.model, library);
+  const problems = checkPieces(model, library, { allowMissing: true });
   if (problems.length > 0) {
     return { kind: 'failed', message: `${path} cannot be opened:\n${bulletList(problems)}` };
   }
-  return { kind: 'opened', path, model: result.model, handEdited: !result.checksumOk };
+  return {
+    kind: 'opened',
+    path,
+    model,
+    handEdited: !result.checksumOk,
+    missing,
+    upgraded,
+    ahead,
+  };
 }
 
 export interface BlockDocument {

@@ -5,7 +5,12 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { Library } from '../../core/library';
 import type { SlotKind } from '../../core/model';
 import { nameSource, onNamesChanged } from '../names';
-import { blockDefinitions, fieldValidators, visibilityRules } from './blocks';
+import {
+  blockDefinitions,
+  fieldValidators,
+  missingBlockDefinitions,
+  visibilityRules,
+} from './blocks';
 import { refreshNameFields, setNameSource } from './nameField';
 import { enableMultiSelect, type MultiSelect } from './multiselect';
 import './multiselect.css';
@@ -62,7 +67,11 @@ export function BlocklyEditor({
     setNameSource(nameSource);
     const rules = visibilityRules(library);
     setVisibilityRules(rules);
-    Blockly.common.defineBlocksWithJsonArray(blockDefinitions(library));
+    // The placeholders for Pieces the Library does not have come with the Piece blocks.
+    Blockly.common.defineBlocksWithJsonArray([
+      ...blockDefinitions(library),
+      ...missingBlockDefinitions(),
+    ]);
     for (const { blockType, field, validator } of fieldValidators(library)) {
       const definition = Blockly.Blocks[blockType]!;
       const init = definition.init!;

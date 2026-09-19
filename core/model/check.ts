@@ -14,13 +14,25 @@ import {
   type Statement,
 } from './index';
 
+export interface CheckOptions {
+  /**
+   * A Piece the Library does not have is not a problem: the editor keeps it as a placeholder
+   * (ticket 16). Everything else about the Block is still checked.
+   */
+  allowMissing?: boolean;
+}
+
 /** Problems as "slot path: message" lines; empty when the model can be edited and generated. */
-export function checkPieces(model: BlockModel, library: Library): string[] {
+export function checkPieces(
+  model: BlockModel,
+  library: Library,
+  { allowMissing = false }: CheckOptions = {},
+): string[] {
   const problems: string[] = [];
   const piece = (ref: PieceRef, kind: 'action' | 'condition', slot: SlotId, where: string) => {
     const found = library.pieces.get(ref.id);
     if (!found) {
-      problems.push(`${where}: Piece '${ref.id}' is not in the Library.`);
+      if (!allowMissing) problems.push(`${where}: Piece '${ref.id}' is not in the Library.`);
       return;
     }
     if (found.manifest.kind !== kind) {
@@ -100,7 +112,8 @@ export function checkPieces(model: BlockModel, library: Library): string[] {
 
 const ARTICLE = { action: 'an Action', condition: 'a Condition' } as const;
 
-function valueProblem(param: ParamSpec, value: Value): string | undefined {
+/** Why `value` does not fit `param` ("is not a whole number from 0 to 99"), or undefined if it does. */
+export function valueProblem(param: ParamSpec, value: Value): string | undefined {
   const whole = (min: number, max: number) =>
     typeof value === 'number' && Number.isInteger(value) && value >= min && value <= max;
   switch (param.type) {

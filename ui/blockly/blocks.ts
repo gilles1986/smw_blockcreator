@@ -2,6 +2,7 @@
 // it can be tested without a DOM. BlocklyEditor hands them to Blockly.
 
 import type { Library, Piece } from '../../core/library';
+import type { Value } from '../../core/template';
 import { categoryColour, type Colour } from './categories';
 import { fieldCodec, type FieldDefinition, type FieldValue } from './fields';
 
@@ -15,11 +16,18 @@ export function pieceIdOf(blockType: string): string | undefined {
   return blockType.startsWith('piece_') ? blockType.slice('piece_'.length) : undefined;
 }
 
+/** A label that Blockly saves with the block, so a placeholder can show what it stands for. */
+export interface LabelFieldDefinition {
+  type: 'field_label_serializable';
+  name: string;
+  text: string;
+}
+
 /** A Blockly block definition (Blockly's word "block", not a GPS Block). */
 export interface BlocklyBlockDefinition {
   type: string;
   message0: string;
-  args0: (FieldDefinition | { type: 'input_end_row' })[];
+  args0: (FieldDefinition | LabelFieldDefinition | { type: 'input_end_row' })[];
   colour: Colour;
   tooltip: string;
   output?: string;
@@ -56,6 +64,47 @@ function blockDefinition(piece: Piece): BlocklyBlockDefinition {
   };
 }
 
+/** Blockly block types of the placeholders for Pieces the Library does not have (ticket 16). */
+export const MISSING_ACTION_BLOCK = 'missing_piece_action';
+export const MISSING_CONDITION_BLOCK = 'missing_piece_condition';
+
+const MISSING_COLOUR = '#6b7075';
+const MISSING_TOOLTIP =
+  'This Piece is not in your Library. Its values are kept. Remove the block, or add the Piece and open the Block again; saving is blocked until then.';
+/** The longest values line a placeholder shows. */
+const MISSING_TEXT_MAX = 100;
+
+/** The placeholders: a grey statement block and a grey Condition block, `ID` and `PARAMS` on show. */
+export function missingBlockDefinitions(): BlocklyBlockDefinition[] {
+  const placeholder = (condition: boolean): BlocklyBlockDefinition => ({
+    type: condition ? MISSING_CONDITION_BLOCK : MISSING_ACTION_BLOCK,
+    message0: 'Missing Piece %1 %2 %3',
+    args0: [
+      { type: 'field_label_serializable', name: 'ID', text: '' },
+      { type: 'input_end_row' },
+      { type: 'field_label_serializable', name: 'PARAMS', text: '' },
+    ],
+    ...(condition ? { output: 'Boolean' } : { previousStatement: null, nextStatement: null }),
+    colour: MISSING_COLOUR,
+    tooltip: MISSING_TOOLTIP,
+  });
+  return [placeholder(false), placeholder(true)];
+}
+
+/** The values of a missing Piece on one line: `speed = 5, note = "hi"`. */
+export function missingPieceParamsText(params: Record<string, Value>): string {
+  const entries = Object.entries(params).map(([name, value]) => `${name} = ${valueText(value)}`);
+  if (entries.length === 0) return 'no values';
+  const text = entries.join(', ');
+  return text.length <= MISSING_TEXT_MAX ? text : `${text.slice(0, MISSING_TEXT_MAX - 1)}…`;
+}
+
+function valueText(value: Value): string {
+  if (typeof value !== 'string')
+    return typeof value === 'object' ? JSON.stringify(value) : String(value);
+  const [first = '', ...more] = value.split('\n');
+  return JSON.stringify(first) + (more.length > 0 ? '…' : '');
+}
 /** A parameter's row of the block is shown only while another field of the block has a value. */
 export interface VisibilityRule {
   blockType: string;

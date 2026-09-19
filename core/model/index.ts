@@ -122,3 +122,7 @@ export function cornerFollowsTop(model: BlockModel): boolean {
 
 export { checkPieces } from './check';
 export { pieceAtPath } from './path';
+export type { CheckOptions } from './check';
+export { mapPieces } from './pieces';
+export { upgradePieces } from './versions';
+export type { PieceAhead, PieceUpgrade, Upgraded } from './versions';

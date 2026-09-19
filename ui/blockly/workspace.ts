@@ -11,7 +11,13 @@ import type {
   Statement,
 } from '../../core/model';
 import type { Value } from '../../core/template';
-import { pieceBlockType, pieceIdOf } from './blocks';
+import {
+  MISSING_ACTION_BLOCK,
+  MISSING_CONDITION_BLOCK,
+  missingPieceParamsText,
+  pieceBlockType,
+  pieceIdOf,
+} from './blocks';
 import { fieldCodec } from './fields';
 import { AND_OR_BLOCK, AND_OR_INPUTS, IF_BLOCK, NOT_BLOCK, NOT_INPUT } from './toolbox';
 
@@ -122,7 +128,10 @@ class Reader {
 
   private statement(block: BlockState): Statement | undefined {
     if (block.type === IF_BLOCK) return this.from(this.ifStatement(block), block);
-    const piece = pieceRef(block, this.library, 'action');
+    const piece =
+      block.type === MISSING_ACTION_BLOCK
+        ? missingRef(block)
+        : pieceRef(block, this.library, 'action');
     return this.from(piece && { type: 'action', piece }, block);
   }
 
@@ -152,7 +161,10 @@ class Reader {
       const condition = input(NOT_INPUT);
       return this.from(condition && { type: 'not', condition }, block);
     }
-    const piece = pieceRef(block, this.library, 'condition');
+    const piece =
+      block.type === MISSING_CONDITION_BLOCK
+        ? missingRef(block)
+        : pieceRef(block, this.library, 'condition');
     return this.from(piece && { type: 'condition', piece }, block);
   }
 }
@@ -176,6 +188,26 @@ function pieceRef(
   return { id: piece.manifest.id, version, params };
 }
 
+/**
+ * The Piece use a placeholder stands for, kept whole in the block's data. Undefined when the data
+ * is not what a placeholder writes (a hand-edited or damaged workspace).
+ */
+function missingRef(block: BlockState): PieceRef | undefined {
+  let data: unknown;
+  try {
+    data = JSON.parse(block.data ?? '');
+  } catch {
+    return undefined;
+  }
+  if (typeof data !== 'object' || data === null) return undefined;
+  const { id, version, params } = data as Record<string, unknown>;
+  if (typeof id !== 'string' || !Number.isInteger(version) || (version as number) < 1) {
+    return undefined;
+  }
+  if (typeof params !== 'object' || params === null || Array.isArray(params)) return undefined;
+  return { id, version: version as number, params: params as Record<string, Value> };
+}
+
 /** The workspace for a Slot's statements: one stack, top left (for opening a saved Block). */
 export function statementsToWorkspace(statements: Statement[], library: Library): WorkspaceState {
   const first = chain(statements, library);
@@ -190,7 +222,7 @@ function chain(statements: Statement[], library: Library): BlockState | undefine
 }
 
 function toBlock(statement: Statement, library: Library): BlockState {
-  if (statement.type === 'action') return pieceBlock(statement.piece, library);
+  if (statement.type === 'action') return pieceBlock(statement.piece, library, 'action');
   const inputs: NonNullable<BlockState['inputs']> = {};
   statement.branches.forEach((branch, i) => {
     inputs[`IF${i}`] = { block: conditionBlock(branch.condition, library) };
@@ -213,7 +245,7 @@ function toBlock(statement: Statement, library: Library): BlockState {
 function conditionBlock(expr: ConditionExpr, library: Library): BlockState {
   switch (expr.type) {
     case 'condition':
-      return pieceBlock(expr.piece, library);
+      return pieceBlock(expr.piece, library, 'condition');
     case 'and':
     case 'or':
       return {
@@ -232,8 +264,17 @@ function conditionBlock(expr: ConditionExpr, library: Library): BlockState {
   }
 }
 
-function pieceBlock(ref: PieceRef, library: Library): BlockState {
-  const params = library.pieces.get(ref.id)?.manifest.params ?? [];
+function pieceBlock(ref: PieceRef, library: Library, kind: 'action' | 'condition'): BlockState {
+  const piece = library.pieces.get(ref.id);
+  if (!piece) {
+    // A Piece this Library does not have: a placeholder that keeps the whole use (ticket 16).
+    return {
+      type: kind === 'condition' ? MISSING_CONDITION_BLOCK : MISSING_ACTION_BLOCK,
+      fields: { ID: ref.id, PARAMS: missingPieceParamsText(ref.params) },
+      data: JSON.stringify(ref),
+    };
+  }
+  const { params } = piece.manifest;
   const fields = Object.fromEntries(
     params
       .filter((param) => ref.params[param.name] !== undefined)
@@ -253,8 +294,12 @@ export function workspaceProblems(state: WorkspaceState, library: Library): stri
       const id = pieceIdOf(current.type);
       const piece = id === undefined ? undefined : library.pieces.get(id);
       if (id !== undefined && !piece) problems.add(`Piece '${id}' is not in the Library.`);
+      const placeholder =
+        current.type === MISSING_ACTION_BLOCK || current.type === MISSING_CONDITION_BLOCK;
+      if (placeholder) problems.add(missingProblem(current, library));
       const logic = current.type === AND_OR_BLOCK || current.type === NOT_BLOCK;
-      const isCondition = logic || piece?.manifest.kind === 'condition';
+      const isCondition =
+        logic || current.type === MISSING_CONDITION_BLOCK || piece?.manifest.kind === 'condition';
       if (topLevel && isCondition) problems.add('A Condition is not attached to an if.');
       const operands: readonly string[] =
         current.type === AND_OR_BLOCK ? AND_OR_INPUTS : logic ? [NOT_INPUT] : [];
@@ -273,6 +318,15 @@ export function workspaceProblems(state: WorkspaceState, library: Library): stri
   };
   for (const top of sortedTops(state)) visit(top, true);
   return [...problems];
+}
+
+/** Why a placeholder blocks saving: the Piece is still missing, or has come in and needs a reopen. */
+function missingProblem(block: BlockState, library: Library): string {
+  const ref = missingRef(block);
+  if (!ref) return 'A placeholder for a missing Piece lost its data.';
+  return library.pieces.has(ref.id)
+    ? `Piece '${ref.id}' is in the Library now: open the Block again to use it.`
+    : `Piece '${ref.id}' is not in the Library.`;
 }
 
 /** One workspace per filled Slot, for opening a saved Block (inverse of `workspacesToSlots`). */

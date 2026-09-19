@@ -12,6 +12,24 @@ const action = (id: string, params: Record<string, unknown> = {}): Statement => 
   piece: { id, version: 1, params: params as never },
 });
 
+describe('checkPieces and Pieces the Library does not have', () => {
+  const ghost = withTop([action('act_as', { tile: 0x25 }), action('no_such_piece', { x: 1 })]);
+
+  it('reports a missing Piece by default', () => {
+    expect(checkPieces(ghost, library)).toEqual([
+      "marioTop /1: Piece 'no_such_piece' is not in the Library.",
+    ]);
+  });
+
+  it('lets a missing Piece through when asked, and still checks the others', () => {
+    expect(checkPieces(ghost, library, { allowMissing: true })).toEqual([]);
+    const wrong = withTop([action('no_such_piece'), action('act_as', { tile: 'x' })]);
+    expect(checkPieces(wrong, library, { allowMissing: true })).toEqual([
+      'marioTop /1: \'tile\' = "x" is not a valid Map16 number.',
+    ]);
+  });
+});
+
 describe('checkPieces', () => {
   it('accepts a model whose Pieces exist and whose values fit their parameters', () => {
     expect(
