@@ -12,8 +12,10 @@ function renderPiece(
 ) {
   const piece = library.pieces.get(id);
   if (!piece) throw new Error(`Piece '${id}' not loaded`);
+  // As the generator does: what is not given is the parameter's default.
+  const defaults = Object.fromEntries(piece.manifest.params.map((p) => [p.name, p.default]));
   return render(piece.template, {
-    params,
+    params: { ...defaults, ...params },
     label: (name) => `L_${name}`,
     ...(falseLabel && { falseLabel }),
   });
@@ -235,6 +237,107 @@ describe('built-in Library seed Pieces', () => {
       smoke: false,
     });
     expect(renderedLunarMagicShell).toContain('LDA #$04\nCLC\n%spawn_sprite()\n');
+  });
+
+  describe('spawn_sprite (ticket 13)', () => {
+    const spawn = (params: Record<string, Value> = {}) =>
+      renderPiece(library, 'spawn_sprite', params);
+    const lines = (...text: string[]) => `${text.join('\n')}\n`;
+    const afterSpawn = ['%spawn_sprite()', 'BCS L_fail'];
+    const state = ['LDA #$08 : STA !14C8,x', 'LDA #$00 : STA !B6,x', 'LDA #$00 : STA !AA,x'];
+
+    it('still writes what a version 1 Block asked for', () => {
+      // Only the parameters version 1 had: the new ones are at their defaults.
+      expect(spawn()).toBe(
+        lines(
+          'LDA #$74',
+          'CLC',
+          ...afterSpawn,
+          '%move_spawn_into_block()',
+          ...state,
+          'LDA #$10 : STA !154C,x',
+          'L_fail:',
+        ),
+      );
+    });
+
+    it('spawns above, below, left, right or an offset away from the block', () => {
+      expect(spawn({ position: 'above' })).toContain(
+        lines(...afterSpawn, '%move_spawn_above_block()'),
+      );
+      expect(spawn({ position: 'below' })).toContain(
+        lines(...afterSpawn, '%move_spawn_below_block()'),
+      );
+      const relative = (x: string, y: string) =>
+        lines(...afterSpawn, `LDA #${x}`, 'STA $00', y, 'TXA', '%move_spawn_relative()');
+      expect(spawn({ position: 'left' })).toContain(relative('$F0', 'STZ $01'));
+      expect(spawn({ position: 'right' })).toContain(relative('$10', 'STZ $01'));
+      expect(spawn({ position: 'offset', x_offset: 8, y_offset: -16 })).toContain(
+        lines(
+          ...afterSpawn,
+          'LDA #$08',
+          'STA $00',
+          'LDA #$F0',
+          'STA $01',
+          'TXA',
+          '%move_spawn_relative()',
+        ),
+      );
+    });
+
+    it('sets the extra bit and the four extra bytes of a custom sprite, and only of that', () => {
+      const extras = {
+        custom: true,
+        extra_bit: true,
+        extra_byte_1: 0x11,
+        extra_byte_2: 0x22,
+        extra_byte_3: 0x33,
+        extra_byte_4: 0x44,
+      };
+      expect(spawn(extras)).toContain(
+        lines(
+          'LDA !7FAB10,x',
+          'ORA #$04',
+          'STA !7FAB10,x',
+          'LDA #$11 : STA !7FAB40,x',
+          'LDA #$22 : STA !7FAB4C,x',
+          'LDA #$33 : STA !7FAB58,x',
+          'LDA #$44 : STA !7FAB64,x',
+        ),
+      );
+      // Off: the bit is left alone, but the bytes are set, so none is left over from another sprite.
+      expect(spawn({ ...extras, extra_bit: false })).not.toContain('ORA #$04');
+      expect(spawn({ ...extras, extra_bit: false })).toContain('STA !7FAB40,x');
+      // A vanilla sprite has no extra bytes, whatever the hidden fields hold.
+      expect(spawn({ ...extras, custom: false })).not.toContain('7FAB');
+      // Custom sprites stay in status 1 (set by %spawn_sprite) so PIXI runs their INIT routine.
+      expect(spawn(extras)).not.toContain('!14C8,x');
+    });
+
+    it('turns the sprite to face right, left, like Mario or away from him', () => {
+      expect(spawn()).not.toContain('!157C');
+      expect(spawn({ facing: 'right' })).toContain(lines('STZ !157C,x', 'L_fail:'));
+      expect(spawn({ facing: 'left' })).toContain(lines('LDA #$01 : STA !157C,x', 'L_fail:'));
+      // $76: 0 left, 1 right; !157C: 0 right, 1 left.
+      expect(spawn({ facing: 'like_mario' })).toContain(
+        lines('LDA $76', 'EOR #$01', 'STA !157C,x', 'L_fail:'),
+      );
+      expect(spawn({ facing: 'away' })).toContain(
+        lines(
+          'LDA !E4,x',
+          'SEC',
+          'SBC $94',
+          'LDA !14E0,x',
+          'SBC $95',
+          'LDA #$00',
+          'BCS L_right',
+          'INC',
+          'L_right:',
+          'STA !157C,x',
+          'L_fail:',
+        ),
+      );
+    });
   });
 
   describe('extended Pieces (ticket 23)', () => {

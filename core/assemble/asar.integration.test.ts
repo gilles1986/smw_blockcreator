@@ -103,6 +103,13 @@ describe.skipIf(!gps)('Asar (GPS project asar.dll)', () => {
       'c_mario_speed',
       'c_p_meter',
       'c_holding_sprite_id',
+      // Ticket 13: the sprite Pieces.
+      'spawn_sprite',
+      'change_sprite',
+      'push_sprite',
+      'set_sprite_state',
+      'turn_sprite_around',
+      'kill_touching_sprite',
     ];
     const failures: string[] = [];
     for (const id of ids) {
@@ -132,6 +139,41 @@ describe.skipIf(!gps)('Asar (GPS project asar.dll)', () => {
           const generated = generate({ properties, slots: { [slot]: [statement] } }, library);
           for (const problem of await checkBlock(generated, routines, run)) {
             failures.push(`${id} ${JSON.stringify(params)} in ${slot}: ${problem.message}`);
+          }
+        }
+      }
+    }
+    expect(failures).toEqual([]);
+  });
+
+  it('assembles Spawn sprite with its options together, in a Mario and in a sprite Slot', async () => {
+    const together = {
+      custom: true,
+      sprite_number: 0x30,
+      extra_bit: true,
+      extra_byte_1: 1,
+      extra_byte_2: 2,
+      extra_byte_3: 3,
+      extra_byte_4: 4,
+      x_speed: 16,
+      y_speed: -32,
+    };
+    const failures: string[] = [];
+    for (const position of ['inside', 'above', 'below', 'left', 'right', 'offset']) {
+      for (const facing of ['keep', 'right', 'left', 'like_mario', 'away']) {
+        for (const custom of [true, false]) {
+          const params = { ...together, custom, position, facing, x_offset: -8, y_offset: 24 };
+          const statement: Statement = {
+            type: 'action',
+            piece: { id: 'spawn_sprite', version: 2, params },
+          };
+          for (const slot of ['marioTop', 'spriteTop'] as const) {
+            const generated = generate({ properties, slots: { [slot]: [statement] } }, library);
+            for (const problem of await checkBlock(generated, routines, run)) {
+              failures.push(
+                `${position} ${facing} custom=${custom} in ${slot}: ${problem.message}`,
+              );
+            }
           }
         }
       }

@@ -5,13 +5,19 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { Library } from '../../core/library';
 import type { SlotKind } from '../../core/model';
 import { nameSource, onNamesChanged } from '../names';
-import { blockDefinitions, fieldValidators } from './blocks';
+import { blockDefinitions, fieldValidators, visibilityRules } from './blocks';
 import { refreshNameFields, setNameSource } from './nameField';
 import { enableMultiSelect, type MultiSelect } from './multiselect';
 import './multiselect.css';
 import './namepicker.css';
 import { SelectionBar } from './SelectionBar';
 import { toolbox } from './toolbox';
+import {
+  applyVisibility,
+  refreshVisibility,
+  setVisibilityRules,
+  watchVisibility,
+} from './visibility';
 import type { WorkspaceState } from './workspace';
 
 interface Props {
@@ -54,6 +60,8 @@ export function BlocklyEditor({
 
   useEffect(() => {
     setNameSource(nameSource);
+    const rules = visibilityRules(library);
+    setVisibilityRules(rules);
     Blockly.common.defineBlocksWithJsonArray(blockDefinitions(library));
     for (const { blockType, field, validator } of fieldValidators(library)) {
       const definition = Blockly.Blocks[blockType]!;
@@ -61,6 +69,15 @@ export function BlocklyEditor({
       definition.init = function (this: Blockly.Block) {
         init.call(this);
         this.getField(field)?.setValidator(validator);
+      };
+    }
+    // A new block starts with the default values, which already decide what is shown.
+    for (const blockType of new Set(rules.map((rule) => rule.blockType))) {
+      const definition = Blockly.Blocks[blockType]!;
+      const init = definition.init!;
+      definition.init = function (this: Blockly.Block) {
+        init.call(this);
+        applyVisibility(this);
       };
     }
     const ws = Blockly.inject(host.current!, {
@@ -81,8 +98,10 @@ export function BlocklyEditor({
     multiSelect.current = enableMultiSelect(ws, setSelectedCount);
     // The PIXI sprites are read after the editor starts, and again when the folder is changed.
     const stopNames = onNamesChanged(() => refreshNameFields(ws));
+    const stopVisibility = watchVisibility(ws);
     return () => {
       stopNames();
+      stopVisibility();
       resize.disconnect();
       multiSelect.current?.dispose();
       multiSelect.current = null;
@@ -99,6 +118,8 @@ export function BlocklyEditor({
     try {
       ws.clear();
       Blockly.serialization.workspaces.load(initialStateRef.current, ws);
+      // The loaded values, not the defaults, decide which rows are shown.
+      refreshVisibility(ws);
       // Each Slot starts with its own history; otherwise undo would replay another Slot's edits.
       ws.clearUndo();
     } finally {

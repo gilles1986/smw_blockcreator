@@ -176,8 +176,28 @@ function checkCrossFields(
     );
     const listError = checkListParam(param, manifest.params);
     if (listError) errors.push({ field: `${field}.listParam`, message: listError });
+    const showError = checkShowWhen(param, manifest.params);
+    if (showError) errors.push({ field: `${field}.showWhen`, message: showError });
   });
   return errors;
+}
+
+/** `showWhen` names another parameter, and a value that parameter can have. */
+function checkShowWhen(param: ParamSpec, params: readonly ParamSpec[]): string | undefined {
+  const rule = param.showWhen;
+  if (rule === undefined) return undefined;
+  const control = params.find((other) => other.name === rule.param);
+  if (!control || control === param) return `'${rule.param}' is not another parameter`;
+  if (control.type === 'bool' && typeof rule.equals !== 'boolean') {
+    return `'${rule.param}' is a bool, so this must be true or false`;
+  }
+  if (control.type === 'enum') {
+    const values = (control.options ?? []).map((option) => option.value);
+    if (!values.includes(rule.equals as number | string)) {
+      return `must be one of the option values of '${rule.param}': ${values.join(', ')}`;
+    }
+  }
+  return undefined;
 }
 
 /** `listParam` belongs to sprite and sound parameters and names a bool (sprite) or enum (sound). */

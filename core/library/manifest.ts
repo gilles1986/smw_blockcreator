@@ -25,6 +25,11 @@ export interface ParamSpec {
    * port that `enum` parameter holds.
    */
   listParam?: string;
+  /**
+   * Only shown in the editor while another parameter of the Piece has this value (e.g. the extra
+   * bytes of a sprite while it is custom). A hidden parameter keeps its value and is still used.
+   */
+  showWhen?: { param: string; equals: number | string | boolean };
 }
 
 export type Register = 'A' | 'X' | 'Y';

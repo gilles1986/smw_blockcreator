@@ -49,8 +49,11 @@ LDA $02
 STA !D8,x
 LDA $03
 STA !14D4,x
+{{#if custom}}
+{{else}}
 LDA #{{hex state 2}}
 STA !14C8,x
+{{/if}}
 LDA #{{signed x_speed}}
 STA !B6,x
 LDA #{{signed y_speed}}

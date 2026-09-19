@@ -3,7 +3,7 @@
 
 import type { Library, Piece } from '../../core/library';
 import { categoryColour, type Colour } from './categories';
-import { fieldCodec, type FieldDefinition } from './fields';
+import { fieldCodec, type FieldDefinition, type FieldValue } from './fields';
 
 /** Blockly block type of a Piece. */
 export function pieceBlockType(id: string): string {
@@ -54,6 +54,35 @@ function blockDefinition(piece: Piece): BlocklyBlockDefinition {
     colour: categoryColour(category),
     tooltip: description,
   };
+}
+
+/** A parameter's row of the block is shown only while another field of the block has a value. */
+export interface VisibilityRule {
+  blockType: string;
+  /** Index of the block's input row that holds the parameter (row 0 is the Piece's name). */
+  row: number;
+  /** The field that decides, and the value it must have, as Blockly holds it. */
+  control: string;
+  shownWhen: FieldValue;
+}
+
+/** The rows of Piece blocks that hide (`showWhen` in the manifest), for the editor to apply. */
+export function visibilityRules(library: Library): VisibilityRule[] {
+  return [...library.pieces.values()].flatMap(({ manifest }) =>
+    manifest.params.flatMap((param, index): VisibilityRule[] => {
+      const control = manifest.params.find((other) => other.name === param.showWhen?.param);
+      if (!param.showWhen || !control) return [];
+      return [
+        {
+          blockType: pieceBlockType(manifest.id),
+          // A Piece with several parameters has the name on row 0, then one row per parameter.
+          row: index + 1,
+          control: control.name,
+          shownWhen: fieldCodec(control).toField(param.showWhen.equals),
+        },
+      ];
+    }),
+  );
 }
 
 export interface FieldValidator {

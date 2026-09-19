@@ -32,7 +32,8 @@
         { "value": 10, "label": "Kicked ($0A)" },
         { "value": 11, "label": "Carried ($0B)" }
       ],
-      "default": 8
+      "default": 8,
+      "showWhen": { "param": "custom", "equals": false }
     },
     {
       "name": "x_speed",

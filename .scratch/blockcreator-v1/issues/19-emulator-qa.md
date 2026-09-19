@@ -18,3 +18,7 @@ Human in the loop: insert all presets into a test project via GPS and check them
 
 **Notes from 23 (extended Pieces)**
 - Try in the emulator: the neighbour Pieces in a vertical level (the block position must be back after the change), `teleport` (screen exit, sublevel instant, sublevel with the pipe animation), `drop_item_box` with and without an item in the box (the data bank around the call), `c_holding_sprite_id` with a key, a shell and a custom sprite, and a muncher built from Kill Mario with the muncher hitbox and `c_really_on_top` / `c_mario_speed`.
+
+**Notes from 13 (sprite Pieces)**
+- The "kicked shell flying up-right" case: Spawn sprite with a shell (04-07 or DA-DD), state Kicked ($0A), a positive X speed and a negative Y speed, facing right, from a block Mario hits from below. Check the shell's direction and speed, that the state 'Stunned' leaves it lying, and that a custom sprite gets its extra bit and bytes (and none left over from another sprite).
+- Spawn positions left / right / offset next to and away from the block, in a Mario Slot and in a sprite Slot.

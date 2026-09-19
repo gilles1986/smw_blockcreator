@@ -1,11 +1,11 @@
 {
   "$schema": "../../../core/library/piece.schema.json",
   "id": "spawn_sprite",
-  "version": 1,
+  "version": 2,
   "kind": "action",
   "category": "sprites",
   "name": "Spawn sprite",
-  "description": "Spawns a vanilla or custom sprite at or relative to the Block.",
+  "description": "Spawns a vanilla or custom sprite at or next to the Block, or a number of pixels away from it. Most sprites start best as 'Initial': the game then sets them up itself. A shell lying on the ground is 'Stunned', a flying one 'Kicked'; items and platforms usually work as 'Normal'. A custom sprite can be given the extra bit and its four extra bytes; a sprite spawned by a routine does not read them from the level.",
   "author": "BlockCreator",
   "slots": "any",
   "params": [
@@ -23,15 +23,83 @@
       "default": 116
     },
     {
+      "name": "extra_bit",
+      "label": "Extra bit",
+      "type": "bool",
+      "default": false,
+      "showWhen": { "param": "custom", "equals": true }
+    },
+    {
+      "name": "extra_byte_1",
+      "label": "Extra byte 1",
+      "type": "number",
+      "format": "hex",
+      "min": 0,
+      "max": 255,
+      "default": 0,
+      "showWhen": { "param": "custom", "equals": true }
+    },
+    {
+      "name": "extra_byte_2",
+      "label": "Extra byte 2",
+      "type": "number",
+      "format": "hex",
+      "min": 0,
+      "max": 255,
+      "default": 0,
+      "showWhen": { "param": "custom", "equals": true }
+    },
+    {
+      "name": "extra_byte_3",
+      "label": "Extra byte 3",
+      "type": "number",
+      "format": "hex",
+      "min": 0,
+      "max": 255,
+      "default": 0,
+      "showWhen": { "param": "custom", "equals": true }
+    },
+    {
+      "name": "extra_byte_4",
+      "label": "Extra byte 4",
+      "type": "number",
+      "format": "hex",
+      "min": 0,
+      "max": 255,
+      "default": 0,
+      "showWhen": { "param": "custom", "equals": true }
+    },
+    {
       "name": "position",
       "label": "Spawn position",
       "type": "enum",
       "options": [
         { "value": "inside", "label": "Inside block" },
         { "value": "above", "label": "Above block" },
-        { "value": "below", "label": "Below block" }
+        { "value": "below", "label": "Below block" },
+        { "value": "left", "label": "Left of block" },
+        { "value": "right", "label": "Right of block" },
+        { "value": "offset", "label": "Offset from block" }
       ],
       "default": "inside"
+    },
+    {
+      "name": "x_offset",
+      "label": "X offset (pixels)",
+      "type": "number",
+      "min": -128,
+      "max": 127,
+      "default": 0,
+      "showWhen": { "param": "position", "equals": "offset" }
+    },
+    {
+      "name": "y_offset",
+      "label": "Y offset (pixels)",
+      "type": "number",
+      "min": -128,
+      "max": 127,
+      "default": 0,
+      "showWhen": { "param": "position", "equals": "offset" }
     },
     {
       "name": "state",
@@ -44,7 +112,8 @@
         { "value": 11, "label": "Carried ($0B)" },
         { "value": 1, "label": "Initial ($01)" }
       ],
-      "default": 8
+      "default": 8,
+      "showWhen": { "param": "custom", "equals": false }
     },
     {
       "name": "x_speed",
@@ -61,6 +130,19 @@
       "min": -128,
       "max": 127,
       "default": 0
+    },
+    {
+      "name": "facing",
+      "label": "Facing",
+      "type": "enum",
+      "options": [
+        { "value": "keep", "label": "Leave as is" },
+        { "value": "right", "label": "Right" },
+        { "value": "left", "label": "Left" },
+        { "value": "like_mario", "label": "Like Mario" },
+        { "value": "away", "label": "Away from Mario" }
+      ],
+      "default": "keep"
     }
   ],
   "once": true,

@@ -156,6 +156,33 @@ describe('loadLibrary', () => {
           message: "'speed' must be a 'bool' parameter for a 'sprite'",
         },
       ],
+      [
+        'a showWhen that names no other parameter',
+        { ...actAs, params: [{ ...number, showWhen: { param: 'missing', equals: true } }] },
+        { field: 'params[0].showWhen', message: "'missing' is not another parameter" },
+      ],
+      [
+        'a showWhen on a bool that is not true or false',
+        {
+          ...actAs,
+          params: [
+            { name: 'custom', label: 'Custom', type: 'bool', default: false },
+            { ...number, showWhen: { param: 'custom', equals: 1 } },
+          ],
+        },
+        {
+          field: 'params[1].showWhen',
+          message: "'custom' is a bool, so this must be true or false",
+        },
+      ],
+      [
+        'a showWhen that is no option of the choice',
+        { ...actAs, params: [onOff, { ...number, showWhen: { param: 'state', equals: 7 } }] },
+        {
+          field: 'params[1].showWhen',
+          message: "must be one of the option values of 'state': 0, 1",
+        },
+      ],
     ];
 
     it.each(crossFieldCases)('reports %s', (_, manifest, expected) => {

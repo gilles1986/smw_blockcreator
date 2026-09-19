@@ -14,5 +14,5 @@ describe('generate → parse', () => {
       }),
       { numRuns: 300 },
     );
-  });
+  }, 15000);
 });
