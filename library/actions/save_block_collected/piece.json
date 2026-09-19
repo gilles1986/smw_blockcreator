@@ -1,0 +1,13 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "save_block_collected",
+  "version": 1,
+  "kind": "action",
+  "category": "level",
+  "name": "Remember this block as collected",
+  "description": "Marks this block in the level's item memory, so it stays gone when the level is entered again. Use it before erasing or changing the block.",
+  "author": "BlockCreator",
+  "slots": "any",
+  "params": [],
+  "clobbers": ["A", "X"]
+}

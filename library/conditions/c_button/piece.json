@@ -1,0 +1,44 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "c_button",
+  "version": 1,
+  "kind": "condition",
+  "category": "conditions",
+  "name": "Controller button",
+  "description": "True while the chosen controller button is held or was just pressed ($15-$18).",
+  "author": "BlockCreator",
+  "slots": "mario",
+  "params": [
+    {
+      "name": "button",
+      "label": "Button",
+      "type": "enum",
+      "options": [
+        { "value": "a", "label": "A" },
+        { "value": "b", "label": "B" },
+        { "value": "x", "label": "X" },
+        { "value": "y", "label": "Y" },
+        { "value": "l", "label": "L" },
+        { "value": "r", "label": "R" },
+        { "value": "start", "label": "Start" },
+        { "value": "select", "label": "Select" },
+        { "value": "up", "label": "Up" },
+        { "value": "down", "label": "Down" },
+        { "value": "left", "label": "Left" },
+        { "value": "right", "label": "Right" }
+      ],
+      "default": "b"
+    },
+    {
+      "name": "mode",
+      "label": "Mode",
+      "type": "enum",
+      "options": [
+        { "value": "held", "label": "Held" },
+        { "value": "pressed", "label": "Pressed (this frame)" }
+      ],
+      "default": "held"
+    }
+  ],
+  "clobbers": ["A"]
+}

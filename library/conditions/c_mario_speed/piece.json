@@ -1,0 +1,35 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "c_mario_speed",
+  "version": 1,
+  "kind": "condition",
+  "category": "conditions",
+  "name": "Mario is moving",
+  "description": "True while Mario moves in the chosen direction ($7B / $7D), optionally at least that fast. 'Down' also holds while he rests on the ground, so it is the test for the top of a muncher; 'Up' is the one for a muncher on the ceiling.",
+  "author": "BlockCreator",
+  "slots": "mario",
+  "params": [
+    {
+      "name": "direction",
+      "label": "Direction",
+      "type": "enum",
+      "options": [
+        { "value": "down", "label": "Down (or resting)" },
+        { "value": "up", "label": "Up" },
+        { "value": "left", "label": "Left" },
+        { "value": "right", "label": "Right" }
+      ],
+      "default": "down"
+    },
+    {
+      "name": "speed",
+      "label": "At least this fast (0 = any)",
+      "type": "number",
+      "format": "dec",
+      "min": 0,
+      "max": 127,
+      "default": 0
+    }
+  ],
+  "clobbers": ["A"]
+}

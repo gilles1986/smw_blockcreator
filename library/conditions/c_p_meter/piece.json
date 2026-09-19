@@ -1,0 +1,23 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "c_p_meter",
+  "version": 1,
+  "kind": "condition",
+  "category": "conditions",
+  "name": "P-meter is at least",
+  "description": "True if Mario's P-meter ($13E4) has reached the value. It fills by 2 a frame while he runs on the ground and is full at 112, where he runs at top speed and can fly with the cape.",
+  "author": "BlockCreator",
+  "slots": "mario",
+  "params": [
+    {
+      "name": "at_least",
+      "label": "P-meter (112 = full)",
+      "type": "number",
+      "format": "dec",
+      "min": 0,
+      "max": 112,
+      "default": 112
+    }
+  ],
+  "clobbers": ["A"]
+}

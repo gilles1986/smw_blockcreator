@@ -17,7 +17,7 @@ const actAs = fc.integer({ min: 0, max: 0xffff }).map((tile): Statement => ({
 }));
 const hurtMario = fc.constant<Statement>({
   type: 'action',
-  piece: { id: 'hurt_mario', version: 1, params: {} },
+  piece: { id: 'hurt_mario', version: 2, params: { side_hitbox: false } },
 });
 const onOff = fc.constantFrom(0, 1).map((position): ConditionExpr => ({
   type: 'condition',

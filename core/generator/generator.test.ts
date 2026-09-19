@@ -141,10 +141,13 @@ describe('errors', () => {
   it('names Slot and path of a Piece that is not in the Library', () => {
     const model = withTop([
       actAs(0x25),
-      { type: 'action', piece: { id: 'teleport', version: 1, params: {} } },
+      { type: 'action', piece: { id: 'time_machine', version: 1, params: {} } },
     ]);
     expect(() => generate(model, library)).toThrow(
-      new GenerateError("Piece 'teleport' is not in the Library", { slot: 'marioTop', path: '/1' }),
+      new GenerateError("Piece 'time_machine' is not in the Library", {
+        slot: 'marioTop',
+        path: '/1',
+      }),
     );
   });
 
@@ -209,7 +212,11 @@ describe('errors', () => {
 
 describe('all Slots', () => {
   const model = (name: string): BlockModel =>
-    JSON.parse(golden(name).split('\n')[1]!.replace(/^;@?bc-model /, ''));
+    JSON.parse(
+      golden(name)
+        .split('\n')[1]!
+        .replace(/^;@?bc-model /, ''),
+    );
 
   it.each(['side_split', 'sprite_platform', 'wall_run'])(
     'writes %s exactly as its golden file',
@@ -267,7 +274,10 @@ describe('all Slots', () => {
   });
 
   it('deduplicates code when multiple offsets share the same logic via links', () => {
-    const erase: Statement = { type: 'action', piece: { id: 'erase_block', version: 1, params: {} } };
+    const erase: Statement = {
+      type: 'action',
+      piece: { id: 'erase_block', version: 1, params: {} },
+    };
     const model: BlockModel = {
       ...base,
       slots: { spriteLeft: [erase] },
@@ -280,9 +290,13 @@ describe('all Slots', () => {
     // SpriteH should not split
     expect(code).not.toContain('LDA !B6,x');
     // SpriteV should branch directly to shared label
-    expect(code).toContain('SpriteV:\n\t%sprite_block_position()\n\tLDA !AA,x ; negative: moving up, touches the bottom\n\tBMI bc1_shared_spriteLeft\n\tRTL');
+    expect(code).toContain(
+      'SpriteV:\n\t%sprite_block_position()\n\tLDA !AA,x ; negative: moving up, touches the bottom\n\tBMI bc1_shared_spriteLeft\n\tRTL',
+    );
     // SpriteH should be the home defining bc1_shared_spriteLeft
-    expect(code).toContain('SpriteH:\n\t%sprite_block_position()\nbc1_shared_spriteLeft:\n\tPHX\n\tPHY\n\t%erase_block()\n\tPLY\n\tPLX\n\tRTL');
+    expect(code).toContain(
+      'SpriteH:\n\t%sprite_block_position()\nbc1_shared_spriteLeft:\n\tPHX\n\tPHY\n\t%erase_block()\n\tPLY\n\tPLX\n\tRTL',
+    );
     // Only one instance of erase_block should be generated!
     const occurrences = (code.match(/%erase_block\(\)/g) ?? []).length;
     expect(occurrences).toBe(1);
@@ -291,7 +305,11 @@ describe('all Slots', () => {
 
 describe('condition logic and long branches', () => {
   const modelOf = (name: string): BlockModel =>
-    JSON.parse(golden(name).split('\n')[1]!.replace(/^;@?bc-model /, ''));
+    JSON.parse(
+      golden(name)
+        .split('\n')[1]!
+        .replace(/^;@?bc-model /, ''),
+    );
 
   it.each(['or_switch', 'not_switch', 'nested_if', 'long_body'])(
     'writes %s exactly as its golden file',

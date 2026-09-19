@@ -1,0 +1,45 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "change_adjacent_block",
+  "version": 1,
+  "kind": "action",
+  "category": "effects",
+  "name": "Change neighbour block",
+  "description": "Changes the block next to this one (above, below, left or right, 1 to 4 blocks away) into another Map16 tile.",
+  "author": "BlockCreator",
+  "slots": "any",
+  "params": [
+    {
+      "name": "direction",
+      "label": "Direction",
+      "type": "enum",
+      "options": [
+        { "value": "above", "label": "Above" },
+        { "value": "below", "label": "Below" },
+        { "value": "left", "label": "Left" },
+        { "value": "right", "label": "Right" }
+      ],
+      "default": "above"
+    },
+    {
+      "name": "distance",
+      "label": "Distance",
+      "type": "enum",
+      "options": [
+        { "value": 16, "label": "1 block" },
+        { "value": 32, "label": "2 blocks" },
+        { "value": 48, "label": "3 blocks" },
+        { "value": 64, "label": "4 blocks" }
+      ],
+      "default": 16
+    },
+    {
+      "name": "tile",
+      "label": "Change to tile",
+      "type": "map16",
+      "default": 37
+    }
+  ],
+  "once": true,
+  "clobbers": ["A", "X"]
+}

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { LEVEL_SHELLS } from '../names';
 import { render, type Value } from '../template';
 import { builtInLibrary } from '../testing/library';
 import type { Library } from './index';
@@ -27,24 +28,43 @@ describe('built-in Library seed Pieces', () => {
       'act_as',
       'blink_invulnerability',
       'boost_mario',
+      'c_adjacent_tile',
+      'c_button',
       'c_carrying',
+      'c_climbing',
+      'c_coins',
       'c_ducking',
+      'c_facing',
+      'c_flying',
+      'c_holding_sprite_id',
+      'c_in_water',
+      'c_item_box',
+      'c_lives',
       'c_mario_powerup',
+      'c_mario_speed',
+      'c_on_ground',
       'c_onoff',
+      'c_p_meter',
       'c_pswitch',
       'c_ram',
+      'c_really_on_top',
+      'c_silver_pswitch',
       'c_spinjump',
       'c_sprite_id',
       'c_sprite_state',
       'c_star',
+      'c_wall',
       'c_yoshi',
+      'change_adjacent_block',
       'change_music',
       'change_sprite',
       'change_to_tile',
       'create_smoke',
       'custom_asm',
       'disable_buttons',
+      'drop_item_box',
       'end_level',
+      'erase_adjacent_block',
       'erase_block',
       'give_coins',
       'glitter',
@@ -53,8 +73,10 @@ describe('built-in Library seed Pieces', () => {
       'kill_touching_sprite',
       'play_sound',
       'push_sprite',
+      'save_block_collected',
       'scroll_lock',
       'set_brightness',
+      'set_item_box',
       'set_onoff',
       'set_powerup',
       'set_sprite_state',
@@ -66,6 +88,7 @@ describe('built-in Library seed Pieces', () => {
       'star_power',
       'start_pswitch',
       'stun_mario',
+      'teleport',
       'turn_sprite_around',
       'water_slippery',
       'write_ram',
@@ -82,13 +105,38 @@ describe('built-in Library seed Pieces', () => {
   });
 
   it('hurt_mario calls HurtMario and declares that it destroys Y', () => {
-    expect(renderPiece(library, 'hurt_mario', {})).toBe('JSL $00F5B7|!bank\n');
+    expect(renderPiece(library, 'hurt_mario', { side_hitbox: false })).toBe('JSL $00F5B7|!bank\n');
     expect(library.pieces.get('hurt_mario')?.manifest.clobbers).toContain('Y');
   });
 
   it('kill_mario calls KillMario and destroys A, X, Y', () => {
-    expect(renderPiece(library, 'kill_mario', {})).toBe('JSL $00F606|!bank\n');
+    expect(renderPiece(library, 'kill_mario', { side_hitbox: false })).toBe('JSL $00F606|!bank\n');
     expect(library.pieces.get('kill_mario')?.manifest.clobbers).toEqual(['A', 'X', 'Y']);
+  });
+
+  it.each([
+    ['hurt_mario', '$00F5B7'],
+    ['kill_mario', '$00F606'],
+  ])('%s with the muncher hitbox skips the hit on the edge pixel', (id, routine) => {
+    // Mario's X in the tile ($94 & $0F) is 02 at the left edge and 0D at the right one, the
+    // same test as GPS's hurt_death.asm and the muncher blocks of the archive.
+    expect(renderPiece(library, id, { side_hitbox: true })).toBe(
+      [
+        '; Muncher hitbox: no hit when only the edge pixel touches. $93 = 0: Mario is left of the block, 1: right.',
+        'LDA $94',
+        'AND #$0F',
+        'LDX $93',
+        'BEQ L_left',
+        'EOR #$0F',
+        'L_left:',
+        'CMP #$02',
+        'BEQ L_safe',
+        `JSL ${routine}|!bank`,
+        'L_safe:',
+        '',
+      ].join('\n'),
+    );
+    expect(library.pieces.get(id)?.manifest.version).toBe(2);
   });
 
   it('erase_block calls erase_block routine and removes block', () => {
@@ -126,51 +174,225 @@ describe('built-in Library seed Pieces', () => {
 
   it('c_sprite_id tests vanilla and custom sprite numbers', () => {
     expect(
-      renderPiece(
-        library,
-        'c_sprite_id',
-        { sprite_number: 4, custom: false },
-        'L_false',
-      ),
+      renderPiece(library, 'c_sprite_id', { sprite_number: 4, custom: false }, 'L_false'),
     ).toBe('LDA !9E,x\nCMP #$04\nBNE L_false\n');
 
     // Lunar Magic shell ID DA maps to runtime $04
     expect(
-      renderPiece(
-        library,
-        'c_sprite_id',
-        { sprite_number: 0xda, custom: false },
-        'L_false',
-      ),
+      renderPiece(library, 'c_sprite_id', { sprite_number: 0xda, custom: false }, 'L_false'),
     ).toBe('LDA !9E,x\nCMP #$04\nBNE L_false\n');
 
     expect(
-      renderPiece(
-        library,
-        'c_sprite_id',
-        { sprite_number: 0xda, custom: true },
-        'L_false',
-      ),
+      renderPiece(library, 'c_sprite_id', { sprite_number: 0xda, custom: true }, 'L_false'),
     ).toBe('LDA !7FAB10,x\nAND #$08\nBEQ L_false\nLDA !7FAB9E,x\nCMP #$DA\nBNE L_false\n');
   });
 
+  it('maps every named Lunar Magic shell number to the sprite the game loads it as', () => {
+    // Level sprite n >= DA is sprite n - DA + 4 (SMWDisX bank_02); DF is the two-bounce shell 09.
+    const runtime: Record<number, string> = {
+      0xda: '04',
+      0xdb: '05',
+      0xdc: '06',
+      0xdd: '07',
+      0xdf: '09',
+    };
+    expect(LEVEL_SHELLS.map((shell) => shell.id)).toEqual(Object.keys(runtime).map(Number));
+    for (const [id, sprite] of Object.entries(runtime)) {
+      const sprite_number = Number(id);
+      expect(renderPiece(library, 'c_sprite_id', { sprite_number, custom: false }, 'L_false')).toBe(
+        `LDA !9E,x\nCMP #$${sprite}\nBNE L_false\n`,
+      );
+      const change = { sprite_number, custom: false, state: 8, x_speed: 0, y_speed: 0 };
+      expect(renderPiece(library, 'change_sprite', { ...change, smoke: false })).toContain(
+        `LDA #$${sprite}\nCLC\n%spawn_sprite()\n`,
+      );
+      expect(renderPiece(library, 'spawn_sprite', { ...change, position: 'inside' })).toContain(
+        `LDA #$${sprite}\nCLC\n%spawn_sprite()\n`,
+      );
+    }
+  });
+
   it('change_sprite replaces touching sprite at same coordinates', () => {
-    const rendered = renderPiece(
-      library,
-      'change_sprite',
-      { sprite_number: 4, custom: false, state: 8, x_speed: 0, y_speed: 0, smoke: true },
-    );
+    const rendered = renderPiece(library, 'change_sprite', {
+      sprite_number: 4,
+      custom: false,
+      state: 8,
+      x_speed: 0,
+      y_speed: 0,
+      smoke: true,
+    });
     expect(rendered).toContain('PHY\nJSL $07FC3B|!bank\nPLY\n');
     expect(rendered).toContain('LDA !E4,x\nSTA $00\n');
     expect(rendered).toContain('%spawn_sprite()\n');
     expect(rendered).toContain('LDA $00\nSTA !E4,x\n');
 
-    const renderedLunarMagicShell = renderPiece(
-      library,
-      'change_sprite',
-      { sprite_number: 0xda, custom: false, state: 8, x_speed: 0, y_speed: 0, smoke: false },
-    );
+    const renderedLunarMagicShell = renderPiece(library, 'change_sprite', {
+      sprite_number: 0xda,
+      custom: false,
+      state: 8,
+      x_speed: 0,
+      y_speed: 0,
+      smoke: false,
+    });
     expect(renderedLunarMagicShell).toContain('LDA #$04\nCLC\n%spawn_sprite()\n');
   });
-});
 
+  describe('extended Pieces (ticket 23)', () => {
+    const render = (id: string, params: Record<string, Value>, falseLabel?: string) =>
+      renderPiece(library, id, params, falseLabel);
+    const lines = (...text: string[]) => `${text.join('\n')}\n`;
+
+    it('the neighbour Pieces move the block position, and put it back', () => {
+      const shift = {
+        above: ['LDA $98', 'SEC', 'SBC #$0020', 'STA $98'],
+        below: ['LDA $98', 'CLC', 'ADC #$0020', 'STA $98'],
+        left: ['LDA $9A', 'SEC', 'SBC #$0020', 'STA $9A'],
+        right: ['LDA $9A', 'CLC', 'ADC #$0020', 'STA $9A'],
+      };
+      for (const [direction, moved] of Object.entries(shift)) {
+        const change = render('change_adjacent_block', { direction, distance: 32, tile: 0x130 });
+        expect(change).toContain(lines('REP #$20', 'LDA $98', 'PHA', 'LDA $9A', 'PHA', ...moved));
+        expect(change).toContain(
+          lines(
+            'REP #$10',
+            'LDX #$0130',
+            '%change_map16()',
+            'SEP #$10',
+            'REP #$20',
+            'PLA',
+            'STA $9A',
+            'PLA',
+            'STA $98',
+            'SEP #$20',
+          ),
+        );
+        const erase = render('erase_adjacent_block', { direction, distance: 32 });
+        expect(erase).toContain(
+          lines(...moved, 'SEP #$20', '%erase_block()', 'REP #$20', 'PLA', 'STA $9A'),
+        );
+      }
+    });
+
+    it('c_adjacent_tile puts the position back before it branches', () => {
+      const back = ['PHP', 'LDA $00', 'STA $98', 'LDA $02', 'STA $9A', 'PLP', 'SEP #$20'];
+      const params = { direction: 'above', distance: 16, tile: 0x25 };
+      expect(render('c_adjacent_tile', { ...params, comparison: 'equal' }, 'L_false')).toContain(
+        lines('%get_map16()', 'CMP #$0025', ...back, 'BNE L_false'),
+      );
+      expect(
+        render('c_adjacent_tile', { ...params, comparison: 'different' }, 'L_false'),
+      ).toContain(lines('%get_map16()', 'CMP #$0025', ...back, 'BEQ L_false'));
+    });
+
+    it('c_really_on_top is the donut lift test: not moving up, at most 4 pixels in', () => {
+      expect(render('c_really_on_top', {}, 'L_false')).toContain(
+        lines(
+          'LDA $7D',
+          'BMI L_false',
+          'REP #$20',
+          'LDA $98',
+          'AND #$FFF0',
+          'SEC',
+          'SBC #$001C',
+          'CMP $96',
+          'SEP #$20',
+          'BCC L_false',
+        ),
+      );
+    });
+
+    it.each([
+      [{ direction: 'down', speed: 0 }, ['LDA $7D', 'BMI L_false']],
+      [{ direction: 'down', speed: 8 }, ['LDA $7D', 'BMI L_false', 'CMP #$08', 'BCC L_false']],
+      [{ direction: 'up', speed: 0 }, ['LDA $7D', 'BPL L_false']],
+      [
+        { direction: 'up', speed: 8 },
+        ['LDA $7D', 'BPL L_false', 'EOR #$FF', 'INC', 'CMP #$08', 'BCC L_false'],
+      ],
+      [
+        { direction: 'left', speed: 16 },
+        ['LDA $7B', 'BPL L_false', 'EOR #$FF', 'INC', 'CMP #$10', 'BCC L_false'],
+      ],
+      [{ direction: 'right', speed: 0 }, ['LDA $7B', 'BEQ L_false', 'BMI L_false']],
+    ])('c_mario_speed %j', (params, expected) => {
+      expect(render('c_mario_speed', params, 'L_false')).toBe(lines(...expected));
+    });
+
+    it('c_p_meter compares $13E4 with the value, 112 being full', () => {
+      expect(render('c_p_meter', { at_least: 112 }, 'L_false')).toBe(
+        lines('LDA $13E4|!addr', 'CMP #$70', 'BCC L_false'),
+      );
+    });
+
+    it("the item box Pieces use the RAM map values, and the game's own release", () => {
+      expect(render('set_item_box', { item: 3 })).toBe(lines('LDA #$03', 'STA $0DC2|!addr'));
+      const labels = library.pieces.get('set_item_box')!.manifest.params[0]!.options!;
+      expect(labels.map((o) => [o.value, o.label])).toEqual([
+        [0, 'Empty'],
+        [1, 'Mushroom'],
+        [2, 'Fire Flower'],
+        [3, 'Starman'],
+        [4, 'Cape Feather'],
+      ]);
+      expect(library.pieces.get('c_item_box')!.manifest.params[0]!.options!.slice(3)).toEqual([
+        { value: 3, label: 'Starman' },
+        { value: 4, label: 'Cape Feather' },
+      ]);
+      expect(render('drop_item_box', {})).toContain(lines('PLB', 'JSL $028008|!bank', 'PLB'));
+    });
+
+    it('teleport goes through the exit of the screen, or to a sublevel, instantly or not', () => {
+      const params = { sublevel: 0x105, instant: true };
+      expect(render('teleport', { ...params, mode: 'screen' })).toContain(
+        lines('LDX #$00', '%teleport_direct()'),
+      );
+      expect(render('teleport', { ...params, mode: 'sublevel' })).toContain(
+        lines(
+          'REP #$20',
+          'LDA #$0105',
+          '; X < 0: a fixed destination, the level number in A.',
+          'LDX #$FF',
+          '%teleport_direct()',
+        ),
+      );
+      const pipe = render('teleport', { ...params, mode: 'sublevel', instant: false });
+      expect(pipe).toBe(lines('REP #$20', 'LDA #$0105', '%teleport()'));
+    });
+
+    it("save_block_collected uses GPS's item memory", () => {
+      expect(render('save_block_collected', {})).toBe(lines('%set_item_memory()'));
+    });
+
+    it('c_holding_sprite_id asks the routine, then compares the sprite number', () => {
+      const piece = library.pieces.get('c_holding_sprite_id')!;
+      expect(piece.manifest.routines).toEqual(['bc_holding_sprite']);
+      expect(library.routines.has('bc_holding_sprite')).toBe(true);
+      const holds = (sprite_number: number, custom = false) =>
+        render('c_holding_sprite_id', { sprite_number, custom }, 'L_false');
+      expect(holds(0x80)).toBe(
+        lines('%bc_holding_sprite()', 'BCC L_false', 'LDA !9E,x', 'CMP #$80', 'BNE L_false'),
+      );
+      // The Lunar Magic shell numbers, as in c_sprite_id.
+      expect(holds(0xda)).toContain('CMP #$04\n');
+      expect(holds(0xdf)).toContain('CMP #$09\n');
+      expect(holds(0x05, true)).toContain(
+        lines(
+          'LDA !7FAB10,x',
+          'AND #$08',
+          'BEQ L_false',
+          'LDA !7FAB9E,x',
+          'CMP #$05',
+          'BNE L_false',
+        ),
+      );
+    });
+
+    it('every Piece that calls a tool routine lists it', () => {
+      for (const { manifest, template } of library.pieces.values()) {
+        const called = [...template.matchAll(/%(bc_[a-z0-9_]+)\(\)/g)].map((match) => match[1]);
+        expect(manifest.routines, manifest.id).toEqual(expect.arrayContaining(called));
+        for (const name of manifest.routines) expect(library.routines.has(name), name).toBe(true);
+      }
+    });
+  });
+});

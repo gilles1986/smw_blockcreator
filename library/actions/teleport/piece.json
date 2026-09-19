@@ -1,0 +1,40 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "teleport",
+  "version": 1,
+  "kind": "action",
+  "category": "level",
+  "name": "Teleport Mario",
+  "description": "Warps Mario: through the exit of the screen he is on, or to a sublevel. A sublevel warp is instant, or plays the vertical pipe animation first.",
+  "author": "BlockCreator",
+  "slots": "mario",
+  "params": [
+    {
+      "name": "mode",
+      "label": "Destination",
+      "type": "enum",
+      "options": [
+        { "value": "screen", "label": "Exit of this screen" },
+        { "value": "sublevel", "label": "A sublevel" }
+      ],
+      "default": "screen"
+    },
+    {
+      "name": "sublevel",
+      "label": "Sublevel (hex)",
+      "type": "number",
+      "format": "hex",
+      "min": 0,
+      "max": 511,
+      "default": 261
+    },
+    {
+      "name": "instant",
+      "label": "Instant (no pipe animation)",
+      "type": "bool",
+      "default": true
+    }
+  ],
+  "once": true,
+  "clobbers": ["A", "X"]
+}

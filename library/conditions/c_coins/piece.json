@@ -1,0 +1,35 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "c_coins",
+  "version": 1,
+  "kind": "condition",
+  "category": "conditions",
+  "name": "Coins check",
+  "description": "Compare Mario's current coin count ($0DBF) against a value.",
+  "author": "BlockCreator",
+  "slots": "mario",
+  "params": [
+    {
+      "name": "comparison",
+      "label": "Comparison",
+      "type": "enum",
+      "options": [
+        { "value": "equal", "label": "Equal (==)" },
+        { "value": "not_equal", "label": "Not Equal (!=)" },
+        { "value": "less", "label": "Less than (<)" },
+        { "value": "greater_equal", "label": "Greater or equal (>=)" }
+      ],
+      "default": "greater_equal"
+    },
+    {
+      "name": "value",
+      "label": "Value (hex)",
+      "type": "number",
+      "min": 0,
+      "max": 255,
+      "format": "hex",
+      "default": 50
+    }
+  ],
+  "clobbers": ["A"]
+}

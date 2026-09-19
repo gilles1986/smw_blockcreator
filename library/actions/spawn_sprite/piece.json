@@ -18,10 +18,8 @@
     {
       "name": "sprite_number",
       "label": "Sprite number",
-      "type": "number",
-      "format": "hex",
-      "min": 0,
-      "max": 255,
+      "type": "sprite",
+      "listParam": "custom",
       "default": 116
     },
     {

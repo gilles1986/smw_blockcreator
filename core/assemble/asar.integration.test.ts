@@ -89,4 +89,87 @@ describe.skipIf(!gps)('Asar (GPS project asar.dll)', () => {
     }
     expect(failures).toEqual([]);
   });
+
+  it('assembles every option of the extended Pieces, and what each Piece calls', async () => {
+    const ids = [
+      'change_adjacent_block',
+      'erase_adjacent_block',
+      'save_block_collected',
+      'teleport',
+      'set_item_box',
+      'drop_item_box',
+      'c_adjacent_tile',
+      'c_really_on_top',
+      'c_mario_speed',
+      'c_p_meter',
+      'c_holding_sprite_id',
+    ];
+    const failures: string[] = [];
+    for (const id of ids) {
+      const { manifest } = library.pieces.get(id)!;
+      const defaults = Object.fromEntries(manifest.params.map((p) => [p.name, p.default]));
+      // The defaults, then each option of each choice and switch on its own.
+      const variants = [defaults];
+      for (const param of manifest.params) {
+        const options =
+          param.type === 'enum'
+            ? param.options!.map((o) => o.value)
+            : param.type === 'bool'
+              ? [false, true]
+              : param.type === 'number' && param.max !== undefined
+                ? [param.min ?? 0, param.max]
+                : [];
+        for (const value of options) variants.push({ ...defaults, [param.name]: value });
+      }
+      for (const params of variants) {
+        const piece = { id, version: manifest.version, params };
+        const statement: Statement =
+          manifest.kind === 'action'
+            ? { type: 'action', piece }
+            : { type: 'if', branches: [{ condition: { type: 'condition', piece }, body: [] }] };
+        for (const slot of ['marioTop', 'spriteTop'] as const) {
+          if (manifest.slots !== 'any' && manifest.slots !== slotKind(slot)) continue;
+          const generated = generate({ properties, slots: { [slot]: [statement] } }, library);
+          for (const problem of await checkBlock(generated, routines, run)) {
+            failures.push(`${id} ${JSON.stringify(params)} in ${slot}: ${problem.message}`);
+          }
+        }
+      }
+    }
+    expect(failures).toEqual([]);
+  });
+
+  it.each([...library.routines].map(([name, file]) => [name, file.text] as const))(
+    'assembles the tool routine %s, the way GPS wraps a routine into a macro',
+    async (name, text) => {
+      const main = [
+        'lorom',
+        'incsrc "defines.asm"',
+        `macro ${name}()`,
+        text,
+        'endmacro',
+        'org $108000',
+        'Routine:',
+        `%${name}()`,
+        '',
+      ].join('\n');
+      const report = await run({ 'main.asm': main }, 'main.asm');
+      expect(report.errors).toEqual([]);
+    },
+  );
+
+  it('assembles the muncher hitbox of Hurt and Kill Mario in the Slots it is meant for', async () => {
+    const failures: string[] = [];
+    for (const id of ['hurt_mario', 'kill_mario']) {
+      const piece = { id, version: 2, params: { side_hitbox: true } };
+      const statement: Statement = { type: 'action', piece };
+      for (const slot of ['marioLeft', 'marioRight', 'marioInside', 'marioTopCorner'] as const) {
+        const generated = generate({ properties, slots: { [slot]: [statement] } }, library);
+        for (const problem of await checkBlock(generated, routines, run)) {
+          failures.push(`${id} in ${slot}: ${problem.message}`);
+        }
+      }
+    }
+    expect(failures).toEqual([]);
+  });
 });

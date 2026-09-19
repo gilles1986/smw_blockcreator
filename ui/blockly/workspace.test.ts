@@ -175,14 +175,14 @@ describe('workspaceProblems', () => {
             inputs: { IF1: { block: { type: 'piece_c_onoff' } } },
           },
           { type: 'piece_c_onoff', y: 100 },
-          { type: 'piece_teleport', y: 200 },
+          { type: 'piece_time_machine', y: 200 },
         ],
       },
     };
     expect(workspaceProblems(state, library)).toEqual([
       'An if has a branch without a Condition.',
       'A Condition is not attached to an if.',
-      "Piece 'teleport' is not in the Library.",
+      "Piece 'time_machine' is not in the Library.",
     ]);
   });
 

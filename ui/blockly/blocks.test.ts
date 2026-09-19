@@ -69,11 +69,22 @@ describe('blockDefinitions', () => {
     expect(typeof definitionOfBoost!.colour).toBe('number');
   });
 
-  it('turns sprite parameters into hex field_inputs supporting values like DA', () => {
-    const spawn = definition('piece_spawn_sprite');
-    expect(spawn).toMatchObject({
-      type: 'piece_spawn_sprite',
-      args0: expect.arrayContaining([{ type: 'field_input', name: 'sprite_number', text: '74' }]),
+  it('turns sprite and sound parameters into name fields holding the number as hex', () => {
+    expect(definition('piece_spawn_sprite')).toMatchObject({
+      args0: expect.arrayContaining([
+        {
+          type: 'field_names',
+          name: 'sprite_number',
+          value: '74',
+          names: 'sprite',
+          listParam: 'custom',
+        },
+      ]),
+    });
+    expect(definition('piece_play_sound')).toMatchObject({
+      args0: expect.arrayContaining([
+        { type: 'field_names', name: 'sound', value: '01', names: 'sound', listParam: 'port' },
+      ]),
     });
   });
 });

@@ -1,0 +1,13 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "c_silver_pswitch",
+  "version": 1,
+  "kind": "condition",
+  "category": "conditions",
+  "name": "Silver P-Switch is active",
+  "description": "True while the silver P-Switch timer is active ($14AE).",
+  "author": "BlockCreator",
+  "slots": "any",
+  "params": [],
+  "clobbers": ["A"]
+}

@@ -1,0 +1,13 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "c_really_on_top",
+  "version": 1,
+  "kind": "condition",
+  "category": "conditions",
+  "name": "Mario is really on top",
+  "description": "True while Mario stands on the block or lands on it: not moving up, and at most 4 pixels into it. Grazing the top corner from the side or falling past does not count.",
+  "author": "BlockCreator",
+  "slots": "mario",
+  "params": [],
+  "clobbers": ["A"]
+}

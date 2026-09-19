@@ -28,7 +28,10 @@ const onOff: Statement = {
         type: 'condition',
         piece: { id: 'c_onoff', version: 1, params: { position: 0 } },
       },
-      body: [act(0x30), { type: 'action', piece: { id: 'hurt_mario', version: 1, params: {} } }],
+      body: [
+        act(0x30),
+        { type: 'action', piece: { id: 'hurt_mario', version: 2, params: { side_hitbox: false } } },
+      ],
     },
   ],
 };

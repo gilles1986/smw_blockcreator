@@ -1,13 +1,20 @@
 {
   "$schema": "../../../core/library/piece.schema.json",
   "id": "hurt_mario",
-  "version": 1,
+  "version": 2,
   "kind": "action",
   "category": "damage",
   "name": "Hurt Mario",
-  "description": "Hurts Mario like an enemy does. Small Mario dies; nothing happens while Mario is invulnerable.",
+  "description": "Hurts Mario like an enemy does. Small Mario dies; nothing happens while Mario is invulnerable. With the muncher hitbox on, a side contact that only touches the edge pixel does not hurt, like vanilla munchers and spikes (for the Left, Right, Inside and Top corner Slots).",
   "author": "BlockCreator",
   "slots": "mario",
-  "params": [],
+  "params": [
+    {
+      "name": "side_hitbox",
+      "label": "Muncher hitbox",
+      "type": "bool",
+      "default": false
+    }
+  ],
   "clobbers": ["A", "X", "Y"]
 }

@@ -15,7 +15,7 @@ LDA #$06
 LDA #$07
 {{else}}
 {{#if sprite_number "223"}}
-LDA #$04
+LDA #$09
 {{else}}
 LDA #{{hex sprite_number 2}}
 {{/if}}

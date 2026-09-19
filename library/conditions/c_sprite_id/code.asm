@@ -20,7 +20,7 @@ CMP #$06
 CMP #$07
 {{else}}
 {{#if sprite_number "223"}}
-CMP #$04
+CMP #$09
 {{else}}
 CMP #{{hex sprite_number 2}}
 {{/if}}

@@ -1,0 +1,64 @@
+/* The search dropdown of a sprite or sound number (namePicker.ts). */
+
+.bc-name-picker {
+  display: grid;
+  gap: 4px;
+  width: 270px;
+  padding: 6px;
+  color: var(--text);
+  background: var(--panel2);
+  border-radius: 6px;
+  font:
+    13px/1.3 system-ui,
+    'Segoe UI',
+    sans-serif;
+}
+
+.bc-name-search {
+  width: 100%;
+  padding: 4px 8px;
+  color: inherit;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  font: inherit;
+}
+
+.bc-name-search:focus {
+  outline: 1px solid var(--accent2);
+  border-color: var(--accent2);
+}
+
+.bc-name-list {
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.bc-name-option {
+  padding: 3px 8px;
+  overflow: hidden;
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.bc-name-option.unnamed {
+  color: var(--muted);
+}
+
+.bc-name-option.current {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.bc-name-option.highlighted,
+.bc-name-option:hover {
+  color: #fff;
+  background: var(--accent2);
+}
+
+.bc-name-none {
+  padding: 3px 8px;
+  color: var(--muted);
+}

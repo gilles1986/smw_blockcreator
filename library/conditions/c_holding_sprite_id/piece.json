@@ -1,0 +1,28 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "c_holding_sprite_id",
+  "version": 1,
+  "kind": "condition",
+  "category": "conditions",
+  "name": "Mario holds sprite",
+  "description": "True if Mario is carrying this sprite: a key, a P-switch, a shell, any vanilla or custom (PIXI) sprite. Needs the routine bc_holding_sprite in the GPS project's routines folder.",
+  "author": "BlockCreator",
+  "slots": "mario",
+  "params": [
+    {
+      "name": "custom",
+      "label": "Custom (PIXI) sprite",
+      "type": "bool",
+      "default": false
+    },
+    {
+      "name": "sprite_number",
+      "label": "Sprite number",
+      "type": "sprite",
+      "listParam": "custom",
+      "default": 128
+    }
+  ],
+  "clobbers": ["A", "X"],
+  "routines": ["bc_holding_sprite"]
+}

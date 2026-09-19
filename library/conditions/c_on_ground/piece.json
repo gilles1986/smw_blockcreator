@@ -1,0 +1,13 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "c_on_ground",
+  "version": 1,
+  "kind": "condition",
+  "category": "conditions",
+  "name": "Mario is on ground",
+  "description": "True if Mario is standing on the ground ($72).",
+  "author": "BlockCreator",
+  "slots": "mario",
+  "params": [],
+  "clobbers": ["A"]
+}

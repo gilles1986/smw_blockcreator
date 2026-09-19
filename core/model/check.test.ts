@@ -58,7 +58,7 @@ describe('checkPieces', () => {
 
   it('names unknown Pieces, Pieces used as the wrong kind and values that do not fit', () => {
     const model = withTop([
-      action('teleport'),
+      action('time_machine'),
       action('c_onoff', { position: 0 }),
       action('act_as', { tile: 0x10000 }),
       {
@@ -75,7 +75,7 @@ describe('checkPieces', () => {
       },
     ]);
     expect(checkPieces(model, library)).toEqual([
-      "marioTop /0: Piece 'teleport' is not in the Library.",
+      "marioTop /0: Piece 'time_machine' is not in the Library.",
       "marioTop /1: Piece 'c_onoff' is a Condition, not an Action.",
       "marioTop /2: 'tile' = 65536 is not a valid Map16 number.",
       "marioTop /3/branches/0/condition: 'position' = 2 is not one of: 0, 1.",

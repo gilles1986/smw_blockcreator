@@ -1,0 +1,27 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "set_item_box",
+  "version": 1,
+  "kind": "action",
+  "category": "level",
+  "name": "Set item box",
+  "description": "Puts an item into Mario's reserve item box ($0DC2), or empties it. What was in the box is replaced without being dropped.",
+  "author": "BlockCreator",
+  "slots": "mario",
+  "params": [
+    {
+      "name": "item",
+      "label": "Item",
+      "type": "enum",
+      "options": [
+        { "value": 0, "label": "Empty" },
+        { "value": 1, "label": "Mushroom" },
+        { "value": 2, "label": "Fire Flower" },
+        { "value": 3, "label": "Starman" },
+        { "value": 4, "label": "Cape Feather" }
+      ],
+      "default": 1
+    }
+  ],
+  "clobbers": ["A"]
+}

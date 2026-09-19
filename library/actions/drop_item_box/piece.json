@@ -1,0 +1,14 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "drop_item_box",
+  "version": 1,
+  "kind": "action",
+  "category": "level",
+  "name": "Drop item box item",
+  "description": "Drops the item from Mario's reserve box as if Select was pressed: it falls from the top of the screen and the sound plays. Does nothing while the box is empty.",
+  "author": "BlockCreator",
+  "slots": "mario",
+  "params": [],
+  "once": true,
+  "clobbers": ["A"]
+}

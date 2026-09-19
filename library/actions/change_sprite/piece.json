@@ -13,6 +13,7 @@
       "name": "sprite_number",
       "label": "Sprite number",
       "type": "sprite",
+      "listParam": "custom",
       "default": 4
     },
     {

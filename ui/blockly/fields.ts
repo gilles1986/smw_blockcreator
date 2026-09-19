@@ -5,7 +5,21 @@ import type { ParamSpec } from '../../core/library';
 import type { Value } from '../../core/template';
 import { formatHex, hexInput, parseHex } from '../hex';
 
+/** Blockly field type of a sprite or sound number, see `nameField.ts`. */
+export const NAMES_FIELD_TYPE = 'field_names';
+
+export interface NamesFieldDefinition {
+  type: typeof NAMES_FIELD_TYPE;
+  name: string;
+  /** The number as two hex digits. */
+  value: string;
+  names: 'sprite' | 'sound';
+  /** The field of the same block that decides which names are listed. */
+  listParam?: string;
+}
+
 export type FieldDefinition =
+  | NamesFieldDefinition
   | { type: 'field_input'; name: string; text: string }
   | { type: 'field_multilinetext'; name: string; text: string }
   | { type: 'field_number'; name: string; value: number; min: number; max: number; precision: 1 }
@@ -38,7 +52,7 @@ export function fieldCodec(param: ParamSpec): FieldCodec {
     }
     case 'sprite':
     case 'sound':
-      return hexCodec(name, 2, 0, 0xff);
+      return namesCodec(param.type, name, param.listParam);
     case 'enum': {
       const options = param.options ?? [];
       return {
@@ -82,6 +96,31 @@ function hexCodec(name: string, digits: number, min: number, max: number): Field
       return value !== undefined && value >= min && value <= max ? value : undefined;
     },
     validator: hexInput(min, max),
+  };
+}
+
+/**
+ * A number 00–FF picked from a dropdown that shows names where there are some. The value is the
+ * same two hex digits a text field would hold, and any number is one of the options.
+ */
+function namesCodec(
+  names: 'sprite' | 'sound',
+  name: string,
+  listParam: string | undefined,
+): FieldCodec {
+  return {
+    definition: (p) => ({
+      type: NAMES_FIELD_TYPE,
+      name,
+      value: formatHex(p.default as number, 2),
+      names,
+      ...(listParam !== undefined && { listParam }),
+    }),
+    toField: (value) => formatHex(value as number, 2),
+    fromField: (raw) => {
+      const value = parseHex(String(raw));
+      return value !== undefined && value <= 0xff ? value : undefined;
+    },
   };
 }
 

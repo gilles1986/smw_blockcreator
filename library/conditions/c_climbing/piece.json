@@ -1,0 +1,13 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "c_climbing",
+  "version": 1,
+  "kind": "condition",
+  "category": "conditions",
+  "name": "Mario is climbing",
+  "description": "True if Mario is currently climbing ($74).",
+  "author": "BlockCreator",
+  "slots": "mario",
+  "params": [],
+  "clobbers": ["A"]
+}

@@ -1,0 +1,13 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "c_in_water",
+  "version": 1,
+  "kind": "condition",
+  "category": "conditions",
+  "name": "Mario is in water",
+  "description": "True if Mario is currently in water ($75).",
+  "author": "BlockCreator",
+  "slots": "mario",
+  "params": [],
+  "clobbers": ["A"]
+}

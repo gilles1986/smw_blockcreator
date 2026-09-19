@@ -1,0 +1,13 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "c_flying",
+  "version": 1,
+  "kind": "condition",
+  "category": "conditions",
+  "name": "Mario is flying",
+  "description": "True if Mario is currently flying with a cape ($1407).",
+  "author": "BlockCreator",
+  "slots": "mario",
+  "params": [],
+  "clobbers": ["A"]
+}

@@ -24,6 +24,7 @@
       "name": "sound",
       "label": "Sound ID",
       "type": "sound",
+      "listParam": "port",
       "default": 1
     }
   ],

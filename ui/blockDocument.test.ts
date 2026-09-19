@@ -148,14 +148,14 @@ describe('saveBlock', () => {
 describe('openBlock checks', () => {
   it('refuses a Block that uses Pieces this Library does not have', async () => {
     const model = JSON.parse(golden.split('\n')[1]!.replace(/^;@?bc-model /, ''));
-    model.slots.marioTop[0].else[0].piece.id = 'teleport';
+    model.slots.marioTop[0].else[0].piece.id = 'time_machine';
     const text = golden.replace(/^;@?bc-model .*$/m, `;bc-model ${JSON.stringify(model)}`);
     const { files, state } = fakeFiles({ 'b.asm': text });
     state.choose = 'b.asm';
     expect(await openBlock(files, { library })).toEqual({
       kind: 'failed',
       message:
-        "b.asm cannot be opened:\n- marioTop /0/else/0: Piece 'teleport' is not in the Library.",
+        "b.asm cannot be opened:\n- marioTop /0/else/0: Piece 'time_machine' is not in the Library.",
     });
   });
 

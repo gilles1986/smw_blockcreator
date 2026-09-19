@@ -1,0 +1,24 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "c_facing",
+  "version": 1,
+  "kind": "condition",
+  "category": "conditions",
+  "name": "Mario is facing",
+  "description": "True if Mario is facing the chosen direction ($76).",
+  "author": "BlockCreator",
+  "slots": "mario",
+  "params": [
+    {
+      "name": "direction",
+      "label": "Direction",
+      "type": "enum",
+      "options": [
+        { "value": 0, "label": "Left" },
+        { "value": 1, "label": "Right" }
+      ],
+      "default": 1
+    }
+  ],
+  "clobbers": ["A"]
+}
