@@ -1,6 +1,6 @@
 # Piece authoring guide + published manifest schema
 
-Status: open
+Status: done
 Blocked by: 08, 03
 Spec: ../spec.md
 
@@ -27,3 +27,9 @@ Spec: ../spec.md
 **Notes from 12 (the Slot in templates)**
 - `{{slot}}` is the id of the Slot the Piece is rendered for (`marioTop` … `spriteRight`), for Pieces whose code depends on the side: `{{#if slot "marioTop" "marioTopCorner"}}`. It is the Slot whose code is written, so it is the Slot other Slots are linked to. It is reserved: a parameter cannot be called `slot`. `{{#if name "a" "b"}}` is true when `name` is any of the values.
 - Negative immediates in templates: `LDA #-{{hex strength 2}}` is fine, Asar takes `#-$30`.
+
+**Result (2026-09-19)**
+- `docs/piece-authoring.md`: folder layout, the manifest and the Slot ids, parameters and their types, the template language, what the code runs as (entry and exit state, every frame, scratch RAM, GPS routines), Conditions, `clobbers`, labels, long branches, SA-1, one-shot Actions, routines, versions and credits, how to check a Piece, a worked example and a checklist. All the notes above are in it.
+- The worked example ("Mario is on Yoshi and ducking", `c_yoshi_ducking`) is a real Library folder, `docs/examples/piece-authoring/`, and the guide shows its two files. `core/library/authoring.test.ts` loads it as a user Library next to the built-in one, checks what it renders and generates, that the guide shows its files and the generated code exactly, and that the guide names every manifest field, parameter type, Slot id, reserved word and template tag (it caught a gap while it was written); `npm run check:asar` assembles it in every Mario Slot, both ways.
+- The manifest schema stays at `core/library/piece.schema.json`; the guide tells authors to point `$schema` at it. Publishing it at a URL waits for the repository going public.
+- The guide says the truth about where a Piece goes: the built-in `library/` folder. A user Library folder is not loaded by the app until ticket 16.

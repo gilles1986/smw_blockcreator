@@ -6,7 +6,8 @@ import { describe, expect, it } from 'vitest';
 import { generate } from '../generator';
 import { SLOT_IDS, slotKind, type BlockModel, type Statement } from '../model';
 import { findGpsFolder, gpsRoutines, nodeAsarRunner } from '../testing/asar';
-import { builtInLibrary } from '../testing/library';
+import { mergeLibraries } from '../library';
+import { builtInLibrary, libraryFolder } from '../testing/library';
 import { checkBlock } from './index';
 
 const gps = findGpsFolder();
@@ -177,6 +178,34 @@ describe.skipIf(!gps)('Asar (GPS project asar.dll)', { timeout: 120_000 }, () =>
               }
             }
           }
+        }
+      }
+    }
+    expect(failures).toEqual([]);
+  });
+
+  it('assembles the worked example of the authoring guide in every Mario Slot, both ways', async () => {
+    const examples = join(import.meta.dirname, '..', '..', 'docs', 'examples', 'piece-authoring');
+    const withExample = mergeLibraries(library, libraryFolder(examples));
+    expect(withExample.errors).toEqual([]);
+    const failures: string[] = [];
+    for (const ducking of [true, false]) {
+      const statement: Statement = {
+        type: 'if',
+        branches: [
+          {
+            condition: {
+              type: 'condition',
+              piece: { id: 'c_yoshi_ducking', version: 1, params: { ducking } },
+            },
+            body: [],
+          },
+        ],
+      };
+      for (const slot of SLOT_IDS.filter((s) => slotKind(s) === 'mario')) {
+        const generated = generate({ properties, slots: { [slot]: [statement] } }, withExample);
+        for (const problem of await checkBlock(generated, routines, run)) {
+          failures.push(`ducking=${ducking} in ${slot}: ${problem.message}`);
         }
       }
     }

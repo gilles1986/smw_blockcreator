@@ -1,6 +1,6 @@
 # BlockCreator
 
-A visual editor for Super Mario World custom blocks (GPS). Compose a block's behaviour from reusable Pieces per Slot, get SA-1-compatible GPS `.asm`, and re-open anything the tool generated. See [CONTEXT.md](CONTEXT.md) for the vocabulary and [docs/adr](docs/adr) for the decisions.
+A visual editor for Super Mario World custom blocks (GPS). Compose a block's behaviour from reusable Pieces per Slot, get SA-1-compatible GPS `.asm`, and re-open anything the tool generated. See [CONTEXT.md](CONTEXT.md) for the vocabulary and [docs/adr](docs/adr) for the decisions. To write your own Pieces (the building blocks of the editor), read [docs/piece-authoring.md](docs/piece-authoring.md).
 
 ## Layout
 

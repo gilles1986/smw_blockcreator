@@ -1,0 +1,20 @@
+{
+  "$schema": "../../../../../core/library/piece.schema.json",
+  "id": "c_yoshi_ducking",
+  "version": 1,
+  "kind": "condition",
+  "category": "conditions",
+  "name": "Mario is on Yoshi and ducking",
+  "description": "True while Mario rides Yoshi ($187A) and is ducking ($73). Turn Ducking off to test for riding Yoshi without ducking.",
+  "author": "Your Name",
+  "slots": "mario",
+  "params": [
+    {
+      "name": "ducking",
+      "label": "Ducking",
+      "type": "bool",
+      "default": true
+    }
+  ],
+  "clobbers": ["A"]
+}
