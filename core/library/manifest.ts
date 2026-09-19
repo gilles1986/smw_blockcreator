@@ -19,6 +19,12 @@ export interface ParamSpec {
   format?: 'hex' | 'dec';
   /** enum only */
   options?: EnumOption[];
+  /**
+   * sprite and sound only: another parameter of the Piece that decides which names are shown. A
+   * sprite lists the PIXI sprites when that `bool` parameter is on, a sound the sounds of the
+   * port that `enum` parameter holds.
+   */
+  listParam?: string;
 }
 
 export type Register = 'A' | 'X' | 'Y';

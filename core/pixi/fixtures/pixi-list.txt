@@ -1,0 +1,75 @@
+;===================================================
+; PIXI SPRITES LIST
+;===================================================
+; This list file specifies sprites to be inserted by
+; PIXI, broken down below by type of sprite.
+;===================================================
+
+
+;===================================================
+; CUSTOM SPRITES (.cfg or .json)
+;---------------------------------------------------
+; Each sprite can be inserted into the list by their
+; sprite number and the name of the CFG/JSON file,
+; for example: "00 sprite_name.cfg".
+;===================================================
+SPRITE:
+06 sprite_42452_Chasing_&_Hidden_Rex/ChasinRex.json
+05 sprite_29851_Ghost_Shell/ghost-shell.json
+07 MotorShell.cfg
+
+; Normal Sprites (00-BF)
+00 platform_megapack/platform_megapack.json
+01 ExtendedSpriteKiller.json
+02 FlyingQuestionBlock.json
+
+; Timed Platforms Needs custom graphics 
+; SP3 -> 213 if you want to use the arrow indicators
+; SP4 -> 220 for numbers until 9
+03 TimedPlatform/TimedPlatform-AnyTimeAndDirection.json
+
+04 Mega_Mole/mega_mole_BF.json
+
+; For use with the Donut block
+A0 donut_sprite.cfg
+
+; Shooter Sprites (C0-CF)
+
+
+; Generator Sprites (D0-DF)
+
+
+;===================================================
+; OTHER SPRITES (.asm)
+;---------------------------------------------------
+; Other types of sprite supported by PIXI are shown
+; below. They can be listed by sprite number and the
+; name of the asm file, e.g. "00 sprite_name.asm".
+;===================================================
+
+; Extended Sprites (00-FF)
+EXTENDED:
+
+
+; Cluster Sprites (00-FF)
+CLUSTER:
+
+
+; Minor Extended Sprites (00-FF)
+MINOREXTENDED:
+
+
+; Bounce Sprites (00-FF)
+BOUNCE:
+
+
+; Smoke Sprites (00-FF)
+SMOKE:
+
+
+; Spinning Coin Sprites (00-FF)
+SPINNINGCOIN:
+
+
+; Score Sprites (00-FF)
+SCORE:

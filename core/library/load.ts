@@ -174,8 +174,23 @@ function checkCrossFields(
     errors.push(
       ...checkDefault(param).map((error) => ({ ...error, field: `${field}.${error.field}` })),
     );
+    const listError = checkListParam(param, manifest.params);
+    if (listError) errors.push({ field: `${field}.listParam`, message: listError });
   });
   return errors;
+}
+
+/** `listParam` belongs to sprite and sound parameters and names a bool (sprite) or enum (sound). */
+function checkListParam(param: ParamSpec, params: readonly ParamSpec[]): string | undefined {
+  if (param.listParam === undefined) return undefined;
+  const wanted = { sprite: 'bool', sound: 'enum' }[param.type as 'sprite' | 'sound'];
+  if (wanted === undefined) return "is only for 'sprite' and 'sound' parameters";
+  const target = params.find((other) => other.name === param.listParam);
+  if (!target || target === param) return `'${param.listParam}' is not another parameter`;
+  if (target.type !== wanted) {
+    return `'${param.listParam}' must be a '${wanted}' parameter for a '${param.type}'`;
+  }
+  return undefined;
 }
 
 function checkDefault(param: ParamSpec): { field: 'default' | 'max'; message: string }[] {

@@ -1,0 +1,324 @@
+; GPS CUSTOM BLOCKS LIST --------------------------------------------
+; Place your custom blocks in this list file like so:
+;
+;    <map16 tile number>:<block act-as> custom_block.asm
+;
+; Lines with a ; at the start are comments that are ignored by GPS
+; -------------------------------------------------------------------
+
+; Add your blocks here
+; Be sure not to use a tile value already in use below
+
+; 400:130 example.asm
+
+
+; BASEROM RESERVED BLOCKS BELOW -------------------------------------
+; The following blocks are largely on Pages 02 and 03 of Map16
+; To be safe, start listing your additions on Page 04 (400).
+; -------------------------------------------------------------------
+
+; PAGE 02 OF MAP16 --------------------------------------------------
+; 200-20A - reserved for layer 3 Tide act-as feature
+; 209-28F - occupied with vanilla Tiles
+
+; Custom Global Blocks
+
+0290:0130 global/mario_passable.asm
+0291:0130 global/sprite_passable.asm
+0292:0025 global/sprite_bounce.asm
+0293:0025 global/one_way_down.asm
+0294:0025 global/one_way_left.asm
+0295:0025 global/one_way_right.asm
+0296:0130 on_off/passthrough_when_off.asm
+0297:0130 on_off/passthrough_when_on.asm
+0298:0130 global/breakable_by_item.asm
+0299:0025 global/sprite_killer.asm
+029A:0130 global/hurt_death.asm
+029B:0025 global/hurt_death+sprite_passthrough.asm
+029C:0025 global/remove_powerup.asm
+029D:0100 global/donut_lift.asm
+029E:0130 global/endless_throwblock.asm
+029F:0025 global/ledge_vine.asm
+02A0:0025 global/fake_spiny.asm
+02A1:0025 global/fake_swooper.asm
+02A2:0025 on_off/set_to_on.asm
+02A3:0025 on_off/set_to_off.asm
+02A4:0025 global/teleport.asm
+02A5:0130 global/single_use_bounce_block.asm
+02A6:0130 global/bumper.asm
+02A7:0025 on_off/collectable_set_to_on.asm
+02A8:0025 on_off/collectable_set_to_off.asm
+;02A9 reserved by baserom
+02AA:0025 camera/scroll_left.asm
+02AB:0025 camera/scroll_right.asm
+02AC:0025 camera/horz_start.asm
+02AD:0025 camera/horz_stop.asm
+02AE:0025 camera/vert_start.asm
+02AF:0025 camera/vert_stop.asm
+
+; Custom Question Blocks
+02B0:0130 question_blocks/74_mushroom.asm
+02B1:0130 question_blocks/75_fire_flower.asm
+02B2:0130 question_blocks/77_feather.asm
+02B3:0130 question_blocks/35_egg.asm
+02B4:0130 question_blocks/79_vine.asm
+02B5:0130 question_blocks/7D_p-balloon.asm
+02B6:0130 question_blocks/80_key.asm
+02B7:0130 question_blocks/53_throw_block.asm
+02B8:0130 question_blocks/85_poison_mushroom.asm
+02B9:0130 question_blocks/85_poison_mushroom+extra-bit.asm
+02BA:0130 question_blocks/0F_goomba.asm
+02BB:0130 question_blocks/18_fish.asm
+02BC:0130 question_blocks/3E_blue_pswitch.asm
+02BD:0130 question_blocks/3E_silver_pswitch.asm
+02BE:0130 question_blocks/2F_spring.asm
+02BF:0130 question_blocks/81_roulette_power-up.asm
+
+; Spawn Carryables
+02E0:049 base/SpawnCarryableSprite.asm 
+02E1:04a base/SpawnCarryableSprite.asm
+02E2:04B base/SpawnCarryableSprite.asm
+02E3:04C base/SpawnCarryableSprite.asm 
+02E4:04D base/SpawnCarryableSprite.asm 
+02E5:04E base/SpawnCarryableSprite.asm 
+
+; Sprite Only Triangles (one-way bounce for kicked sprites, Mario passes through)
+02E6:025 base/SpriteOnlyTriangle-RightwardsKicked.asm
+02E7:025 base/SpriteOnlyTriangle-LeftwardsKicked.asm
+
+02E8:025 base/boost_up.asm
+
+; Sticky Ceiling (SMWC #14496 by MellyMellouange)
+02E9:025 base/stickyceiling.asm
+
+; Sticky Ceiling that sprites can walk on (solid for sprites from above)
+02F8:025 base/stickyceiling_spritesolid.asm
+
+;Keyblocks
+;16x32
+2CE:130 base/KeylockBlocks(Remote)/16x32_V_Keyblk_T.asm
+2DE:130 base/KeylockBlocks(Remote)/16x32_V_Keyblk_B.asm
+;16x48
+2CF:130 base/KeylockBlocks(Remote)/16x48_V_Keyblk_T.asm
+2DF:130 base/KeylockBlocks(Remote)/16x48_V_Keyblk_M.asm
+2EF:130 base/KeylockBlocks(Remote)/16x48_V_Keyblk_B.asm
+;32x16
+2EA:130 base/KeylockBlocks(Remote)/32x16_H_Keyblk_L.asm
+2EB:130 base/KeylockBlocks(Remote)/32x16_H_Keyblk_R.asm
+;48x16 
+2EC:130 base/KeylockBlocks(Remote)/48x16_H_Keyblk_L.asm
+2ED:130 base/KeylockBlocks(Remote)/48x16_H_Keyblk_M.asm
+2EE:130 base/KeylockBlocks(Remote)/48x16_H_Keyblk_R.asm
+
+; ON/OFF Blocks
+2F0:025 base/OnDeathBlock.asm
+2F1:025 base/OffDeathBlock.asm
+
+; Transform Blocks
+2F2:025 base/sprite_solid.asm
+2F3:025 base/sprite_solid_off_trigger.asm
+
+;Sprite Manipulation
+2F4:025 base/sprite_speed_limit_down.asm
+2F5:025 base/sprite_speed_limit_slow.asm
+2F6:025 base/sprite_speed_limit_fast.asm
+2F7:025 base/turn-into-disco.asm
+
+; ON / OFF One Time
+330:130 on_off/OnSwitch-SingleHitSynchronized.asm
+331:130 on_off/OffSwitch-SingleHitSynchronized.asm
+
+; One way sprites
+340:25 base/one_way_right_sprite.asm
+341:25 base/one_way_left_sprite.asm
+342:130 base/one_way_up_sprite.asm
+
+; Camera Block
+35B:025 camera/CameraScrollingBlock.asm
+
+;Collectable 1F0
+371:1F0 base/Collectable.asm
+; PAGE 03 OF MAP16 --------------------------------------------------
+
+; Screen Scrolling Pipes
+
+; Large Vertical Two-Way Pipe
+0300:0130 screen_scrolling_pipes/vertical_top_pipe_cap_L.asm
+0301:0130 screen_scrolling_pipes/vertical_top_pipe_cap_R.asm
+0310:0130 screen_scrolling_pipes/pass_if_in_pipe.asm
+0311:0130 screen_scrolling_pipes/pass_if_in_pipe.asm
+0320:0130 screen_scrolling_pipes/vertical_bottom_pipe_cap_L.asm
+0321:0130 screen_scrolling_pipes/vertical_bottom_pipe_cap_R.asm
+; Large Horizontal Two-Way Pipe
+0302:0130 screen_scrolling_pipes/pass_if_in_pipe.asm
+0303:0130 screen_scrolling_pipes/pass_if_in_pipe.asm
+0304:0130 screen_scrolling_pipes/pass_if_in_pipe.asm
+0312:0130 screen_scrolling_pipes/horizontal_left_pipe_cap_B.asm
+0313:0130 screen_scrolling_pipes/pass_if_in_pipe.asm
+0314:0130 screen_scrolling_pipes/horizontal_right_pipe_cap_B.asm
+; Small Vertical Two-Way Pipe
+0305:0130 screen_scrolling_pipes/vertical_top_pipe_cap_small.asm
+0315:0130 screen_scrolling_pipes/pass_if_in_pipe.asm
+0325:0130 screen_scrolling_pipes/vertical_bottom_pipe_cap_small.asm
+; Small Horizontal Two-Way Pipe
+0322:0130 screen_scrolling_pipes/horizontal_left_pipe_cap_small.asm
+0323:0130 screen_scrolling_pipes/pass_if_in_pipe.asm
+0324:0130 screen_scrolling_pipes/horizontal_right_pipe_cap_small.asm
+
+; Large Vertical One-Way Pipe (Downward)
+0306:0130 screen_scrolling_pipes/vertical_top_pipe_cap_L.asm
+0307:0130 screen_scrolling_pipes/vertical_top_pipe_cap_R.asm
+0316:0130 screen_scrolling_pipes/pass_if_in_pipe.asm
+0317:0130 screen_scrolling_pipes/pass_if_in_pipe.asm
+0326:0130 screen_scrolling_pipes/vertical_bottom_pipe_cap_L_exit.asm
+0327:0130 screen_scrolling_pipes/vertical_bottom_pipe_cap_R_exit.asm
+; Large Horizontal One-Way Pipe (Leftward)
+0308:0130 screen_scrolling_pipes/pass_if_in_pipe.asm
+0309:0130 screen_scrolling_pipes/pass_if_in_pipe.asm
+030A:0130 screen_scrolling_pipes/pass_if_in_pipe.asm
+0318:0130 screen_scrolling_pipes/horizontal_left_pipe_cap_B_exit.asm
+0319:0130 screen_scrolling_pipes/pass_if_in_pipe.asm
+031A:0130 screen_scrolling_pipes/horizontal_right_pipe_cap_B.asm
+; Small Vertical One-Way Pipe (Downward)
+030B:0130 screen_scrolling_pipes/vertical_top_pipe_cap_small.asm
+031B:0130 screen_scrolling_pipes/pass_if_in_pipe.asm
+032B:0130 screen_scrolling_pipes/vertical_bottom_pipe_cap_small_exit.asm
+; Small Horizontal One-Way Pipe (Leftward)
+0328:0130 screen_scrolling_pipes/horizontal_left_pipe_cap_small.asm
+0329:0130 screen_scrolling_pipes/pass_if_in_pipe.asm
+032A:0130 screen_scrolling_pipes/horizontal_right_pipe_cap_B_exit.asm
+
+; Large Vertical One-Way Pipe (Upward)
+0336:0130 screen_scrolling_pipes/vertical_top_pipe_cap_L_exit.asm
+0337:0130 screen_scrolling_pipes/vertical_top_pipe_cap_R_exit.asm
+0346:0130 screen_scrolling_pipes/vertical_bottom_pipe_cap_L.asm
+0347:0130 screen_scrolling_pipes/vertical_bottom_pipe_cap_R.asm
+; Large Horizontal One-Way Pipe (Rightward)
+0338:0130 screen_scrolling_pipes/pass_if_in_pipe.asm
+0339:0130 screen_scrolling_pipes/pass_if_in_pipe.asm
+0348:0130 screen_scrolling_pipes/horizontal_left_pipe_cap_B.asm
+0349:0130 screen_scrolling_pipes/horizontal_right_pipe_cap_B_exit.asm
+; Small Vertical One-Way Pipe (Upward)
+033B:0130 screen_scrolling_pipes/vertical_top_pipe_cap_small_exit.asm
+034B:0130 screen_scrolling_pipes/vertical_bottom_pipe_cap_small.asm
+; Small Horizontal One-Way Pipe (Rightward)
+033A:0130 screen_scrolling_pipes/horizontal_left_pipe_cap_B_exit.asm
+034A:0130 screen_scrolling_pipes/horizontal_right_pipe_cap_small.asm
+
+; Turn Block (Right-Up)
+030C:0130 screen_scrolling_pipes/pass_if_in_pipe.asm
+030D:0130 screen_scrolling_pipes/pass_if_in_pipe.asm
+031C:0130 screen_scrolling_pipes/turn_up-right.asm
+031D:0130 screen_scrolling_pipes/pass_if_in_pipe.asm
+; Turn Block (Right-Down)
+030E:0130 screen_scrolling_pipes/pass_if_in_pipe.asm
+030F:0130 screen_scrolling_pipes/pass_if_in_pipe.asm
+031E:0130 screen_scrolling_pipes/pass_if_in_pipe.asm
+031F:0130 screen_scrolling_pipes/turn_right-down.asm
+; Turn Block (Left-Up)
+032C:0130 screen_scrolling_pipes/pass_if_in_pipe.asm
+032D:0130 screen_scrolling_pipes/pass_if_in_pipe.asm
+033C:0130 screen_scrolling_pipes/turn_left-up.asm
+033D:0130 screen_scrolling_pipes/pass_if_in_pipe.asm
+; Turn Block (Left-Down)
+032E:0130 screen_scrolling_pipes/pass_if_in_pipe.asm
+032F:0130 screen_scrolling_pipes/pass_if_in_pipe.asm
+033E:0130 screen_scrolling_pipes/pass_if_in_pipe.asm
+033F:0130 screen_scrolling_pipes/turn_down-left.asm
+
+; Small Turn Blocks
+034C:0130 screen_scrolling_pipes/turn_up-right_small.asm
+034D:0130 screen_scrolling_pipes/turn_right-down_small.asm
+035C:0130 screen_scrolling_pipes/turn_left-up_small.asm
+035D:0130 screen_scrolling_pipes/turn_down-left_small.asm
+
+; Pass if In Pipe
+036F:0130 screen_scrolling_pipes/pass_if_in_pipe.asm
+
+; Filter Pipe
+0332-0335:0130 screen_scrolling_pipes/pass_if_in_pipe+item_filter.asm
+0342-0345:0130 screen_scrolling_pipes/pass_if_in_pipe+item_filter.asm
+
+; ON/OFF Pipe
+0350:0130 screen_scrolling_pipes/pass_if_in_pipe+set_to_on.asm
+0351:0130 screen_scrolling_pipes/pass_if_in_pipe+set_to_off.asm
+0352-0354:0130 screen_scrolling_pipes/pass_if_in_pipe+set_to_on.asm
+0355:0130 screen_scrolling_pipes/pass_if_in_pipe+set_to_off.asm
+0356-0357:0130 screen_scrolling_pipes/pass_if_in_pipe+set_to_on.asm
+0360:0130 screen_scrolling_pipes/pass_if_in_pipe+set_to_on.asm
+0361:0130 screen_scrolling_pipes/pass_if_in_pipe+set_to_off.asm
+0362-0363:0130 screen_scrolling_pipes/pass_if_in_pipe+set_to_off.asm
+0364:0130 screen_scrolling_pipes/pass_if_in_pipe+set_to_on.asm
+0365-0367:0130 screen_scrolling_pipes/pass_if_in_pipe+set_to_off.asm
+
+0400:025 base/death_sprite_1f0.asm
+0401:025 temp1.asm
+0402:130 shell_to_platform.asm
+0403:130 mini_p_switch.asm
+0404:130 Shell_to_Goomba.asm
+0405:130 Spin_Block.asm
+
+; Additional Tile Descriptions
+@dsc
+
+200 0 Tile that can be used with Lunar Magic's Layer 3 tide Act As feature.
+201 0 Tile that can be used with Lunar Magic's Layer 3 tide Act As feature.
+202 0 Tile that can be used with Lunar Magic's Layer 3 tide Act As feature.
+203 0 Tile that can be used with Lunar Magic's Layer 3 tide Act As feature.
+204 0 Tile that can be used with Lunar Magic's Layer 3 tide Act As feature.
+205 0 Tile that can be used with Lunar Magic's Layer 3 tide Act As feature.
+206 0 Tile that can be used with Lunar Magic's Layer 3 tide Act As feature.
+207 0 Tile that can be used with Lunar Magic's Layer 3 tide Act As feature.
+208 0 Tile that can be used with Lunar Magic's Layer 3 tide Act As feature.
+209 0 Tile that can be used with Lunar Magic's Layer 3 tide Act As feature.
+20A 0 Tile that can be used with Lunar Magic's Layer 3 tide Act As feature.
+2E6 0 Sprite only triangle: bounces rightward-kicked sprites, solid from the left, Mario passes through.
+2E7 0 Sprite only triangle: bounces leftward-kicked sprites, solid from the right, Mario passes through.
+2E9 0 Sticky ceiling: solid, but Mario and upward-moving sprites stick to it. Hold jump to stay stuck.
+2C4 0 Arrow pointing down.
+2C5 0 Arrow pointing left.
+2D4 0 Arrow pointing right.
+2D5 0 Arrow pointing up.
+3C6 0 Upper left part of large circular line guide.
+3C7 0 Upper left part of large circular line guide.
+3D6 0 Upper left part of large circular line guide.
+3D7 0 Upper left part of large circular line guide.
+3E6 0 Lower left part of large circular line guide.
+3E7 0 Lower left part of large circular line guide.
+3F6 0 Lower left part of large circular line guide.
+3F7 0 Lower left part of large circular line guide.
+3C8 0 Upper right part of large circular line guide.
+3C9 0 Upper right part of large circular line guide.
+3D8 0 Upper right part of large circular line guide.
+3D9 0 Upper right part of large circular line guide.
+3E8 0 Lower right part of large circular line guide.
+3E9 0 Lower right part of large circular line guide.
+3F8 0 Lower right part of large circular line guide.
+3F9 0 Lower right part of large circular line guide.
+3CE 0 Upper left part of small circular line guide.
+3CF 0 Upper right part of small circular line guide.
+3DE 0 Lower left part of small circular line guide.
+3DF 0 Lower right part of small circular line guide.
+3CA 0 Horizontal line guide. Sprite can be placed one tile ABOVE and still be on the line.
+3DA 0 Horizontal line guide. Sprite can be placed one tile BELOW and still be on the line.
+3CB 0 Horizontal line guide end.
+3DB 0 Horizontal line guide end.
+3EA 0 Vertical line guide. Sprite can be placed one tile LEFT and still be on the line.
+3EB 0 Vertical line guide. Sprite can be placed one tile RIGHT and still be on the line.
+3FA 0 Vertical line guide end.
+3FB 0 Vertical line guide end.
+3EC 0 -45 degree line guide.
+3ED 0 45 degree line guide.
+3FC 0 45 degree ON/OFF line guide.
+3FD 0 -45 degree ON/OFF line guide.
+3CC 0 Part of leftward steep line guide.
+3DC 0 Part of leftward steep line guide.
+3CD 0 Part of rightward steep line guide.
+3DD 0 Part of rightward steep line guide.
+3EE 0 Part of rightward gradual line guide.
+3EF 0 Part of rightward gradual line guide.
+3FE 0 Part of leftward gradual line guide.
+3FF 0 Part of leftward gradual line guide.
+
+; Don't add blocks here!
+; Blocks must be added to the list above the "@dsc" section.

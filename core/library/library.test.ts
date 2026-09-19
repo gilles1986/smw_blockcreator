@@ -101,6 +101,7 @@ describe('loadLibrary', () => {
       ],
       default: 0,
     };
+    const sprite = { name: 'sprite_number', label: 'Sprite', type: 'sprite', default: 4 };
     const crossFieldCases: [string, unknown, { field: string; message: string }][] = [
       [
         'an id that differs from the folder',
@@ -137,10 +138,43 @@ describe('loadLibrary', () => {
         { ...actAs, params: [number, { ...number, label: 'Other' }] },
         { field: 'params[1].name', message: "'speed' is already used by params[0]" },
       ],
+      [
+        'a listParam on a number',
+        { ...actAs, params: [{ ...number, listParam: 'custom' }] },
+        { field: 'params[0].listParam', message: "is only for 'sprite' and 'sound' parameters" },
+      ],
+      [
+        'a listParam that names no other parameter',
+        { ...actAs, params: [{ ...sprite, listParam: 'missing' }] },
+        { field: 'params[0].listParam', message: "'missing' is not another parameter" },
+      ],
+      [
+        'a sprite that lists by something other than a bool',
+        { ...actAs, params: [{ ...sprite, listParam: 'speed' }, number] },
+        {
+          field: 'params[0].listParam',
+          message: "'speed' must be a 'bool' parameter for a 'sprite'",
+        },
+      ],
     ];
 
     it.each(crossFieldCases)('reports %s', (_, manifest, expected) => {
       expect(errorsFor(manifest)).toEqual([{ origin: 'builtin', file, ...expected }]);
+    });
+
+    it('accepts a sprite that lists by a bool and a sound that lists by an enum', () => {
+      const custom = { name: 'custom', label: 'Custom', type: 'bool', default: false };
+      const port = { ...onOff, name: 'port', default: 0 };
+      const sound = { name: 'sound', label: 'Sound', type: 'sound', default: 1, listParam: 'port' };
+      const library = loadLibrary(
+        files({
+          [file]: { ...actAs, params: [{ ...sprite, listParam: 'custom' }, custom, sound, port] },
+          'actions/act_as/code.asm': 'NOP',
+        }),
+        'builtin',
+      );
+      expect(library.errors).toEqual([]);
+      expect(library.pieces.get('act_as')?.manifest.params[0]?.listParam).toBe('custom');
     });
 
     it('reports a manifest that is not JSON', () => {
