@@ -1,6 +1,6 @@
 # Asar validation with error mapping to Slot and Piece
 
-Status: open
+Status: done
 Blocked by: 04
 Spec: ../spec.md
 

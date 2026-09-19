@@ -6,7 +6,7 @@ A visual editor for Super Mario World custom blocks (GPS). Compose a block's beh
 
 - `core/` — framework-free TypeScript (template, library, model, generator, header, …). No React, Tauri, Blockly or DOM imports; tested with Vitest.
 - `ui/` — React front-end (Vite).
-- `src-tauri/` — Tauri 2 shell (file dialogs, file system, spawning Asar).
+- `src-tauri/` — Tauri 2 shell (file dialogs, file system, Asar checks with the GPS project's `asar.dll`).
 
 ## Develop
 

@@ -372,3 +372,46 @@ button:disabled {
   font-weight: 500;
 }
 
+.slot-row.has-error .dot {
+  background: var(--danger);
+  border-color: var(--danger);
+}
+
+.check-results {
+  margin: 0;
+  padding: 6px 12px;
+  list-style: none;
+  font-size: 12px;
+  border-bottom: 1px solid var(--line);
+  max-height: 30%;
+  overflow: auto;
+}
+
+.check-results li {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  padding: 2px 0;
+}
+
+.check-results .check-ok {
+  color: var(--filled);
+}
+
+.check-results .check-error {
+  color: var(--text);
+}
+
+.check-results .check-error button {
+  padding: 0 6px;
+  font-size: 12px;
+  border-color: var(--danger);
+}
+
+.check-results .piece {
+  font-weight: 500;
+}
+
+.check-results .line {
+  color: var(--muted);
+}

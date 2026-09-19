@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import {
   cornerFollowsTop,
+  effectiveSlot,
   slotFilled,
   slotLinkTarget,
   type BlockModel,
@@ -12,15 +13,19 @@ interface Props {
   model: BlockModel;
   selected: SlotId;
   onSelect: (slot: SlotId) => void;
+  /** Slots the last Asar check found errors in. */
+  errorSlots?: ReadonlySet<SlotId>;
 }
 
 /** Slot rows grouped under Mario and Sprite, with a filled dot per row (variant C). */
-export function SlotList({ model, selected, onSelect }: Props) {
+export function SlotList({ model, selected, onSelect, errorSlots }: Props) {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const row = (slot: SlotId) => {
     const filled = slotFilled(model, slot);
+    const hasError = errorSlots?.has(effectiveSlot(model, slot)) ?? false;
     const linkTarget = slotLinkTarget(model, slot);
-    const linked = (slot === 'marioTopCorner' && cornerFollowsTop(model)) || linkTarget !== undefined;
+    const linked =
+      (slot === 'marioTopCorner' && cornerFollowsTop(model)) || linkTarget !== undefined;
     const summary =
       slot === 'marioTopCorner' && cornerFollowsTop(model)
         ? '= Top'
@@ -31,7 +36,7 @@ export function SlotList({ model, selected, onSelect }: Props) {
       <button
         key={slot}
         type="button"
-        className={`slot-row${slot === selected ? ' selected' : ''}${filled ? ' filled' : ''}${linked ? ' linked' : ''}`}
+        className={`slot-row${slot === selected ? ' selected' : ''}${filled ? ' filled' : ''}${linked ? ' linked' : ''}${hasError ? ' has-error' : ''}`}
         aria-pressed={slot === selected}
         onClick={() => onSelect(slot)}
       >

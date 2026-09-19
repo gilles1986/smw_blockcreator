@@ -121,3 +121,4 @@ export function cornerFollowsTop(model: BlockModel): boolean {
 }
 
 export { checkPieces } from './check';
+export { pieceAtPath } from './path';

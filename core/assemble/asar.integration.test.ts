@@ -50,6 +50,26 @@ describe.skipIf(!gps)('Asar (GPS project asar.dll)', () => {
     expect(generated.text.split('\n')[problems[0]!.line! - 1]).toBe('\tLDAX #$30');
   });
 
+  it('puts a typo in a Custom ASM Action on that Action, whichever of its lines it is on', async () => {
+    const model: BlockModel = {
+      properties,
+      slots: {
+        spriteLeft: [
+          { type: 'action', piece: { id: 'act_as', version: 1, params: { tile: 0x25 } } },
+          {
+            type: 'action',
+            piece: { id: 'custom_asm', version: 1, params: { code: '; fine\nLDAX #$30' } },
+          },
+        ],
+      },
+    };
+    const generated = generate(model, library);
+    const problems = await checkBlock(generated, routines, run);
+    expect(problems).toHaveLength(1);
+    expect(problems[0]).toMatchObject({ origin: { slot: 'spriteLeft', path: '/1' } });
+    expect(generated.text.split('\n')[problems[0]!.line! - 1]).toBe('\tLDAX #$30');
+  });
+
   it('assembles every Library Piece with its defaults in each kind of Slot it allows', async () => {
     const failures: string[] = [];
     for (const { manifest } of library.pieces.values()) {

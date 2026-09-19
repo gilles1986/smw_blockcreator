@@ -84,7 +84,7 @@ Importing foreign GPS blocks (v2), Map16 tile graphics (v2), free-RAM one-shot g
 
 ## Architecture
 
-- **Shell**: Tauri 2 (Rust) — only file dialogs, file system access, and spawning Asar. Prefer official Tauri plugins (dialog, fs, shell) over custom Rust.
+- **Shell**: Tauri 2 (Rust) — only file dialogs, file system access, and running Asar (the GPS project's `asar.dll`, ADR 4). Prefer official Tauri plugins (dialog, fs) over custom Rust; loading the DLL is the one custom command.
 - **Front-end**: TypeScript + Vite + React; Blockly 11+.
 - **`core/`** (framework-free TypeScript, no Tauri or DOM imports; the deep modules):
   - `template` — Mustache-subset renderer.
@@ -95,7 +95,7 @@ Importing foreign GPS blocks (v2), Map16 tile graphics (v2), free-RAM one-shot g
   - `listtxt` — parse / edit GPS `list.txt` preserving everything else; PIXI list reader.
   - `summary` — one-line Slot summaries.
 - **UI**: `ui/` React components; Blockly block definitions generated from manifests; workspace ↔ model adapters.
-- **Validation**: Asar invoked via Tauri shell on a temp harness file.
+- **Validation**: the GPS project's `asar.dll`, loaded by a Tauri command, on a temp harness file (ADR 4).
 
 ## Testing
 - `core` with Vitest: template unit tests; generator golden files (every preset → expected `.asm`); header round-trip (generate → parse → equal model); property test: random models round-trip; `list.txt` edit tests on fixtures copied from a real project.
@@ -103,7 +103,6 @@ Importing foreign GPS blocks (v2), Map16 tile graphics (v2), free-RAM one-shot g
 - Manual QA in an emulator (HITL) for the facts marked unverified in the research.
 
 ## Open questions
-- Asar distribution: ship `asar.exe` (check licence) vs. use the project's `asar.dll`.
 - WallFeet vs. WallBody mapping (GPS comments contradict) — verify in emulator.
 - X register in MarioCape; sound ID list per port; spawned custom sprites reading extra bytes from level data.
 - Tool licence before the repo goes public.

@@ -9,3 +9,7 @@ Project open (romhack or GPS folder; detect `gps.exe` + `list.txt`; recent proje
 **Done when**
 - `listtxt` tests on a fixture copied from `Rooms-For-A-Friend/tools/GPS/list.txt` (ranges, rectangles, comments, `@dsc`).
 - Saving twice with the same file updates the entry instead of duplicating it.
+
+**Notes from 09 (Asar validation)**
+- `ui/tauriAsar.ts` asks for the GPS folder (folder dialog) the first time a check runs, also before a save, and remembers it in local storage. With a project open, give `gpsAsar` the project's GPS folder instead and drop the dialog; ask only when no project is open.
+- Save and Save as… check first and go through `saveVerdict` in `ui/checkView.ts` (Asar errors block; a check that cannot run saves with a note). "Save to project…" should use the same verdict.

@@ -16,10 +16,22 @@ interface Props {
   slotKind: SlotKind;
   initialState: WorkspaceState;
   onChange: (state: WorkspaceState) => void;
+  /** Block id → warning text shown on that block (Asar errors). */
+  warnings?: ReadonlyMap<string, string>;
 }
 
+const NO_WARNINGS: ReadonlyMap<string, string> = new Map();
+const ASAR_WARNING = 'asar';
+
 /** A Blockly workspace for one Slot at a time (zelos renderer, dark theme). */
-export function BlocklyEditor({ library, editKey, slotKind, initialState, onChange }: Props) {
+export function BlocklyEditor({
+  library,
+  editKey,
+  slotKind,
+  initialState,
+  onChange,
+  warnings = NO_WARNINGS,
+}: Props) {
   const host = useRef<HTMLDivElement>(null);
   const workspace = useRef<Blockly.WorkspaceSvg | null>(null);
   const onChangeRef = useRef(onChange);
@@ -81,6 +93,21 @@ export function BlocklyEditor({ library, editKey, slotKind, initialState, onChan
   useEffect(() => {
     workspace.current?.updateToolbox(toolbox(library, slotKind));
   }, [slotKind, library]);
+
+  useEffect(() => {
+    const ws = workspace.current;
+    if (!ws) return;
+    // Warning icons are not part of the saved workspace; keep them out of the change events.
+    // The id keeps Asar's warning apart from any other warning a block may carry.
+    Blockly.Events.disable();
+    try {
+      for (const block of ws.getAllBlocks(false)) {
+        block.setWarningText(warnings.get(block.id) ?? null, ASAR_WARNING);
+      }
+    } finally {
+      Blockly.Events.enable();
+    }
+  }, [warnings, editKey, library]);
 
   return <div className="blockly-host" ref={host} />;
 }

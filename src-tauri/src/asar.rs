@@ -122,9 +122,13 @@ fn run(dll: &PathBuf, entry: &Path) -> Result<AsarReport, String> {
     let size = max_rom_size();
     let mut rom = vec![0u8; size.max(0) as usize];
     let mut rom_len: c_int = 0x80000;
-    patch(path.as_ptr(), rom.as_mut_ptr(), size, &mut rom_len);
+    let assembled = patch(path.as_ptr(), rom.as_mut_ptr(), size, &mut rom_len);
     let report = AsarReport { errors: messages(&errors), warnings: messages(&warnings) };
     close();
+    // A failed patch without a message must not pass as a clean check.
+    if !assembled && report.errors.is_empty() {
+      return Err("Asar failed without reporting an error".to_string());
+    }
     Ok(report)
   }
 }

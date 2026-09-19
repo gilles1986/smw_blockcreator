@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { generate, GenerateError } from '../core/generator';
+import { checkBlock, type CheckProblem } from '../core/assemble';
+import { generate, GenerateError, type GenerateResult } from '../core/generator';
 import { canonicalJson } from '../core/header';
 import {
   cornerFollowsTop,
@@ -20,9 +21,20 @@ import {
 } from './blockly/workspace';
 import { DISCARD_QUESTION, HAND_EDIT_WARNING, openBlock, saveBlock } from './blockDocument';
 import { formatHex, parseHex } from './hex';
+import { CheckResults } from './CheckResults';
+import {
+  blockWarnings,
+  checkNotice,
+  problemPieceName,
+  saveVerdict,
+  slotsWithProblems,
+  type CheckOutcome,
+  type Notice,
+} from './checkView';
 import { builtInLibrary as library } from './library';
 import { SlotList } from './SlotList';
 import { groupName, SLOT_LABELS } from './slots';
+import { gpsAsar } from './tauriAsar';
 import { tauriFiles as files } from './tauriFiles';
 
 const TOOL_VERSION = import.meta.env.VITE_APP_VERSION ?? 'dev';
@@ -33,11 +45,6 @@ const NEW_BLOCK: BlockModel = {
 };
 
 type Workspaces = Partial<Record<SlotId, WorkspaceState>>;
-
-interface Notice {
-  kind: 'warning' | 'error';
-  text: string;
-}
 
 /** The Block file being edited; `revision` changes whenever a Block is opened or created. */
 interface OpenFile {
@@ -61,6 +68,9 @@ export function App() {
   });
   const [notice, setNotice] = useState<Notice | null>(null);
   const [copied, setCopied] = useState(false);
+  /** The last Asar check and the text it checked; it no longer applies once the text changes. */
+  const [check, setCheck] = useState<{ text: string; problems: CheckProblem[] } | null>(null);
+  const [checking, setChecking] = useState(false);
 
   const model: BlockModel = useMemo(
     () => ({
@@ -73,9 +83,9 @@ export function App() {
     [properties, workspaces, slotLinks, topCornerFollowsTop],
   );
 
-  const generated = useMemo((): { text: string } | { error: string } => {
+  const generated = useMemo((): GenerateResult | { error: string } => {
     try {
-      return { text: generate(model, library, { toolVersion: TOOL_VERSION }).text };
+      return generate(model, library, { toolVersion: TOOL_VERSION });
     } catch (error) {
       if (error instanceof GenerateError) return { error: error.message };
       throw error;
@@ -90,6 +100,33 @@ export function App() {
   );
 
   const unsavedChanges = canonicalJson(model) !== file.savedJson;
+
+  const checked = check && 'text' in generated && check.text === generated.text ? check : null;
+
+  /**
+   * Assembles the current Block with the GPS project's Asar; the errors are shown through
+   * `check`. Nothing here throws: whatever went wrong is in the outcome.
+   */
+  async function runCheck(): Promise<CheckOutcome> {
+    if (!('text' in generated)) return { kind: 'unavailable', reason: generated.error };
+    setChecking(true);
+    try {
+      const { asar, message } = await gpsAsar();
+      if (!asar) return { kind: 'unavailable', reason: message };
+      const routines = [...(await asar.routines()), ...library.routines.keys()];
+      const found = await checkBlock(generated, routines, asar.run);
+      setCheck({ text: generated.text, problems: found });
+      return found.length > 0 ? { kind: 'errors', problems: found } : { kind: 'passed' };
+    } catch (error) {
+      return { kind: 'failed', message: String(error) };
+    } finally {
+      setChecking(false);
+    }
+  }
+
+  async function checkOnly() {
+    setNotice(checkNotice(await runCheck()));
+  }
 
   function load(next: BlockModel, path: string | undefined) {
     setProperties(next.properties);
@@ -130,6 +167,9 @@ export function App() {
       setNotice({ kind: 'error', text: `Cannot save: ${generated.error}` });
       return;
     }
+    // Errors block the save; they stay on screen through `check`.
+    const verdict = saveVerdict(await runCheck());
+    if (!verdict.save) return;
     const doc = { path: file.path, name: properties.name, text: generated.text, problems };
     const outcome = await saveBlock(files, doc, { saveAs });
     if (outcome.kind === 'blocked' || outcome.kind === 'failed') {
@@ -142,25 +182,41 @@ export function App() {
       revision: file.revision + 1,
       savedJson: canonicalJson(model),
     });
-    setNotice(null);
+    setNotice(verdict.notice);
   }
 
   const currentKind = slotKind(selected);
   const eligibleLinkTargets = SLOT_IDS.filter(
-    (s) =>
-      s !== selected &&
-      slotKind(s) === currentKind &&
-      slotLinks[s] !== selected,
+    (s) => s !== selected && slotKind(s) === currentKind && slotLinks[s] !== selected,
   );
   const activeLink = slotLinks[selected];
   const activeSlot = effectiveSlot(model, selected);
+  const activeWorkspace = workspaces[activeSlot];
+  const warnings = useMemo(
+    () =>
+      checked
+        ? blockWarnings(checked.problems, activeSlot, activeWorkspace ?? {}, library)
+        : undefined,
+    [checked, activeSlot, activeWorkspace],
+  );
 
   return (
     <div className="app">
       <aside className="sidebar">
         <PropertiesForm properties={properties} onChange={setProperties} />
-        <SlotList model={model} selected={selected} onSelect={setSelected} />
+        <SlotList
+          model={model}
+          selected={selected}
+          onSelect={setSelected}
+          errorSlots={checked ? slotsWithProblems(checked.problems) : undefined}
+        />
         <section className="save">
+          {checked && checked.problems.length > 0 && (
+            <p className="notice error">
+              Asar found {checked.problems.length} error{checked.problems.length === 1 ? '' : 's'}{' '}
+              (see the ASM pane); fix them before saving.
+            </p>
+          )}
           {notice && <p className={`notice ${notice.kind}`}>{notice.text}</p>}
           {unsavedChanges && (
             <p className="notice warning" role="status">
@@ -179,10 +235,10 @@ export function App() {
             <button type="button" disabled={!files} onClick={openFile}>
               Open…
             </button>
-            <button type="button" disabled={!files} onClick={() => saveFile(false)}>
+            <button type="button" disabled={!files || checking} onClick={() => saveFile(false)}>
               Save
             </button>
-            <button type="button" disabled={!files} onClick={() => saveFile(true)}>
+            <button type="button" disabled={!files || checking} onClick={() => saveFile(true)}>
               Save as…
             </button>
           </div>
@@ -229,9 +285,7 @@ export function App() {
               </select>
             </label>
             {activeLink && (
-              <span className="linked-indicator">
-                🔗 Uses {SLOT_LABELS[activeLink]}'s logic
-              </span>
+              <span className="linked-indicator">🔗 Uses {SLOT_LABELS[activeLink]}'s logic</span>
             )}
           </div>
           {selected === 'marioTopCorner' && !slotFilled(model, 'marioTopCorner') && !activeLink && (
@@ -256,11 +310,21 @@ export function App() {
               slotKind={slotKind(activeSlot)}
               initialState={workspaces[activeSlot] ?? {}}
               onChange={(state) => setWorkspaces((all) => ({ ...all, [activeSlot]: state }))}
+              warnings={warnings}
             />
           </section>
           <section className="asm" aria-label="ASM preview">
             <div className="asm-head">
               <span className="asm-title">ASM Preview</span>
+              <button
+                type="button"
+                className="btn-copy"
+                onClick={checkOnly}
+                disabled={checking || !('text' in generated)}
+                title="Assemble with the GPS project's Asar"
+              >
+                {checking ? 'Checking…' : 'Check'}
+              </button>
               <button
                 type="button"
                 className="btn-copy"
@@ -277,6 +341,13 @@ export function App() {
                 {copied ? '✓ Copied!' : 'Copy ASM'}
               </button>
             </div>
+            {checked && (
+              <CheckResults
+                problems={checked.problems}
+                pieceName={(problem) => problemPieceName(problem, model.slots, library)}
+                onSelectSlot={setSelected}
+              />
+            )}
             <pre className="asm-code">
               {'text' in generated ? generated.text : `; ${generated.error}`}
             </pre>
