@@ -32,6 +32,8 @@ export interface GenerateResult {
   text: string;
   /** 1-based line number → origin, for every line produced by a Slot's statements. */
   lineMap: ReadonlyMap<number, LineOrigin>;
+  /** The tool routines (`bc_*`) the Block calls, sorted: they must be in the GPS project. */
+  routines: readonly string[];
 }
 
 export class GenerateError extends Error {
@@ -135,8 +137,9 @@ export function generate(
   code.line('RTL');
   const widened = widenBranches(code.lines, code.origins, () => labels.instance());
 
+  const usedPieces = emitter.usedPieces();
   const beforeCode = [
-    ...humanHeader(model, emitter.usedPieces(), options.toolVersion ?? 'dev'),
+    ...humanHeader(model, usedPieces, options.toolVersion ?? 'dev'),
     '',
     plan.wallRun ? 'db $37' : 'db $42',
     ...jumpTable(plan.offsets),
@@ -152,7 +155,7 @@ export function generate(
   widened.origins.forEach((origin, i) => {
     if (origin) lineMap.set(firstCodeLine + i, origin);
   });
-  return { text, lineMap };
+  return { text, lineMap, routines: neededRoutines(usedPieces) };
 }
 
 function lineCount(text: string): number {
@@ -164,6 +167,11 @@ function jumpTable(offsets: readonly Offset[]): string[] {
   return JUMP_TABLE_ROWS.map((size) => offsets.slice(next, (next += size)))
     .filter((row) => row.length > 0)
     .map((row) => row.map((offset) => `JMP ${offset}`).join(' : '));
+}
+
+/** The tool routines the Pieces call, sorted and without repeats. */
+function neededRoutines(pieces: readonly Piece[]): string[] {
+  return [...new Set(pieces.flatMap((piece) => piece.manifest.routines))].sort();
 }
 
 function humanHeader(model: BlockModel, pieces: Piece[], toolVersion: string): string[] {
@@ -183,7 +191,7 @@ function humanHeader(model: BlockModel, pieces: Piece[], toolVersion: string): s
       credited.map((p) => `Credits (${oneLine(p.manifest.name)}): ${oneLine(p.manifest.credits!)}`),
     );
   }
-  const routines = [...new Set(pieces.flatMap((piece) => piece.manifest.routines))].sort();
+  const routines = neededRoutines(pieces);
   if (routines.length > 0) paragraphs.push([`Needs GPS routines: ${routines.join(', ')}`]);
   return [
     ';',
@@ -210,10 +218,7 @@ const LINE_BREAKS = new RegExp(
  * defines even inside strings, so `!` is escaped as `\!` (verified with Asar 1.91).
  */
 function tooltip(description: string): string[] {
-  const text = oneLine(description)
-    .replace(/\s+/g, ' ')
-    .replace(/"/g, "'")
-    .replace(/!/g, '\\!');
+  const text = oneLine(description).replace(/\s+/g, ' ').replace(/"/g, "'").replace(/!/g, '\\!');
   return text ? ['', `print "${text}"`] : [];
 }
 

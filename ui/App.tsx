@@ -33,7 +33,9 @@ import {
   type Notice,
 } from './checkView';
 import { builtInLibrary as library } from './library';
-import { saveToProject, type ListChoice } from './projectSave';
+import { saveToProject, type ListChoice, type RoutineFile } from './projectSave';
+import { routineFilesNote, savedToProjectNotice } from './routineNotes';
+import { getFolder } from './settings';
 import { SaveToProjectDialog } from './SaveToProjectDialog';
 import { SettingsDialog } from './SettingsDialog';
 import { SlotList } from './SlotList';
@@ -233,7 +235,12 @@ export function App() {
       revision: file.revision + 1,
       savedJson: canonicalJson(model),
     });
-    setNotice(verdict.notice);
+    // A plain save cannot copy the routines; say which files the Block needs and where they go.
+    const routineNote = routineFilesNote(generated.routines, getFolder('gpsFolder'));
+    if (routineNote === undefined) setNotice(verdict.notice);
+    else if (verdict.notice) {
+      setNotice({ kind: 'warning', text: `${verdict.notice.text}\n${routineNote}` });
+    } else setNotice({ kind: 'info', text: routineNote });
   }
 
   /** Opens the "Save to project" dialog, asking for the GPS folder first if none is set. */
@@ -256,7 +263,12 @@ export function App() {
     // Errors block the save; they stay on screen through `check`.
     const verdict = saveVerdict(await runCheck());
     if (!verdict.save) return;
-    const doc = { name: properties.name, text: generated.text, problems };
+    const doc = {
+      name: properties.name,
+      text: generated.text,
+      problems,
+      routines: routineFilesOf(generated.routines),
+    };
     const outcome = await saveToProject(project, doc, list);
     if (outcome.kind === 'blocked' || outcome.kind === 'failed') {
       setNotice({ kind: 'error', text: outcome.message });
@@ -264,16 +276,18 @@ export function App() {
     }
     if (outcome.kind === 'cancelled') return;
     setFile((current) => ({ ...current, savedJson: canonicalJson(model) }));
-    const added =
-      outcome.listUpdated && list
-        ? ` and put it in list.txt at ${formatHex(list.tile, 4)} (the old list is list.txt.bak)`
-        : '';
-    const saved = `Saved ${outcome.path}${added}. Run GPS (or Callisto's Update) to insert it.`;
+    const saved = savedToProjectNotice(outcome, list);
     setNotice(
-      verdict.notice
-        ? { kind: 'warning', text: `${saved}\n${verdict.notice.text}` }
-        : { kind: 'info', text: saved },
+      verdict.notice ? { kind: 'warning', text: `${saved.text}\n${verdict.notice.text}` } : saved,
     );
+  }
+
+  /** The routines a Block needs as BlockCreator ships them; one the Library lacks is left out. */
+  function routineFilesOf(names: readonly string[]): RoutineFile[] {
+    return names.flatMap((name) => {
+      const routine = library.routines.get(name);
+      return routine ? [{ name, text: routine.text }] : [];
+    });
   }
 
   const activeLink = slotLinks[selected];

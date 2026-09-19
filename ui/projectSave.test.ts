@@ -44,6 +44,7 @@ describe('saveToProject', () => {
       kind: 'saved',
       path: 'blocks/blockcreator/onoff_cement.asm',
       listUpdated: false,
+      routines: { copied: [], missing: [], kept: [] },
     });
     expect(disk.get('blocks/blockcreator/onoff_cement.asm')).toBe(golden);
     expect(disk.get('list.txt')).toBe(list);
@@ -123,5 +124,85 @@ describe('saveToProject', () => {
     const { project, disk } = fakeProject();
     await saveToProject(project, { ...doc, name: 'a/b:c' });
     expect(disk.has('blocks/blockcreator/a_b_c.asm')).toBe(true);
+  });
+});
+
+describe('saveToProject and the tool routines', () => {
+  const routine = { name: 'bc_holding_sprite', text: 'LDA $1470|!addr\n\tRTL\n' };
+  const other = { name: 'bc_other', text: 'RTL\n' };
+  const withRoutines = { ...doc, routines: [routine, other] };
+  const file = (name: string) => `routines/${name}.asm`;
+
+  it('copies missing routines after one question naming them', async () => {
+    const { project, disk, asked, state } = fakeProject();
+    state.answers = [true];
+    const outcome = await saveToProject(project, withRoutines);
+    expect(outcome).toMatchObject({
+      kind: 'saved',
+      routines: { copied: ['bc_holding_sprite', 'bc_other'], missing: [], kept: [] },
+    });
+    expect(asked).toHaveLength(1);
+    expect(asked[0]).toContain('bc_holding_sprite.asm, bc_other.asm');
+    expect(disk.get(file('bc_holding_sprite'))).toBe(routine.text);
+    expect(disk.get(file('bc_other'))).toBe(other.text);
+  });
+
+  it('still saves the Block when the user does not want the routines', async () => {
+    const { project, disk } = fakeProject();
+    const outcome = await saveToProject(project, withRoutines);
+    expect(outcome).toMatchObject({
+      kind: 'saved',
+      routines: { copied: [], missing: ['bc_holding_sprite', 'bc_other'], kept: [] },
+    });
+    expect(disk.has('blocks/blockcreator/onoff_cement.asm')).toBe(true);
+    expect(disk.has(file('bc_holding_sprite'))).toBe(false);
+  });
+
+  it('asks nothing when the routines are there and the same, whatever the line breaks', async () => {
+    const { project, asked, writes } = fakeProject({
+      'list.txt': list,
+      [file('bc_holding_sprite')]: routine.text.replace(/\n/g, '\r\n'),
+      [file('bc_other')]: other.text,
+    });
+    const outcome = await saveToProject(project, withRoutines);
+    expect(outcome).toMatchObject({ routines: { copied: [], missing: [], kept: [] } });
+    expect(asked).toEqual([]);
+    expect(writes).toEqual(['blocks/blockcreator/onoff_cement.asm']);
+  });
+
+  it('asks separately before replacing a different routine, and keeps it on no', async () => {
+    const mine = 'RTL ; my own version\n';
+    const { project, disk, asked, state } = fakeProject({
+      'list.txt': list,
+      [file('bc_holding_sprite')]: mine,
+      [file('bc_other')]: 'NOP\n',
+    });
+    state.answers = [true, false];
+    const outcome = await saveToProject(project, withRoutines);
+    expect(outcome).toMatchObject({
+      routines: { copied: ['bc_holding_sprite'], missing: [], kept: ['bc_other'] },
+    });
+    expect(asked).toHaveLength(2);
+    expect(asked[0]).toContain('routines/bc_holding_sprite.asm');
+    expect(disk.get(file('bc_holding_sprite'))).toBe(routine.text);
+    expect(disk.get(file('bc_other'))).toBe('NOP\n');
+  });
+
+  it('asks about the missing ones and the different ones, and about no others', async () => {
+    const { project, asked, state } = fakeProject({
+      'list.txt': list,
+      [file('bc_other')]: 'NOP\n',
+    });
+    state.answers = [true, true];
+    await saveToProject(project, withRoutines);
+    expect(asked).toHaveLength(2);
+    expect(asked[0]).toContain('does not have');
+    expect(asked[1]).toContain('bc_other.asm');
+  });
+
+  it('does not look at the routines folder for a Block that needs none', async () => {
+    const { project, asked } = fakeProject();
+    await saveToProject(project, doc);
+    expect(asked).toEqual([]);
   });
 });

@@ -34,6 +34,34 @@ const onOffCement: BlockModel = {
   },
 };
 
+describe('generate and the tool routines', () => {
+  const holds = (sprite: number): PieceRef => ({
+    id: 'c_holding_sprite_id',
+    version: 1,
+    params: { sprite_number: sprite, custom: false },
+  });
+  const model = (...sprites: number[]): BlockModel => ({
+    ...onOffCement,
+    slots: {
+      marioTop: sprites.map((sprite) => ({
+        type: 'if',
+        branches: [{ condition: { type: 'condition', piece: holds(sprite) }, body: [actAs(0x25)] }],
+      })),
+    },
+  });
+
+  it('names the routines the Pieces call, once each, in the result and in the header', () => {
+    const result = generate(model(0x80, 0x0f), library, { toolVersion: 'test' });
+    expect(result.routines).toEqual(['bc_holding_sprite']);
+    expect(result.text).toContain('; Needs GPS routines: bc_holding_sprite\n');
+  });
+
+  it('names none for a Block whose Pieces call none', () => {
+    expect(generate(onOffCement, library).routines).toEqual([]);
+    expect(generate(onOffCement, library).text).not.toContain('Needs GPS routines');
+  });
+});
+
 describe('generate', () => {
   it('writes the ON/OFF cement Block exactly as the golden file', () => {
     expect(generate(onOffCement, library, { toolVersion: 'test' }).text).toBe(
