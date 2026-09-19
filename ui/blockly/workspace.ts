@@ -95,7 +95,7 @@ export function blockIdsByPath(state: WorkspaceState, library: Library): Map<str
 }
 
 /** Top-level stacks in reading order: top to bottom, then left to right. */
-function sortedTops(state: WorkspaceState): BlockState[] {
+export function sortedTops(state: WorkspaceState): BlockState[] {
   return [...(state.blocks?.blocks ?? [])].sort(
     (a, b) => (a.y ?? 0) - (b.y ?? 0) || (a.x ?? 0) - (b.x ?? 0),
   );

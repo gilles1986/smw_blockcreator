@@ -160,3 +160,46 @@ describe('toolbox per Slot kind', () => {
     expect(typesIn('sprite')).toContain('piece_turn');
   });
 });
+
+describe('toolbox with a search', () => {
+  const library = builtInLibrary();
+  const types = (query: string, kind: 'mario' | 'sprite' = 'mario') =>
+    toolbox(library, kind, query).contents[0]?.contents.map((block) => block.type);
+
+  it('has no Search category without a query, or with a blank one', () => {
+    expect(toolbox(library, 'mario', '').contents[0]?.name).toBe('Logic');
+    expect(toolbox(library, 'mario', '   ').contents[0]?.name).toBe('Logic');
+    expect(toolbox(library, 'mario').contents[0]?.name).toBe('Logic');
+  });
+
+  it('puts the Pieces that match first, as a category that says how many', () => {
+    const box = toolbox(library, 'mario', 'flashing');
+    const search = box.contents[0]!;
+    expect(search.name).toBe(`Search: ${search.contents.length} found`);
+    expect(search.contents.map((block) => block.type)).toContain('piece_blink_invulnerability');
+    // The rest of the toolbox is where it was.
+    expect(box.contents[1]?.name).toBe('Logic');
+    expect(box.contents).toHaveLength(toolbox(library, 'mario').contents.length + 1);
+  });
+
+  it('finds a Piece by its name, first, with its default values already in the block', () => {
+    const [first] = toolbox(library, 'mario', 'Act as').contents[0]!.contents;
+    expect(first).toEqual(
+      toolbox(library, 'mario')
+        .contents.flatMap((category) => category.contents)
+        .find((block) => block.type === 'piece_act_as'),
+    );
+  });
+
+  it('only offers what the Slot takes', () => {
+    expect(types('push sprite', 'sprite')).toContain('piece_push_sprite');
+    expect(types('push sprite', 'mario')).not.toContain('piece_push_sprite');
+    expect(types('hurt', 'sprite') ?? []).not.toContain('piece_hurt_mario');
+  });
+
+  it('says so when nothing matches, and keeps the category so the toolbox does not jump', () => {
+    const search = toolbox(library, 'mario', 'zzz nothing').contents[0]!;
+    expect(search.name).toBe('Search: nothing found');
+    expect(search.contents).toEqual([]);
+  });
+});

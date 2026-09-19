@@ -35,6 +35,8 @@ interface Props {
   onChange: (state: WorkspaceState) => void;
   /** Block id → warning text shown on that block (Asar errors). */
   warnings?: ReadonlyMap<string, string>;
+  /** What the Piece search looks for; the Pieces it finds are the first category of the toolbox. */
+  searchQuery?: string;
 }
 
 const NO_WARNINGS: ReadonlyMap<string, string> = new Map();
@@ -48,6 +50,7 @@ export function BlocklyEditor({
   initialState,
   onChange,
   warnings = NO_WARNINGS,
+  searchQuery = '',
 }: Props) {
   const host = useRef<HTMLDivElement>(null);
   const workspace = useRef<Blockly.WorkspaceSvg | null>(null);
@@ -139,8 +142,12 @@ export function BlocklyEditor({
   }, [editKey, library]);
 
   useEffect(() => {
-    workspace.current?.updateToolbox(toolbox(library, slotKind));
-  }, [slotKind, library]);
+    const ws = workspace.current;
+    if (!ws) return;
+    ws.updateToolbox(toolbox(library, slotKind, searchQuery));
+    // Show what the search found: its category is the first one.
+    if (searchQuery.trim() !== '') ws.getToolbox()?.selectItemByPosition(0);
+  }, [slotKind, library, searchQuery]);
 
   useEffect(() => {
     const ws = workspace.current;

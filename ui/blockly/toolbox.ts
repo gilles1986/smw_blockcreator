@@ -1,6 +1,6 @@
 // Blockly toolbox (JSON) built from the Library: Logic first, then Piece categories.
 
-import type { Library } from '../../core/library';
+import { searchPieces, type Library, type Manifest } from '../../core/library';
 import { fitsSlot, type SlotKind } from '../../core/model';
 import { pieceBlockType } from './blocks';
 import { categoryColour, categoryName, KNOWN_CATEGORIES, type Colour } from './categories';
@@ -49,26 +49,45 @@ const LOGIC: ToolboxCategory = {
   ],
 };
 
-/** The toolbox for a Slot of the given kind: Pieces for the other kind are left out. */
-export function toolbox(library: Library, kind: SlotKind): Toolbox {
+/** The colour of the Search category, which stands out from the Piece categories. */
+const SEARCH_COLOUR = '#f2b233';
+
+/** A Piece as a toolbox block, with its default values in place. */
+function pieceToolboxBlock(manifest: Manifest): ToolboxBlock {
+  // Explicit defaults: a dropdown would otherwise start on its first option.
+  const fields = Object.fromEntries(
+    manifest.params.map((param) => [param.name, fieldCodec(param).toField(param.default)]),
+  );
+  return {
+    kind: 'block',
+    type: pieceBlockType(manifest.id),
+    ...(manifest.params.length > 0 && { fields }),
+  };
+}
+
+/**
+ * The toolbox for a Slot of the given kind: Pieces for the other kind are left out. With a search
+ * query, the Pieces it finds (`searchPieces`, best first) are a category on top of the others.
+ */
+export function toolbox(library: Library, kind: SlotKind, query = ''): Toolbox {
   const byCategory = new Map<string, { name: string; block: ToolboxBlock }[]>();
   for (const { manifest } of library.pieces.values()) {
     if (!fitsSlot(manifest.slots, kind)) continue;
     const blocks = byCategory.get(manifest.category) ?? [];
-    // Explicit defaults: a dropdown would otherwise start on its first option.
-    const fields = Object.fromEntries(
-      manifest.params.map((param) => [param.name, fieldCodec(param).toField(param.default)]),
-    );
-    blocks.push({
-      name: manifest.name,
-      block: {
-        kind: 'block',
-        type: pieceBlockType(manifest.id),
-        ...(manifest.params.length > 0 && { fields }),
-      },
-    });
+    blocks.push({ name: manifest.name, block: pieceToolboxBlock(manifest) });
     byCategory.set(manifest.category, blocks);
   }
+  const found = query.trim() === '' ? undefined : searchPieces(library, query, { slotKind: kind });
+  const search: ToolboxCategory[] = found
+    ? [
+        {
+          kind: 'category',
+          name: found.length > 0 ? `Search: ${found.length} found` : 'Search: nothing found',
+          colour: SEARCH_COLOUR,
+          contents: found.map(({ manifest }) => pieceToolboxBlock(manifest)),
+        },
+      ]
+    : [];
   const known = Object.keys(KNOWN_CATEGORIES);
   const order = (category: string) => {
     const index = known.indexOf(category);
@@ -78,6 +97,7 @@ export function toolbox(library: Library, kind: SlotKind): Toolbox {
   return {
     kind: 'categoryToolbox',
     contents: [
+      ...search,
       LOGIC,
       ...categories.map((category) => ({
         kind: 'category' as const,

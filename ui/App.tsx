@@ -5,7 +5,6 @@ import { canonicalJson } from '../core/header';
 import {
   cornerFollowsTop,
   effectiveSlot,
-  slotFilled,
   slotKind,
   type BlockModel,
   type BlockProperties,
@@ -46,12 +45,15 @@ import { onceWarnings } from './onceWarnings';
 import { openNotice } from './openNotice';
 import { PresetDialog } from './PresetDialog';
 import { presetList, type Preset } from './presets';
+import { propertyProblems } from './properties';
 import { saveToProject, type ListChoice, type RoutineFile } from './projectSave';
 import { routineFilesNote, savedToProjectNotice } from './routineNotes';
 import { getFolder } from './settings';
 import { SaveToProjectDialog } from './SaveToProjectDialog';
 import { SettingsDialog } from './SettingsDialog';
+import { copySlot } from './slotOps';
 import { SlotList } from './SlotList';
+import { stackWarnings } from './stackWarnings';
 import { SlotGlyph } from './SlotGlyph';
 import { groupName, SLOT_GLYPHS, SLOT_HINTS, SLOT_LABELS } from './slots';
 import { gpsAsar, gpsFolder } from './tauriAsar';
@@ -127,6 +129,8 @@ export function App() {
   const [checking, setChecking] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [presetsOpen, setPresetsOpen] = useState(false);
+  /** What the Piece search box looks for. */
+  const [query, setQuery] = useState('');
   /** The user's own Pieces, loaded from the app's data dir; null until read (browser: never). */
   const [userLibrary, setUserLibrary] = useState<Library | null>(null);
   const library = useMemo(
@@ -372,10 +376,24 @@ export function App() {
       }));
     }
   }
+  /** Puts a copy of one Slot's logic into another; the editor reloads to show it. */
+  function copyLogic(from: SlotId, to: SlotId) {
+    const next = copySlot({ workspaces, slotLinks }, from, to);
+    setWorkspaces(next.workspaces);
+    setSlotLinks(next.slotLinks);
+    // The Slot on show may be the target: a new revision makes the editor load its logic again.
+    setFile((current) => ({ ...current, revision: current.revision + 1 }));
+  }
+
   const activeWorkspace = workspaces[activeSlot];
-  // Warning icons on blocks: one-shot Actions that would repeat, and Asar's errors when checked.
+  // Warning icons on blocks: one-shot Actions that would repeat, a second stack, and Asar's
+  // errors when checked.
   const warnings = useMemo(() => {
     const found = onceWarnings(activeWorkspace ?? {}, library);
+    for (const [id, text] of stackWarnings(activeWorkspace ?? {}, library)) {
+      const earlier = found.get(id);
+      found.set(id, earlier ? `${earlier}\n${text}` : text);
+    }
     if (checked) {
       for (const [id, text] of blockWarnings(
         checked.problems,
@@ -394,12 +412,15 @@ export function App() {
     <div className="app">
       <aside className="sidebar">
         <div className="sidebar-scroll">
-          <PropertiesForm properties={properties} onChange={setProperties} />
+          <PropertiesForm key={file.revision} properties={properties} onChange={setProperties} />
           <SlotList
             model={model}
+            library={library}
             selected={selected}
             onSelect={setSelected}
             onLink={setLink}
+            onCopy={copyLogic}
+            onCornerFollowsTop={setTopCornerFollowsTop}
             errorSlots={checked ? slotsWithProblems(checked.problems) : undefined}
           />
         </div>
@@ -496,19 +517,20 @@ export function App() {
           {activeLink && (
             <span className="linked-indicator">🔗 Uses {SLOT_LABELS[activeLink]}'s logic</span>
           )}
-          {selected === 'marioTopCorner' && !slotFilled(model, 'marioTopCorner') && !activeLink && (
-            <label className="link">
-              <input
-                type="checkbox"
-                checked={topCornerFollowsTop}
-                onChange={(e) => setTopCornerFollowsTop(e.target.checked)}
-              />
-              While empty, do what Top does
-            </label>
-          )}
           {selected === 'marioTopCorner' && cornerFollowsTop(model) && !activeLink && (
-            <span className="hint">Add blocks here to give the corner its own logic.</span>
+            <span className="hint">
+              It does what Top does while it is empty (switch in the Slot list). Add blocks here to
+              give the corner its own logic.
+            </span>
           )}
+          <input
+            type="search"
+            className="piece-search"
+            placeholder="Search Pieces…"
+            aria-label="Search Pieces"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
         </header>
         <div className="split">
           <section className="editor" aria-label="Logic editor">
@@ -519,6 +541,7 @@ export function App() {
               initialState={workspaces[activeSlot] ?? {}}
               onChange={(state) => setWorkspaces((all) => ({ ...all, [activeSlot]: state }))}
               warnings={warnings}
+              searchQuery={query}
             />
           </section>
           <section className="asm" aria-label="ASM preview">
@@ -575,12 +598,18 @@ function PropertiesForm({
 }) {
   const set = (patch: Partial<BlockProperties>) => onChange({ ...properties, ...patch });
   const [actAsText, setActAsText] = useState(formatHex(properties.defaultActAs, 3));
+  const problems = propertyProblems(properties.name, actAsText);
   return (
     <section className="props" aria-label="Block properties">
       <h1>BlockCreator</h1>
       <label>
         Name
-        <input value={properties.name} onChange={(e) => set({ name: e.target.value })} />
+        <input
+          value={properties.name}
+          aria-invalid={problems.name !== undefined}
+          onChange={(e) => set({ name: e.target.value })}
+        />
+        {problems.name && <span className="field-problem">{problems.name}</span>}
       </label>
       <label>
         Description
@@ -598,12 +627,14 @@ function PropertiesForm({
         Default act as
         <input
           value={actAsText}
+          aria-invalid={problems.defaultActAs !== undefined}
           onChange={(e) => {
             setActAsText(e.target.value);
             const value = parseHex(e.target.value);
             if (value !== undefined && value <= 0xffff) set({ defaultActAs: value });
           }}
         />
+        {problems.defaultActAs && <span className="field-problem">{problems.defaultActAs}</span>}
       </label>
     </section>
   );
