@@ -8,3 +8,6 @@ Spec: ../spec.md
 
 **Done when**
 - Every preset re-opens, regenerates byte-identically and assembles.
+
+**Notes from 12 (muncher)**
+- The muncher preset uses Kill / Hurt Mario with `side_hitbox` on in Left, Right and Inside, and the top edge guarded by a falling check (see ticket 23, `c_really_on_top`).
