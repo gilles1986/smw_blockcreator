@@ -19,7 +19,7 @@ export function pieceIdOf(blockType: string): string | undefined {
 export interface BlocklyBlockDefinition {
   type: string;
   message0: string;
-  args0: FieldDefinition[];
+  args0: (FieldDefinition | { type: 'input_end_row' })[];
   colour: Colour;
   tooltip: string;
   output?: string;
@@ -33,15 +33,21 @@ export function blockDefinitions(library: Library): BlocklyBlockDefinition[] {
 
 function blockDefinition(piece: Piece): BlocklyBlockDefinition {
   const { id, kind, name, description, category, params } = piece.manifest;
-  // One parameter reads as a sentence ("Act as %1"); several get their labels.
+  const fields = params.map((param) => fieldCodec(param).definition(param));
+  // One parameter reads as a sentence ("Act as %1"); several get their labels, one per row
+  // under the name, so the block grows taller instead of wider.
+  // Arg 2i+1 is the row break before parameter i, arg 2i+2 its field.
   const message =
     params.length === 1
       ? `${name} %1`
-      : [name, ...params.map((param, i) => `${param.label} %${i + 1}`)].join(' ');
+      : name + params.map((param, i) => ` %${2 * i + 1} ${param.label} %${2 * i + 2}`).join('');
   return {
     type: pieceBlockType(id),
     message0: message,
-    args0: params.map((param) => fieldCodec(param).definition(param)),
+    args0:
+      params.length === 1
+        ? fields
+        : fields.flatMap((field) => [{ type: 'input_end_row' } as const, field]),
     ...(kind === 'condition'
       ? { output: 'Boolean' }
       : { previousStatement: null, nextStatement: null }),

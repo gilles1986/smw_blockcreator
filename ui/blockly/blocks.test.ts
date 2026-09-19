@@ -38,7 +38,7 @@ describe('blockDefinitions', () => {
     expect(definition('piece_c_onoff')).not.toHaveProperty('previousStatement');
   });
 
-  it('labels each parameter when a Piece has several, and colours unknown categories', () => {
+  it('labels each parameter on its own row when a Piece has several, and colours unknown categories', () => {
     const base = library.pieces.get('act_as')!;
     const boost = {
       ...base,
@@ -58,9 +58,11 @@ describe('blockDefinitions', () => {
       pieces: new Map([['boost', boost]]),
     });
     expect(definitionOfBoost).toMatchObject({
-      message0: 'Boost Mario X %1 add %2',
+      message0: 'Boost Mario %1 X %2 %3 add %4',
       args0: [
+        { type: 'input_end_row' },
         { type: 'field_number', name: 'x', value: 48, min: 0, max: 127, precision: 1 },
+        { type: 'input_end_row' },
         { type: 'field_checkbox', name: 'add', checked: false },
       ],
     });
@@ -71,9 +73,7 @@ describe('blockDefinitions', () => {
     const spawn = definition('piece_spawn_sprite');
     expect(spawn).toMatchObject({
       type: 'piece_spawn_sprite',
-      args0: expect.arrayContaining([
-        { type: 'field_input', name: 'sprite_number', text: '74' },
-      ]),
+      args0: expect.arrayContaining([{ type: 'field_input', name: 'sprite_number', text: '74' }]),
     });
   });
 });
