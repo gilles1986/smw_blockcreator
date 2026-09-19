@@ -1,5 +1,7 @@
 node_modules/
 dist/
+*.zip
+app-icon.png
 *.local
 .vite/
 coverage/
