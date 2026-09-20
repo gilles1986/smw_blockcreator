@@ -7,7 +7,7 @@
   "name": "Item box contains",
   "description": "True if Mario's item box ($0DC2) holds the chosen item.",
   "author": "BlockCreator",
-  "slots": "mario",
+  "slots": "any",
   "params": [
     {
       "name": "item",

@@ -9,6 +9,8 @@ function renderPiece(
   id: string,
   params: Record<string, Value>,
   falseLabel?: string,
+  // Some templates act differently per Slot; any Slot will do for the tests that do not care.
+  slot = 'marioTop',
 ) {
   const piece = library.pieces.get(id);
   if (!piece) throw new Error(`Piece '${id}' not loaded`);
@@ -18,6 +20,7 @@ function renderPiece(
     params: { ...defaults, ...params },
     label: (name) => `L_${name}`,
     ...(falseLabel && { falseLabel }),
+    slot,
   });
 }
 
@@ -28,19 +31,28 @@ describe('built-in Library seed Pieces', () => {
     expect(library.errors).toEqual([]);
     expect([...library.pieces.keys()].sort()).toEqual([
       'act_as',
+      'add_bonus_stars',
+      'add_lives',
+      'add_time',
+      'behind_scenery',
       'blink_invulnerability',
       'boost_mario',
+      'bounce_block',
       'c_adjacent_tile',
+      'c_block_collected',
+      'c_bonus_stars',
       'c_button',
       'c_carrying',
       'c_climbing',
       'c_coins',
       'c_ducking',
+      'c_events_passed',
       'c_facing',
       'c_flying',
       'c_holding_sprite_id',
       'c_in_water',
       'c_item_box',
+      'c_level_beaten',
       'c_lives',
       'c_mario_powerup',
       'c_mario_speed',
@@ -49,14 +61,19 @@ describe('built-in Library seed Pieces', () => {
       'c_p_meter',
       'c_pswitch',
       'c_ram',
+      'c_random',
       'c_really_on_top',
       'c_silver_pswitch',
       'c_spinjump',
       'c_sprite_id',
       'c_sprite_state',
+      'c_sprites_alive',
       'c_star',
+      'c_switch_palace',
+      'c_timer',
       'c_wall',
       'c_yoshi',
+      'c_yoshi_coins',
       'change_adjacent_block',
       'change_music',
       'change_sprite',
@@ -68,26 +85,34 @@ describe('built-in Library seed Pieces', () => {
       'end_level',
       'erase_adjacent_block',
       'erase_block',
+      'exit_level_silent',
       'freeze_sprites',
       'give_coins',
       'give_life',
+      'give_points',
       'glitter',
       'hurt_mario',
       'kill_all_sprites',
       'kill_mario',
       'kill_touching_sprite',
+      'kill_yoshi',
+      'limit_sprite_speed',
       'play_sound',
       'power_down',
       'push_sprite',
+      'remove_carried',
       'reverse_direction',
       'save_block_collected',
       'scroll_lock',
       'set_brightness',
       'set_item_box',
+      'set_midway',
       'set_onoff',
       'set_powerup',
+      'set_side_exit',
       'set_sprite_state',
       'set_timer',
+      'set_yoshi_color',
       'shake_screen',
       'shatter',
       'show_message',
@@ -95,7 +120,10 @@ describe('built-in Library seed Pieces', () => {
       'sprite_kicked',
       'star_power',
       'start_pswitch',
+      'stick_to_ceiling',
       'stun_mario',
+      'take_coins',
+      'take_lives',
       'teleport',
       'turn_sprite_around',
       'water_slippery',
@@ -128,7 +156,7 @@ describe('built-in Library seed Pieces', () => {
   ])('%s with the muncher hitbox skips the hit on the edge pixel', (id, routine) => {
     // Mario's X in the tile ($94 & $0F) is 02 at the left edge and 0D at the right one, the
     // same test as GPS's hurt_death.asm and the muncher blocks of the archive.
-    expect(renderPiece(library, id, { side_hitbox: true })).toBe(
+    expect(renderPiece(library, id, { side_hitbox: true }, undefined, 'marioLeft')).toBe(
       [
         '; Muncher hitbox: no hit when only the edge pixel touches. $93 = 0: Mario is left of the block, 1: right.',
         'LDA $94',
@@ -503,6 +531,36 @@ describe('built-in Library seed Pieces', () => {
           'CMP #$05',
           'BNE L_false',
         ),
+      );
+    });
+
+    it('c_block_collected checks item memory via bc_check_item_memory', () => {
+      const piece = library.pieces.get('c_block_collected')!;
+      expect(piece.manifest.routines).toEqual(['bc_check_item_memory']);
+      expect(library.routines.has('bc_check_item_memory')).toBe(true);
+      expect(render('c_block_collected', { collected: true }, 'L_false')).toBe(
+        lines('%bc_check_item_memory()', 'BCC L_false'),
+      );
+      expect(render('c_block_collected', { collected: false }, 'L_false')).toBe(
+        lines('%bc_check_item_memory()', 'BCS L_false'),
+      );
+    });
+
+    it('stick_to_ceiling passes the selected button flag to bc_stick_to_ceiling', () => {
+      const piece = library.pieces.get('stick_to_ceiling')!;
+      expect(piece.manifest.routines).toEqual(['bc_stick_to_ceiling']);
+      expect(library.routines.has('bc_stick_to_ceiling')).toBe(true);
+      expect(render('stick_to_ceiling', { button: 'b' })).toBe(
+        lines('LDA $15', '%bc_stick_to_ceiling()'),
+      );
+      expect(render('stick_to_ceiling', { button: 'a' })).toBe(
+        lines('LDA $17', '%bc_stick_to_ceiling()'),
+      );
+      expect(render('stick_to_ceiling', { button: 'any' })).toBe(
+        lines('LDA $15', 'ORA $17', '%bc_stick_to_ceiling()'),
+      );
+      expect(render('stick_to_ceiling', { button: 'none' })).toBe(
+        lines('LDA #$80', '%bc_stick_to_ceiling()'),
       );
     });
 

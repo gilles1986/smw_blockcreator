@@ -1,0 +1,23 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "add_bonus_stars",
+  "version": 1,
+  "kind": "action",
+  "category": "level",
+  "name": "Add bonus stars",
+  "description": "Adds bonus stars to the current player's count ($0F48 for Mario, $0F49 for Luigi, picked by $0DB3). It stops at 99, so the bonus game (100) is not started by it.",
+  "author": "BlockCreator",
+  "slots": "any",
+  "params": [
+    {
+      "name": "amount",
+      "label": "Bonus stars (1..99)",
+      "type": "number",
+      "min": 1,
+      "max": 99,
+      "default": 1
+    }
+  ],
+  "once": true,
+  "clobbers": ["A", "X"]
+}

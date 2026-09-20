@@ -1,0 +1,32 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "set_midway",
+  "version": 1,
+  "kind": "action",
+  "category": "level",
+  "name": "Midway point",
+  "description": "Sets or clears the midway point flag ($13CE): once set, dying sends Mario back to the midway entrance. Setting it can play the midway sound ($05 on the $1DF9 port).",
+  "author": "BlockCreator",
+  "slots": "any",
+  "params": [
+    {
+      "name": "state",
+      "label": "Midway flag",
+      "type": "enum",
+      "options": [
+        { "value": "set", "label": "Set (midway passed)" },
+        { "value": "clear", "label": "Clear (midway not passed)" }
+      ],
+      "default": "set"
+    },
+    {
+      "name": "sound",
+      "label": "Play the midway sound",
+      "type": "bool",
+      "default": true,
+      "showWhen": { "param": "state", "equals": "set" }
+    }
+  ],
+  "once": true,
+  "clobbers": ["A"]
+}

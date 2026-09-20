@@ -1,0 +1,14 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "exit_level_silent",
+  "version": 1,
+  "kind": "action",
+  "category": "level",
+  "name": "Exit level (no event)",
+  "description": "Leaves the level at once, back to the overworld, without triggering any overworld event: it clears how the level was exited ($0DD5), which decides the events, clears the overworld override ($0109), enables the side exit flag ($1B96), sets the overworld process ($13D9) and the game mode ($0100 = $0B). Adapted from the Exit Block (no OW events) of SMWC 19071; not tried in an emulator by us.",
+  "author": "BlockCreator",
+  "slots": "any",
+  "params": [],
+  "once": true,
+  "clobbers": ["A"]
+}

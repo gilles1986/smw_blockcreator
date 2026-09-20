@@ -1,0 +1,24 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "set_side_exit",
+  "version": 1,
+  "kind": "action",
+  "category": "level",
+  "name": "Side exit",
+  "description": "Enables or disables the side exit of the level: the flag $1B96 is 1 while walking off the side of the screen ends the level, 0 while it does not.",
+  "author": "BlockCreator",
+  "slots": "any",
+  "params": [
+    {
+      "name": "enabled",
+      "label": "Side exit",
+      "type": "enum",
+      "options": [
+        { "value": "on", "label": "Enabled" },
+        { "value": "off", "label": "Disabled" }
+      ],
+      "default": "on"
+    }
+  ],
+  "clobbers": ["A"]
+}

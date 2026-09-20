@@ -110,9 +110,13 @@ describe('toolbox per Slot kind', () => {
     toolbox(library, kind).contents.flatMap((c) => c.contents.map((b) => b.type));
 
   it('hides Mario-only Pieces in Sprite Slots (and drops categories left empty)', () => {
-    expect(types('sprite')).not.toContain('piece_hurt_mario');
-    expect(types('sprite')).not.toContain('piece_kill_mario');
+    expect(types('sprite')).not.toContain('piece_stick_to_ceiling');
+    expect(types('sprite')).not.toContain('piece_reverse_direction');
     expect(types('sprite')).not.toContain('piece_boost_mario');
+    // What only reads global state works from a sprite Slot too, as a Block that hurts Mario when
+    // a sprite touches it needs (ticket 24).
+    expect(types('sprite')).toContain('piece_hurt_mario');
+    expect(types('sprite')).toContain('piece_kill_mario');
     expect(types('sprite')).toContain('piece_kill_touching_sprite');
     expect(types('sprite')).toContain('piece_push_sprite');
 
@@ -143,7 +147,7 @@ describe('toolbox per Slot kind', () => {
 
   it('shows Mario-only and any-Slot Pieces in Mario Slots', () => {
     expect(types('mario')).toEqual(
-      expect.arrayContaining(['piece_hurt_mario', 'piece_act_as', 'piece_c_onoff']),
+      expect.arrayContaining(['piece_boost_mario', 'piece_act_as', 'piece_c_onoff']),
     );
   });
 
@@ -194,12 +198,24 @@ describe('toolbox with a search', () => {
   it('only offers what the Slot takes', () => {
     expect(types('push sprite', 'sprite')).toContain('piece_push_sprite');
     expect(types('push sprite', 'mario')).not.toContain('piece_push_sprite');
-    expect(types('hurt', 'sprite') ?? []).not.toContain('piece_hurt_mario');
+    expect(types('boost', 'sprite') ?? []).not.toContain('piece_boost_mario');
   });
 
   it('says so when nothing matches, and keeps the category so the toolbox does not jump', () => {
     const search = toolbox(library, 'mario', 'zzz nothing').contents[0]!;
     expect(search.name).toBe('Search: nothing found');
     expect(search.contents).toEqual([]);
+  });
+});
+
+describe('neighbour blocks in Effects category', () => {
+  const library = builtInLibrary();
+
+  it('puts at_neighbour in Effects and hides the replaced standalone pieces', () => {
+    const effects = toolbox(library, 'mario').contents.find((c) => c.name === 'Effects')!;
+    const types = effects.contents.map((b) => b.type);
+    expect(types).toContain('at_neighbour');
+    expect(types).not.toContain('piece_change_adjacent_block');
+    expect(types).not.toContain('piece_erase_adjacent_block');
   });
 });

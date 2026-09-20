@@ -5,7 +5,7 @@
   "kind": "action",
   "category": "level",
   "name": "Scroll lock",
-  "description": "Locks or unlocks horizontal screen scrolling ($1411: 0 stops the screen from following Mario, 1 lets it scroll). Vertical scrolling ($1412) is left alone; Write RAM can set it.",
+  "description": "Locks or unlocks screen scrolling: $1411 for horizontal and $1412 for vertical scrolling (0 stops the screen from following Mario, 1 lets it scroll).",
   "author": "BlockCreator",
   "slots": "any",
   "params": [
@@ -14,6 +14,17 @@
       "label": "Lock scrolling",
       "type": "bool",
       "default": true
+    },
+    {
+      "name": "axis",
+      "label": "Direction",
+      "type": "enum",
+      "options": [
+        { "value": "horizontal", "label": "Horizontal" },
+        { "value": "vertical", "label": "Vertical" },
+        { "value": "both", "label": "Both" }
+      ],
+      "default": "horizontal"
     }
   ],
   "clobbers": ["A"]

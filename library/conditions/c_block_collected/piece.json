@@ -1,0 +1,21 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "c_block_collected",
+  "version": 1,
+  "kind": "condition",
+  "category": "conditions",
+  "name": "Block was already collected",
+  "description": "True if this block has already been marked as collected in SMW's Item Memory ($19F8). Requires Item Memory Setting 0, 1, 2, or 3 in Lunar Magic's Level Header (Ctrl+H). Needs the routine bc_check_item_memory in the GPS project's routines folder.",
+  "author": "BlockCreator",
+  "slots": "any",
+  "params": [
+    {
+      "name": "collected",
+      "label": "Collected",
+      "type": "bool",
+      "default": true
+    }
+  ],
+  "clobbers": ["A"],
+  "routines": ["bc_check_item_memory"]
+}

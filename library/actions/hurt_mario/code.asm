@@ -1,4 +1,6 @@
 {{#if side_hitbox}}
+{{#if slot "spriteTop" "spriteBottom" "spriteLeft" "spriteRight"}}
+{{else}}
 ; Muncher hitbox: no hit when only the edge pixel touches. $93 = 0: Mario is left of the block, 1: right.
 LDA $94
 AND #$0F
@@ -9,7 +11,11 @@ EOR #$0F
 CMP #$02
 BEQ {{label "safe"}}
 {{/if}}
+{{/if}}
 JSL $00F5B7|!bank
 {{#if side_hitbox}}
+{{#if slot "spriteTop" "spriteBottom" "spriteLeft" "spriteRight"}}
+{{else}}
 {{label "safe"}}:
+{{/if}}
 {{/if}}

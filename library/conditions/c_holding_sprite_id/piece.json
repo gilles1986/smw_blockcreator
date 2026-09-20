@@ -7,7 +7,7 @@
   "name": "Mario holds sprite",
   "description": "True if Mario is carrying this sprite: a key, a P-switch, a shell, any vanilla or custom (PIXI) sprite. It is told by its number, in !9E for a vanilla sprite and in !7FAB9E for a custom one (bit 3 of !7FAB10), so a custom sprite that acts like a vanilla one does not count as that. Needs the routine bc_holding_sprite in the GPS project's routines folder.",
   "author": "BlockCreator",
-  "slots": "mario",
+  "slots": "any",
   "params": [
     {
       "name": "custom",

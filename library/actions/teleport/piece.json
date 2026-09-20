@@ -7,7 +7,7 @@
   "name": "Teleport Mario",
   "description": "Warps Mario: through the exit of the screen he is on, or to a sublevel. A sublevel warp is instant, or plays the vertical pipe animation first.",
   "author": "BlockCreator",
-  "slots": "mario",
+  "slots": "any",
   "params": [
     {
       "name": "mode",

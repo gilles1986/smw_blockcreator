@@ -284,9 +284,12 @@ describe('all Slots', () => {
   });
 
   it('refuses a Mario-only Piece in a Sprite Slot', () => {
-    const hurt: Statement = { type: 'action', piece: { id: 'hurt_mario', version: 1, params: {} } };
-    expect(() => generate({ ...base, slots: { spriteTop: [hurt] } }, library)).toThrow(
-      "spriteTop /0: Piece 'hurt_mario' only works in Mario Slots",
+    const boost: Statement = {
+      type: 'action',
+      piece: { id: 'boost_mario', version: 1, params: {} },
+    };
+    expect(() => generate({ ...base, slots: { spriteTop: [boost] } }, library)).toThrow(
+      "spriteTop /0: Piece 'boost_mario' only works in Mario Slots",
     );
   });
 

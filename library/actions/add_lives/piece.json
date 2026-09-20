@@ -1,0 +1,23 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "add_lives",
+  "version": 1,
+  "kind": "action",
+  "category": "level",
+  "name": "Give lives",
+  "description": "Adds lives through the game's life counter ($18E4), the way a 1-Up does: one life every 35 frames, each with the 1-Up sound. This way of adding does not stop at 99. For a single 1-Up that stops at 99, use Give 1-Up.",
+  "author": "BlockCreator",
+  "slots": "any",
+  "params": [
+    {
+      "name": "amount",
+      "label": "Lives (1..99)",
+      "type": "number",
+      "min": 1,
+      "max": 99,
+      "default": 1
+    }
+  ],
+  "once": true,
+  "clobbers": ["A"]
+}

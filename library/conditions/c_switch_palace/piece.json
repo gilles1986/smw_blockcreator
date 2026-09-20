@@ -1,0 +1,33 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "c_switch_palace",
+  "version": 1,
+  "kind": "condition",
+  "category": "conditions",
+  "name": "Switch palace",
+  "description": "Checks whether a switch palace has been pressed: the flags $1F27 (green), $1F28 (yellow), $1F29 (blue) and $1F2A (red) are 1 once it was. 'All four' is true when every one is pressed, and its 'not pressed' is true while at least one is not.",
+  "author": "BlockCreator",
+  "slots": "any",
+  "params": [
+    {
+      "name": "palace",
+      "label": "Switch palace",
+      "type": "enum",
+      "options": [
+        { "value": "yellow", "label": "Yellow" },
+        { "value": "green", "label": "Green" },
+        { "value": "red", "label": "Red" },
+        { "value": "blue", "label": "Blue" },
+        { "value": "all", "label": "All four" }
+      ],
+      "default": "yellow"
+    },
+    {
+      "name": "pressed",
+      "label": "Is pressed",
+      "type": "bool",
+      "default": true
+    }
+  ],
+  "clobbers": ["A"]
+}

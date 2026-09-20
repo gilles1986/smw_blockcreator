@@ -1,0 +1,24 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "c_sprites_alive",
+  "version": 1,
+  "kind": "condition",
+  "category": "conditions",
+  "name": "Sprites on screen",
+  "description": "Looks at the sprite status table (!14C8, $14C8 without SA-1) for a sprite that is alive, which is a status of 8 or more (normal, stationary, kicked, carried). Sprites that are only dying, in smoke or being set up do not count.",
+  "author": "BlockCreator",
+  "slots": "any",
+  "params": [
+    {
+      "name": "state",
+      "label": "There is",
+      "type": "enum",
+      "options": [
+        { "value": "none", "label": "No living sprite" },
+        { "value": "some", "label": "At least one living sprite" }
+      ],
+      "default": "none"
+    }
+  ],
+  "clobbers": ["A", "X"]
+}

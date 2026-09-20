@@ -1,0 +1,32 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "limit_sprite_speed",
+  "version": 1,
+  "kind": "action",
+  "category": "physics",
+  "name": "Limit sprite speed",
+  "description": "Keeps the touching sprite from going faster than a maximum: its X speed (!B6, both ways) or its speed downwards (!AA), in the sprite tables ($B6 and $AA without SA-1). A sprite that is slower is left alone. As the Sprite/Shell Speed Limiter blocks of the archive (SMWC 32053 and 35601).",
+  "author": "BlockCreator",
+  "slots": "sprite",
+  "params": [
+    {
+      "name": "axis",
+      "label": "Limit",
+      "type": "enum",
+      "options": [
+        { "value": "horizontal", "label": "Horizontal speed (left and right)" },
+        { "value": "down", "label": "Downward speed" }
+      ],
+      "default": "horizontal"
+    },
+    {
+      "name": "max",
+      "label": "Maximum speed (0..127)",
+      "type": "number",
+      "min": 0,
+      "max": 127,
+      "default": 35
+    }
+  ],
+  "clobbers": ["A"]
+}

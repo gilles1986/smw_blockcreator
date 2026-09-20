@@ -19,6 +19,12 @@ export function mapPieces(model: BlockModel, change: (ref: PieceRef) => PieceRef
   const statements = (list: Statement[]): Statement[] =>
     list.map((statement): Statement => {
       if (statement.type === 'action') return { type: 'action', piece: change(statement.piece) };
+      if (statement.type === 'atNeighbour') {
+        return {
+          ...statement,
+          body: statements(statement.body),
+        };
+      }
       return {
         type: 'if',
         branches: statement.branches.map((branch) => ({

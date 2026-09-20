@@ -1,0 +1,27 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "stick_to_ceiling",
+  "version": 1,
+  "kind": "action",
+  "category": "physics",
+  "name": "Stick to ceiling",
+  "description": "Snaps Mario to the underside of the ceiling block ($96/$97 from $98/$99, adjusting for $73 ducking, $19 powerup, $187A Yoshi and $13DC) and keeps his vertical speed ($7D) negative so he clings to the ceiling while holding the selected button ($15, $17). Releasing the button sets $7D to 0 to drop.",
+  "author": "BlockCreator",
+  "slots": "mario",
+  "params": [
+    {
+      "name": "button",
+      "label": "Button required to stick",
+      "type": "enum",
+      "options": [
+        { "value": "b", "label": "B (jump)" },
+        { "value": "a", "label": "A (spin jump)" },
+        { "value": "any", "label": "B or A (any jump button)" },
+        { "value": "none", "label": "Always stick (no button required)" }
+      ],
+      "default": "b"
+    }
+  ],
+  "clobbers": ["A"],
+  "routines": ["bc_stick_to_ceiling"]
+}

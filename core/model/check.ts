@@ -69,6 +69,10 @@ export function checkPieces(
     list.forEach((statement, i) => {
       const path = `${where}/${i}`;
       if (statement.type === 'action') return piece(statement.piece, 'action', slot, path);
+      if (statement.type === 'atNeighbour') {
+        statements(statement.body, slot, `${path}/body`);
+        return;
+      }
       statement.branches.forEach((branch, b) => {
         condition(branch.condition, slot, `${path}/branches/${b}/condition`);
         statements(branch.body, slot, `${path}/branches/${b}/body`);

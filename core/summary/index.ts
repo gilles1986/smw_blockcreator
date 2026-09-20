@@ -70,6 +70,10 @@ export function summarizePiece(
 
 function summarizeStatement(statement: Statement, library: Library, names: NameSource): string {
   if (statement.type === 'action') return summarizePiece(statement.piece, library, names);
+  if (statement.type === 'atNeighbour') {
+    const dist = statement.distance === 16 ? '1 block' : `${statement.distance / 16} blocks`;
+    return `at neighbour (${statement.direction}, ${dist}): ${summarizeStatements(statement.body, library, names) || '—'}`;
+  }
   const body = (list: readonly Statement[]) => summarizeStatements(list, library, names) || '—';
   const parts = statement.branches.map(
     (branch, i) =>

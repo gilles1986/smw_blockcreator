@@ -90,3 +90,12 @@ export function InfoIcon() {
     </Icon>
   );
 }
+
+/** A jigsaw puzzle piece: custom Actions and Conditions. */
+export function PiecesIcon() {
+  return (
+    <Icon>
+      <path d="M19.5 12c0-.83-.67-1.5-1.5-1.5H16V6c0-1.1-.9-2-2-2h-3.5c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5H4c-1.1 0-2 .9-2 2v3.5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5V18c0 1.1.9 2 2 2h3.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5H14c1.1 0 2-.9 2-2v-4.5h2c.83 0 1.5-.67 1.5-1.5z" />
+    </Icon>
+  );
+}

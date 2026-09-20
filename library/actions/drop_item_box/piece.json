@@ -7,7 +7,7 @@
   "name": "Drop item box item",
   "description": "Drops the item from Mario's reserve box as if Select was pressed: it falls from the top of the screen and the sound plays. Does nothing while the box is empty.",
   "author": "BlockCreator",
-  "slots": "mario",
+  "slots": "any",
   "params": [],
   "once": true,
   "clobbers": ["A"]

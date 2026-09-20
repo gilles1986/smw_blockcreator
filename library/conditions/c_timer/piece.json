@@ -1,0 +1,49 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "c_timer",
+  "version": 1,
+  "kind": "condition",
+  "category": "conditions",
+  "name": "Time left is",
+  "description": "Compares the time left in the level with a time. The timer ($0F31-$0F33) has one digit per byte: hundreds, tens and ones.",
+  "author": "BlockCreator",
+  "slots": "any",
+  "params": [
+    {
+      "name": "comparison",
+      "label": "Comparison",
+      "type": "enum",
+      "options": [
+        { "value": "greater_equal", "label": "At least (>=)" },
+        { "value": "less", "label": "Less than (<)" },
+        { "value": "equal", "label": "Exactly (==)" }
+      ],
+      "default": "greater_equal"
+    },
+    {
+      "name": "hundreds",
+      "label": "Hundreds (0..9)",
+      "type": "number",
+      "min": 0,
+      "max": 9,
+      "default": 1
+    },
+    {
+      "name": "tens",
+      "label": "Tens (0..9)",
+      "type": "number",
+      "min": 0,
+      "max": 9,
+      "default": 0
+    },
+    {
+      "name": "ones",
+      "label": "Ones (0..9)",
+      "type": "number",
+      "min": 0,
+      "max": 9,
+      "default": 0
+    }
+  ],
+  "clobbers": ["A"]
+}

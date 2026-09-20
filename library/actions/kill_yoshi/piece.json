@@ -1,0 +1,20 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "kill_yoshi",
+  "version": 1,
+  "kind": "action",
+  "category": "sprites",
+  "name": "Destroy Yoshi",
+  "description": "When Mario rides Yoshi ($187A), Yoshi is destroyed in a puff of smoke, and so is whatever he holds in his mouth ($18AC); Mario lands on his feet. Adapted from the Destroy Yoshi block (SMWC 31301), with its SA-1 fixes; not tried in an emulator by us. Yoshi's slot comes from $18E2, and the puff and stars are made by the game's routine at $07FC3B.",
+  "author": "BlockCreator",
+  "slots": "mario",
+  "params": [
+    {
+      "name": "sound",
+      "label": "Play the sound",
+      "type": "bool",
+      "default": true
+    }
+  ],
+  "clobbers": ["A", "X"]
+}

@@ -7,7 +7,7 @@
   "name": "Star power",
   "description": "Grants Mario star invincibility ($1490). The timer runs down by 1 every 4 frames, so 255 lasts about 17 seconds. The star music is not started.",
   "author": "BlockCreator",
-  "slots": "mario",
+  "slots": "any",
   "params": [
     {
       "name": "timer",

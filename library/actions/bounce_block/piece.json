@@ -1,0 +1,63 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "bounce_block",
+  "version": 1,
+  "kind": "action",
+  "category": "effects",
+  "name": "Bounce block",
+  "description": "Makes the block bounce like a hit ? or turn block, and turn into another block afterwards. It spawns a bounce sprite with GPS's spawn_bounce_sprite: the type is the number in $1699, the block it turns into the value in $9C, and the direction picks the speed from the game's BlockBounceSpeed tables (0 up, 1 right, 2 left, 3 down).",
+  "author": "BlockCreator",
+  "slots": "any",
+  "params": [
+    {
+      "name": "bounce",
+      "label": "Bounce sprite",
+      "type": "enum",
+      "options": [
+        { "value": 3, "label": "Question mark block" },
+        { "value": 1, "label": "Turn block (not turning)" },
+        { "value": 7, "label": "Turn block (turning)" },
+        { "value": 2, "label": "Note block" },
+        { "value": 6, "label": "ON/OFF block" },
+        { "value": 4, "label": "Sideways bouncing block" },
+        { "value": 5, "label": "Translucent block" }
+      ],
+      "default": 3
+    },
+    {
+      "name": "becomes",
+      "label": "Then it turns into",
+      "type": "enum",
+      "options": [
+        { "value": 13, "label": "Used block (132)" },
+        { "value": 22, "label": "Used block (132), remembered" },
+        { "value": 2, "label": "Empty (025)" },
+        { "value": 1, "label": "Empty (025), remembered" },
+        { "value": 12, "label": "Turn block (11E)" },
+        { "value": 5, "label": "Always turning turn block (048)" },
+        { "value": 11, "label": "Multiple coin question block (123)" },
+        { "value": 10, "label": "Multiple coin turn block (11B)" },
+        { "value": 14, "label": "Note block (113)" },
+        { "value": 19, "label": "ON/OFF switch (112)" },
+        { "value": 9, "label": "Invisible solid block (152)" },
+        { "value": 0, "label": "Stays the same tile" }
+      ],
+      "default": 13
+    },
+    {
+      "name": "direction",
+      "label": "Bounces",
+      "type": "enum",
+      "options": [
+        { "value": 0, "label": "Up" },
+        { "value": 3, "label": "Down" },
+        { "value": 1, "label": "Right" },
+        { "value": 2, "label": "Left" }
+      ],
+      "default": 0
+    }
+  ],
+  "once": true,
+  "removesBlock": true,
+  "clobbers": ["A", "X", "Y"]
+}

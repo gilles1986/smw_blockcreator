@@ -62,11 +62,13 @@ describe.each([
     const named = (name: string) => params.find((p) => p.name === name)!;
     expect([named('x_strength').min, named('x_strength').max]).toEqual([0, 127]);
     expect([named('y_strength').min, named('y_strength').max]).toEqual([0, 127]);
+    // Boost Mario also pushes the way Mario faces (ticket 24); a sprite has no such direction.
     expect(named('x_direction').options!.map((o) => o.value)).toEqual([
       'none',
       'left',
       'right',
       'away',
+      ...(id === 'boost_mario' ? ['facing'] : []),
     ]);
     expect(named('y_direction').options!.map((o) => o.value)).toEqual([
       'none',

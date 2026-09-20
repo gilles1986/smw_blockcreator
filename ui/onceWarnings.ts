@@ -4,7 +4,7 @@
 
 import type { Library, Piece } from '../core/library';
 import { pieceIdOf } from './blockly/blocks';
-import { IF_BLOCK } from './blockly/toolbox';
+import { AT_NEIGHBOUR_BLOCK, IF_BLOCK } from './blockly/toolbox';
 import type { BlockState, WorkspaceState } from './blockly/workspace';
 
 export const ONCE_WARNING =
@@ -32,6 +32,8 @@ export function onceWarnings(workspace: WorkspaceState, library: Library): Map<s
         for (const [name, input] of Object.entries(block.inputs ?? {})) {
           if (BRANCH_INPUT.test(name)) visit(input.block);
         }
+      } else if (block.type === AT_NEIGHBOUR_BLOCK) {
+        if (block.inputs?.DO?.block) visit(block.inputs.DO.block);
       } else if (!removes && block.id !== undefined && pieceOf(block)?.manifest.once) {
         warnings.set(block.id, ONCE_WARNING);
       }

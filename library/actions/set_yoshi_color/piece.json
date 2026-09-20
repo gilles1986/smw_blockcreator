@@ -1,0 +1,26 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "set_yoshi_color",
+  "version": 1,
+  "kind": "action",
+  "category": "sprites",
+  "name": "Change Yoshi's color",
+  "description": "Paints the Yoshi Mario rides ($187A) in another color, by writing the palette byte of his sprite (!15F6, $15F6 without SA-1): $0A yellow, $0B blue, $0C red, $0D green, as the Yoshi color blocks of the archive (SMWC 15392 and 34003) do. His slot comes from $18E2. Nothing happens when Mario is not on Yoshi.",
+  "author": "BlockCreator",
+  "slots": "mario",
+  "params": [
+    {
+      "name": "color",
+      "label": "Color",
+      "type": "enum",
+      "options": [
+        { "value": 13, "label": "Green" },
+        { "value": 12, "label": "Red" },
+        { "value": 11, "label": "Blue" },
+        { "value": 10, "label": "Yellow" }
+      ],
+      "default": 13
+    }
+  ],
+  "clobbers": ["A", "X"]
+}

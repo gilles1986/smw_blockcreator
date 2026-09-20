@@ -71,6 +71,31 @@ const muncher: BlockModel = {
 /** Solid (130) while the switch is ON, air (025) while it is OFF. */
 const onOffRule = () => [when(piece('c_onoff', { position: 0 }), [actAs(SOLID)], [actAs(AIR)])];
 
+// The Blocks of the archive survey (ticket 24): built from the new Pieces.
+
+/** The bounce of a ? block, which turns into a used block afterwards. */
+const bounceUsed = () => action('bounce_block', { bounce: 3, becomes: 13, direction: 0 });
+const spawnAbove = (sprite: number) =>
+  action('spawn_sprite', { custom: false, sprite_number: sprite, position: 'above' });
+/** Solid unless Mario pays: he needs 5 coins, which are taken, and the block is gone. */
+const tollRule = () => [
+  when(piece('c_coins', { comparison: 'greater_equal', value: 5 }), [
+    action('take_coins', { amount: 5 }),
+    action('erase_block'),
+  ]),
+];
+/** Solid unless Mario carries a key (sprite 80): the key is used up and the block is gone. */
+const lockRule = () => [
+  when(piece('c_holding_sprite_id', { custom: false, sprite_number: 0x80 }), [
+    action('remove_carried', { mode: 'delete' }),
+    action('erase_block'),
+  ]),
+];
+/** Passable once the level's five Yoshi coins are collected. */
+const yoshiCoinRule = () => [
+  when(piece('c_yoshi_coins', { source: 'this_attempt', count: 5 }), [actAs(AIR)], [actAs(SOLID)]),
+];
+
 export const PRESETS: Readonly<Record<string, BlockModel>> = {
   muncher,
   death_block: {
@@ -227,7 +252,160 @@ export const PRESETS: Readonly<Record<string, BlockModel>> = {
       ],
     },
   },
+  sticky_ceiling: {
+    properties: properties(
+      'sticky_ceiling',
+      'Jump against it from below to cling to the ceiling while holding B. Release B to drop. Solid from all sides.',
+    ),
+    slots: {
+      marioBottom: [action('stick_to_ceiling', { button: 'b' })],
+    },
+  },
+  question_block_coin: {
+    properties: properties(
+      'question_block_coin',
+      'Hit it from below for a coin: the block bounces like a ? block and turns into a used block.',
+    ),
+    slots: { marioBottom: [action('give_coins', { amount: 1 }), bounceUsed()] },
+  },
+  // Small Mario gets a mushroom (sprite 74), the others a fire flower (75).
+  question_block_powerup: {
+    properties: properties(
+      'question_block_powerup',
+      'Hit it from below: small Mario gets a mushroom, bigger Mario a fire flower. The block bounces and turns into a used block.',
+    ),
+    slots: {
+      marioBottom: [
+        when(
+          piece('c_mario_powerup', { powerup: 0 }),
+          [spawnAbove(0x74), bounceUsed()],
+          [spawnAbove(0x75), bounceUsed()],
+        ),
+      ],
+    },
+  },
+  // A turn block (11E) again after the bounce: only big Mario breaks it.
+  brick_block: {
+    properties: properties(
+      'brick_block',
+      'Hit it from below: small Mario makes it bounce, bigger Mario shatters it.',
+    ),
+    slots: {
+      marioBottom: [
+        when(
+          piece('c_mario_powerup', { powerup: 0 }),
+          [action('bounce_block', { bounce: 1, becomes: 12, direction: 0 })],
+          [action('shatter', { rainbow: false })],
+        ),
+      ],
+    },
+  },
+  // Landed on from above, the note block bounces down, and Mario flies up.
+  note_block: {
+    properties: properties(
+      'note_block',
+      'Land on it to bounce high: the block sinks and comes back as a note block, and Mario is thrown up.',
+    ),
+    slots: {
+      marioTop: [
+        action('bounce_block', { bounce: 2, becomes: 14, direction: 3 }),
+        action('boost_mario', {
+          mode: 0,
+          x_direction: 'none',
+          y_direction: 'up',
+          y_strength: 112,
+        }),
+      ],
+    },
+  },
+  toll_block: {
+    properties: properties(
+      'toll_block',
+      'Solid until Mario has 5 coins: touching it then takes the 5 coins and removes the block.',
+    ),
+    slots: { marioTop: tollRule(), marioBottom: tollRule(), marioLeft: tollRule() },
+    slotLinks: { marioRight: 'marioLeft' },
+  },
+  key_lock: {
+    properties: properties(
+      'key_lock',
+      'Solid, until Mario touches it with a key in his hands: the key is used up and the block is gone.',
+    ),
+    slots: { marioTop: lockRule(), marioBottom: lockRule(), marioLeft: lockRule() },
+    slotLinks: { marioRight: 'marioLeft' },
+  },
+  midway_block: {
+    properties: properties(
+      'midway_block',
+      'Touch it to pass the midway point: the flag is set with the midway sound, and the block is gone.',
+    ),
+    slots: {
+      marioTop: [action('set_midway', { state: 'set', sound: true }), action('erase_block')],
+      marioBottom: [action('set_midway', { state: 'set', sound: true }), action('erase_block')],
+      marioLeft: [action('set_midway', { state: 'set', sound: true }), action('erase_block')],
+    },
+    slotLinks: { marioRight: 'marioLeft' },
+  },
+  bonus_star_goal: {
+    properties: properties(
+      'bonus_star_goal',
+      'Touch it to end the level with one more bonus star: the block shatters and the normal exit is taken.',
+    ),
+    slots: {
+      marioTop: bonusStarGoal(),
+      marioBottom: bonusStarGoal(),
+      marioLeft: bonusStarGoal(),
+    },
+    slotLinks: { marioRight: 'marioLeft' },
+  },
+  yoshi_coin_gate: {
+    properties: properties(
+      'yoshi_coin_gate',
+      'Solid until the five Yoshi coins of the level are collected, then Mario walks through it.',
+    ),
+    slots: {
+      marioTop: yoshiCoinRule(),
+      marioBottom: yoshiCoinRule(),
+      marioLeft: yoshiCoinRule(),
+      marioInside: yoshiCoinRule(),
+    },
+    slotLinks: { marioRight: 'marioLeft' },
+  },
+  no_yoshi: {
+    properties: properties(
+      'no_yoshi',
+      'Yoshi does not get past it: Mario riding Yoshi who touches it loses Yoshi in a puff of smoke.',
+    ),
+    slots: {
+      marioTop: [action('kill_yoshi', { sound: true })],
+      marioBottom: [action('kill_yoshi', { sound: true })],
+      marioLeft: [action('kill_yoshi', { sound: true })],
+    },
+    slotLinks: { marioRight: 'marioLeft' },
+  },
+  // Like the lava of Super Mario 64: it hurts, and throws Mario up; small Mario dies.
+  lava_bounce: {
+    properties: properties(
+      'lava_bounce',
+      'Land on it and it hurts (small Mario dies) and throws Mario high into the air.',
+    ),
+    slots: {
+      marioTop: [
+        hurt(false),
+        action('boost_mario', { mode: 0, x_direction: 'none', y_direction: 'up', y_strength: 100 }),
+      ],
+    },
+  },
 };
+
+/** One more bonus star, and the level ends through the normal exit as the block shatters. */
+function bonusStarGoal(): Statement[] {
+  return [
+    action('add_bonus_stars', { amount: 1 }),
+    action('end_level', { secret: false }),
+    action('shatter', { rainbow: false }),
+  ];
+}
 
 function boostAway(): Statement {
   return action('boost_mario', {

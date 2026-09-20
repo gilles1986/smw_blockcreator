@@ -1,0 +1,39 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "add_time",
+  "version": 1,
+  "kind": "action",
+  "category": "level",
+  "name": "Add time",
+  "description": "Adds time to the level timer ($0F31-$0F33: hundreds, tens and ones, one digit each). The timer stops at 999 when it would go beyond.",
+  "author": "BlockCreator",
+  "slots": "any",
+  "params": [
+    {
+      "name": "hundreds",
+      "label": "Hundreds (0..9)",
+      "type": "number",
+      "min": 0,
+      "max": 9,
+      "default": 0
+    },
+    {
+      "name": "tens",
+      "label": "Tens (0..9)",
+      "type": "number",
+      "min": 0,
+      "max": 9,
+      "default": 1
+    },
+    {
+      "name": "ones",
+      "label": "Ones (0..9)",
+      "type": "number",
+      "min": 0,
+      "max": 9,
+      "default": 0
+    }
+  ],
+  "once": true,
+  "clobbers": ["A"]
+}

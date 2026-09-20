@@ -6,6 +6,7 @@ import type { Library } from '../../core/library';
 import type { SlotKind } from '../../core/model';
 import { nameSource, onNamesChanged } from '../names';
 import {
+  atNeighbourBlockDefinition,
   blockDefinitions,
   fieldValidators,
   missingBlockDefinitions,
@@ -73,6 +74,7 @@ export function BlocklyEditor({
     // The placeholders for Pieces the Library does not have come with the Piece blocks.
     Blockly.common.defineBlocksWithJsonArray([
       ...blockDefinitions(library),
+      atNeighbourBlockDefinition(),
       ...missingBlockDefinitions(),
     ]);
     for (const { blockType, field, validator } of fieldValidators(library)) {

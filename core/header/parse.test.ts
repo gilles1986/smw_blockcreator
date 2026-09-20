@@ -66,7 +66,7 @@ describe('parse', () => {
       ok: false,
       reason: 'invalid',
       message:
-        'The ;bc-model header is not a valid Block: slots.marioTop[0].type must be one of: action, if',
+        'The ;bc-model header is not a valid Block: slots.marioTop[0].type must be one of: action, if, atNeighbour',
     });
   });
 });

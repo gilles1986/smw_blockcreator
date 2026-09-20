@@ -62,6 +62,23 @@ function statementsFor(kind: SlotKind): fc.Arbitrary<Statement[]> {
             ? { type: 'if', branches }
             : { type: 'if', branches, else: otherwise },
         ),
+      fc
+        .record({
+          direction: fc.constantFrom(
+            'above' as const,
+            'below' as const,
+            'left' as const,
+            'right' as const,
+          ),
+          distance: fc.constantFrom(16, 32, 48, 64),
+          body: tie('statements'),
+        })
+        .map(({ direction, distance, body }): Statement => ({
+          type: 'atNeighbour',
+          direction,
+          distance,
+          body,
+        })),
     ),
   })).statements;
 }

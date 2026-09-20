@@ -1,0 +1,33 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "c_yoshi_coins",
+  "version": 1,
+  "kind": "condition",
+  "category": "conditions",
+  "name": "Yoshi coins",
+  "description": "Checks the Yoshi coins (dragon coins) of the level. 'Collected so far' counts the ones of this attempt ($1420) and starts again after a death. 'All five collected before' looks at the flag the game saves once the five were collected (the bit of the level in $1F2F-$1F3A, picked by the level number in $13BF with the game's bit table at $0DA8A6), which stays after a death.",
+  "author": "BlockCreator",
+  "slots": "any",
+  "params": [
+    {
+      "name": "source",
+      "label": "Which",
+      "type": "enum",
+      "options": [
+        { "value": "this_attempt", "label": "Collected so far (at least)" },
+        { "value": "saved", "label": "All five collected before (saved)" }
+      ],
+      "default": "this_attempt"
+    },
+    {
+      "name": "count",
+      "label": "Yoshi coins (0..255)",
+      "type": "number",
+      "min": 0,
+      "max": 255,
+      "default": 5,
+      "showWhen": { "param": "source", "equals": "this_attempt" }
+    }
+  ],
+  "clobbers": ["A", "X", "Y"]
+}

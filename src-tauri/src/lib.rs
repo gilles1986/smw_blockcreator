@@ -21,7 +21,9 @@ pub fn run() {
       userlibrary::user_piece_delete,
       userlibrary::user_piece_write,
       userlibrary::user_pieces_dir,
-      userlibrary::user_pieces_read_all
+      userlibrary::user_pieces_make_dir,
+      userlibrary::user_pieces_read_all,
+      userlibrary::user_pieces_writable
     ])
     .setup(|app| {
       if cfg!(debug_assertions) {

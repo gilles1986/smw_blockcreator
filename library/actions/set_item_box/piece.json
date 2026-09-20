@@ -7,7 +7,7 @@
   "name": "Set item box",
   "description": "Puts an item into Mario's reserve item box ($0DC2), or empties it. What was in the box is replaced without being dropped.",
   "author": "BlockCreator",
-  "slots": "mario",
+  "slots": "any",
   "params": [
     {
       "name": "item",

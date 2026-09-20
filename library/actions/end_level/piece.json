@@ -5,15 +5,23 @@
   "kind": "action",
   "category": "level",
   "name": "End level",
-  "description": "Ends the level the way the goal sphere does: the end level timer ($1493) is set to $FF, and the goal type ($141C) to 0 for the normal exit or 1 for secret exit 1. The level clear music is not played.",
+  "description": "Ends the level the way the goal sphere does: the end level timer ($1493) is set to $FF, and the goal type ($141C) to 0 for the normal exit or 1 for secret exit 1. The level clear music is not played. 'Event + n' adds n to the overworld event to run at the end of the level ($1DEA) first, to reach the event of a further secret exit, as the Exit Adder block (SMWC 4073) does; an event of $FF (none) is left alone.",
   "author": "BlockCreator",
-  "slots": "mario",
+  "slots": "any",
   "params": [
     {
       "name": "secret",
       "label": "Secret exit 1",
       "type": "bool",
       "default": false
+    },
+    {
+      "name": "event_offset",
+      "label": "Event + n (0..14)",
+      "type": "number",
+      "min": 0,
+      "max": 14,
+      "default": 0
     }
   ],
   "once": true,

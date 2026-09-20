@@ -66,7 +66,11 @@ export function parse(text: string): ParseResult {
 function headerValue(line: string, key: keyof typeof HEADER, shape: RegExp): string | undefined {
   const prefix = HEADER[key];
   const legacyPrefix = ';@' + prefix.slice(1);
-  const matched = line.startsWith(prefix) ? prefix : line.startsWith(legacyPrefix) ? legacyPrefix : undefined;
+  const matched = line.startsWith(prefix)
+    ? prefix
+    : line.startsWith(legacyPrefix)
+      ? legacyPrefix
+      : undefined;
   if (!matched) return undefined;
   const value = line.slice(matched.length);
   return shape.test(value) ? value : undefined;

@@ -68,10 +68,14 @@ export interface Branch {
   body: Statement[];
 }
 
+export type Direction = 'above' | 'below' | 'left' | 'right';
+
 export type Statement =
   | { type: 'action'; piece: PieceRef }
   /** `if` / `else if` … / `else`: the first branch whose condition holds runs. */
-  | { type: 'if'; branches: Branch[]; else?: Statement[] };
+  | { type: 'if'; branches: Branch[]; else?: Statement[] }
+  /** `atNeighbour`: runs statements at the neighbour block's position ($98/$9A). */
+  | { type: 'atNeighbour'; direction: Direction; distance: number; body: Statement[] };
 
 export interface BlockModel {
   properties: BlockProperties;

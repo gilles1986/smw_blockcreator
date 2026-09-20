@@ -7,7 +7,7 @@
   "name": "Mario is moving",
   "description": "True while Mario moves in the chosen direction ($7B / $7D), optionally at least that fast. 'Down' also holds while he rests on the ground, so it is the test for the top of a muncher; 'Up' is the one for a muncher on the ceiling.",
   "author": "BlockCreator",
-  "slots": "mario",
+  "slots": "any",
   "params": [
     {
       "name": "direction",

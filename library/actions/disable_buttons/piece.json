@@ -5,9 +5,9 @@
   "kind": "action",
   "category": "level",
   "name": "Disable buttons",
-  "description": "Stops the chosen buttons from registering new presses while Mario touches the Block. The game counts a press as new only when the button was not held on the frame before, so this marks the buttons as already held: $0DAA (B, Y, Select, Start, D-pad) and $0DAC (A, X, L, R) for controller 1, $0DAB and $0DAD for controller 2, for the next frame. A button that is already held stays held ($15, $17), so holding a direction still walks.",
+  "description": "Disables the chosen controller buttons while Mario touches the Block. Clears the inputs for the current frame ($15, $16, $17, $18) and sets the disable mask for the next frame ($0DAA and $0DAC for Player 1, $0DAB and $0DAD for Player 2), preventing running, jumping, spin jumping, fireballs, and other actions.",
   "author": "BlockCreator",
-  "slots": "mario",
+  "slots": "any",
   "params": [
     {
       "name": "b",

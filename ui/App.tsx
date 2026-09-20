@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { checkBlock, type CheckProblem } from '../core/assemble';
 import { generate, GenerateError, type GenerateResult } from '../core/generator';
 import { canonicalJson } from '../core/header';
@@ -10,17 +10,10 @@ import {
   type BlockProperties,
   type SlotId,
 } from '../core/model';
-import { About } from './About';
+import { AboutDialog } from './About';
 import { BlocklyEditor } from './blockly/BlocklyEditor';
-import {
-  NewIcon,
-  OpenIcon,
-  PresetIcon,
-  ProjectIcon,
-  SaveAsIcon,
-  SaveIcon,
-  SettingsIcon,
-} from './icons';
+import { MenuBar } from './MenuBar';
+import { PieceManagerDialog } from './pieceEditor/PieceManagerDialog';
 import {
   slotsToWorkspaces,
   workspaceProblems,
@@ -48,7 +41,7 @@ import { presetList, type Preset } from './presets';
 import { propertyProblems } from './properties';
 import { saveToProject, type ListChoice, type RoutineFile } from './projectSave';
 import { routineFilesNote, savedToProjectNotice } from './routineNotes';
-import { getFolder } from './settings';
+import { getAsmOpen, getFolder, setAsmOpen } from './settings';
 import { SaveToProjectDialog } from './SaveToProjectDialog';
 import { SettingsDialog } from './SettingsDialog';
 import { copySlot } from './slotOps';
@@ -70,37 +63,6 @@ const NEW_BLOCK: BlockModel = {
 };
 
 type Workspaces = Partial<Record<SlotId, WorkspaceState>>;
-
-/** Tooltip of a button that needs the desktop app's file access. */
-const desktopOnly = (label: string) => (files ? label : `${label} (desktop app only)`);
-
-/** A sidebar button that shows only an icon; the label is its tooltip and accessible name. */
-function IconButton({
-  label,
-  disabled,
-  className = '',
-  onClick,
-  children,
-}: {
-  label: string;
-  disabled?: boolean;
-  className?: string;
-  onClick: () => void;
-  children: ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      className={`icon-btn ${className}`.trim()}
-      title={label}
-      aria-label={label}
-      disabled={disabled}
-      onClick={onClick}
-    >
-      {children}
-    </button>
-  );
-}
 
 /** The Block file being edited; `revision` changes whenever a Block is opened or created. */
 interface OpenFile {
@@ -124,11 +86,15 @@ export function App() {
   });
   const [notice, setNotice] = useState<Notice | null>(null);
   const [copied, setCopied] = useState(false);
+  /** Whether the ASM pane takes its column; folded away, the editor gets the room. */
+  const [asmOpen, setAsmOpenState] = useState(getAsmOpen);
   /** The last Asar check and the text it checked; it no longer applies once the text changes. */
   const [check, setCheck] = useState<{ text: string; problems: CheckProblem[] } | null>(null);
   const [checking, setChecking] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [presetsOpen, setPresetsOpen] = useState(false);
+  const [piecesOpen, setPiecesOpen] = useState(false);
+  const [aboutOpen, setAboutOpen] = useState(false);
   /** What the Piece search box looks for. */
   const [query, setQuery] = useState('');
   /** The user's own Pieces, loaded from the app's data dir; null until read (browser: never). */
@@ -144,6 +110,11 @@ export function App() {
     () => (projectFolder === undefined ? undefined : projectFiles(projectFolder)),
     [projectFolder],
   );
+
+  useEffect(() => {
+    const displayVersion = TOOL_VERSION.startsWith('v') ? TOOL_VERSION : `v${TOOL_VERSION}`;
+    document.title = `BlockCreator ${displayVersion}`;
+  }, []);
 
   // The custom sprite names come from the PIXI folder in the settings: read at the start, and
   // again whenever the settings dialog has been closed (the folder may have changed).
@@ -161,25 +132,21 @@ export function App() {
     });
   }
 
+  const reloadUserLibrary = useCallback(async () => {
+    if (!userLibrarySupported) return;
+    try {
+      const user = await loadUserLibrary();
+      setUserLibrary(user);
+      reportLibraryErrors(user);
+    } catch (error) {
+      setNotice({ kind: 'error', text: `Cannot read your Pieces: ${String(error)}` });
+    }
+  }, []);
+
   // Read the user's Pieces once at the start.
   useEffect(() => {
-    if (!userLibrarySupported) return;
-    let current = true;
-    loadUserLibrary().then(
-      (user) => {
-        if (!current) return;
-        setUserLibrary(user);
-        reportLibraryErrors(user);
-      },
-      (error) => {
-        if (current)
-          setNotice({ kind: 'error', text: `Cannot read your Pieces: ${String(error)}` });
-      },
-    );
-    return () => {
-      current = false;
-    };
-  }, []);
+    void reloadUserLibrary();
+  }, [reloadUserLibrary]);
 
   const model: BlockModel = useMemo(
     () => ({
@@ -235,6 +202,11 @@ export function App() {
 
   async function checkOnly() {
     setNotice(checkNotice(await runCheck()));
+  }
+
+  function toggleAsm() {
+    setAsmOpenState(!asmOpen);
+    setAsmOpen(!asmOpen);
   }
 
   function load(next: BlockModel, path: string | undefined) {
@@ -410,181 +382,205 @@ export function App() {
 
   return (
     <div className="app">
-      <aside className="sidebar">
-        <div className="sidebar-scroll">
-          <PropertiesForm key={file.revision} properties={properties} onChange={setProperties} />
-          <SlotList
-            model={model}
-            library={library}
-            selected={selected}
-            onSelect={setSelected}
-            onLink={setLink}
-            onCopy={copyLogic}
-            onCornerFollowsTop={setTopCornerFollowsTop}
-            errorSlots={checked ? slotsWithProblems(checked.problems) : undefined}
-          />
-        </div>
-        <section className="save">
-          {checked && checked.problems.length > 0 && (
-            <p className="notice error">
-              Asar found {checked.problems.length} error{checked.problems.length === 1 ? '' : 's'}{' '}
-              (see the ASM pane); fix them before saving.
-            </p>
-          )}
-          {notice && <p className={`notice ${notice.kind}`}>{notice.text}</p>}
-          {unsavedChanges && (
-            <p className="notice warning" role="status">
-              Unsaved changes
-            </p>
-          )}
-          {file.path && (
-            <p className="path" title={file.path}>
-              {file.path}
-            </p>
-          )}
-          <div className="buttons">
-            <IconButton label="New" onClick={newBlock}>
-              <NewIcon />
-            </IconButton>
-            <IconButton label="New from preset…" onClick={() => setPresetsOpen(true)}>
-              <PresetIcon />
-            </IconButton>
-            <IconButton label={desktopOnly('Open…')} disabled={!files} onClick={openFile}>
-              <OpenIcon />
-            </IconButton>
-            <IconButton
-              label={desktopOnly('Save')}
-              disabled={!files || checking}
-              onClick={() => saveFile(false)}
-            >
-              <SaveIcon />
-            </IconButton>
-            <IconButton
-              label={desktopOnly('Save as…')}
-              disabled={!files || checking}
-              onClick={() => saveFile(true)}
-            >
-              <SaveAsIcon />
-            </IconButton>
-            <IconButton
-              label={desktopOnly('Save to GPS project…')}
-              disabled={!files || checking}
-              onClick={openProjectDialog}
-            >
-              <ProjectIcon />
-            </IconButton>
-            <IconButton
-              label={desktopOnly('Settings')}
-              className="push-right"
-              disabled={!files}
-              onClick={() => setSettingsOpen(true)}
-            >
-              <SettingsIcon />
-            </IconButton>
-            <About version={TOOL_VERSION} />
-          </div>
-          <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />
-          <PresetDialog
-            open={presetsOpen}
-            onClose={() => setPresetsOpen(false)}
-            presets={presets}
-            onPick={newFromPreset}
-          />
-          {project && projectFolder !== undefined && (
-            <SaveToProjectDialog
-              open
-              onClose={() => setProjectFolder(undefined)}
-              project={project}
-              gpsFolder={projectFolder}
-              name={properties.name}
-              defaultActAs={properties.defaultActAs}
-              onSave={saveToGpsProject}
-            />
-          )}
-        </section>
-      </aside>
-      <main className="main">
-        <header className="edhead">
-          <div className="slot-title">
-            <SlotGlyph glyph={SLOT_GLYPHS[selected]} size={34} />
-            <div className="slot-text">
-              <strong>
-                {groupName(selected)} · {SLOT_LABELS[selected]}
-              </strong>
-              <span className="slot-hint">{SLOT_HINTS[selected]}</span>
-            </div>
-          </div>
-          {activeLink && (
-            <span className="linked-indicator">🔗 Uses {SLOT_LABELS[activeLink]}'s logic</span>
-          )}
-          {selected === 'marioTopCorner' && cornerFollowsTop(model) && !activeLink && (
-            <span className="hint">
-              It does what Top does while it is empty (switch in the Slot list). Add blocks here to
-              give the corner its own logic.
-            </span>
-          )}
-          <input
-            type="search"
-            className="piece-search"
-            placeholder="Search Pieces…"
-            aria-label="Search Pieces"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
-        </header>
-        <div className="split">
-          <section className="editor" aria-label="Logic editor">
-            <BlocklyEditor
+      <MenuBar
+        version={TOOL_VERSION}
+        filePath={file.path}
+        unsavedChanges={unsavedChanges}
+        desktopFilesSupported={Boolean(files)}
+        checking={checking}
+        onNew={newBlock}
+        onOpen={openFile}
+        onSave={() => saveFile(false)}
+        onSaveAs={() => saveFile(true)}
+        onSaveToProject={openProjectDialog}
+        onOpenPresets={() => setPresetsOpen(true)}
+        onOpenPieces={() => setPiecesOpen(true)}
+        onOpenSettings={() => setSettingsOpen(true)}
+        onOpenAbout={() => setAboutOpen(true)}
+      />
+      <div className="app-body">
+        <aside className="sidebar">
+          <div className="sidebar-scroll">
+            <PropertiesForm key={file.revision} properties={properties} onChange={setProperties} />
+            <SlotList
+              model={model}
               library={library}
-              editKey={`${file.revision}:${activeSlot}`}
-              slotKind={slotKind(activeSlot)}
-              initialState={workspaces[activeSlot] ?? {}}
-              onChange={(state) => setWorkspaces((all) => ({ ...all, [activeSlot]: state }))}
-              warnings={warnings}
-              searchQuery={query}
+              selected={selected}
+              onSelect={setSelected}
+              onLink={setLink}
+              onCopy={copyLogic}
+              onCornerFollowsTop={setTopCornerFollowsTop}
+              errorSlots={checked ? slotsWithProblems(checked.problems) : undefined}
             />
-          </section>
-          <section className="asm" aria-label="ASM preview">
-            <div className="asm-head">
-              <span className="asm-title">ASM Preview</span>
-              <button
-                type="button"
-                className="btn-copy"
-                onClick={checkOnly}
-                disabled={checking || !('text' in generated)}
-                title="Assemble with the GPS project's Asar"
-              >
-                {checking ? 'Checking…' : 'Check'}
-              </button>
-              <button
-                type="button"
-                className="btn-copy"
-                onClick={async () => {
-                  if ('text' in generated) {
-                    await navigator.clipboard.writeText(generated.text);
-                    setCopied(true);
-                    setTimeout(() => setCopied(false), 2000);
-                  }
-                }}
-                disabled={!('text' in generated)}
-                title="Copy ASM code to clipboard"
-              >
-                {copied ? '✓ Copied!' : 'Copy ASM'}
-              </button>
+          </div>
+          {((checked && checked.problems.length > 0) || notice || unsavedChanges || file.path) && (
+            <section className="sidebar-status">
+              {checked && checked.problems.length > 0 && (
+                <p className="notice error">
+                  Asar found {checked.problems.length} error
+                  {checked.problems.length === 1 ? '' : 's'} (see the ASM pane); fix them before
+                  saving.
+                </p>
+              )}
+              {notice && <p className={`notice ${notice.kind}`}>{notice.text}</p>}
+              {unsavedChanges && (
+                <p className="notice warning" role="status">
+                  Unsaved changes
+                </p>
+              )}
+              {file.path && (
+                <p className="path" title={file.path}>
+                  {file.path}
+                </p>
+              )}
+            </section>
+          )}
+        </aside>
+        <main className="main">
+          <header className="edhead">
+            <div className="slot-title">
+              <SlotGlyph glyph={SLOT_GLYPHS[selected]} size={34} />
+              <div className="slot-text">
+                <strong>
+                  {groupName(selected)} · {SLOT_LABELS[selected]}
+                </strong>
+                <span className="slot-hint">{SLOT_HINTS[selected]}</span>
+              </div>
             </div>
-            {checked && (
-              <CheckResults
-                problems={checked.problems}
-                pieceName={(problem) => problemPieceName(problem, model.slots, library)}
-                onSelectSlot={setSelected}
-              />
+            {activeLink && (
+              <span className="linked-indicator">🔗 Uses {SLOT_LABELS[activeLink]}'s logic</span>
             )}
-            <pre className="asm-code">
-              {'text' in generated ? generated.text : `; ${generated.error}`}
-            </pre>
-          </section>
-        </div>
-      </main>
+            {selected === 'marioTopCorner' && cornerFollowsTop(model) && !activeLink && (
+              <span className="hint">
+                It does what Top does while it is empty (switch in the Slot list). Add blocks here
+                to give the corner its own logic.
+              </span>
+            )}
+            <input
+              type="search"
+              className="piece-search"
+              placeholder="Search Pieces…"
+              aria-label="Search Pieces"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+          </header>
+          <div className={asmOpen ? 'split' : 'split asm-folded'}>
+            <section className="editor" aria-label="Logic editor">
+              <BlocklyEditor
+                library={library}
+                editKey={`${file.revision}:${activeSlot}`}
+                slotKind={slotKind(activeSlot)}
+                initialState={workspaces[activeSlot] ?? {}}
+                onChange={(state) => setWorkspaces((all) => ({ ...all, [activeSlot]: state }))}
+                warnings={warnings}
+                searchQuery={query}
+              />
+            </section>
+            <section className={asmOpen ? 'asm' : 'asm folded'} aria-label="ASM preview">
+              {asmOpen ? (
+                <>
+                  <div className="asm-head">
+                    <span className="asm-title">ASM Preview</span>
+                    <button
+                      type="button"
+                      className="btn-copy"
+                      onClick={checkOnly}
+                      disabled={checking || !('text' in generated)}
+                      title="Assemble with the GPS project's Asar"
+                    >
+                      {checking ? 'Checking…' : 'Check'}
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-copy"
+                      onClick={async () => {
+                        if ('text' in generated) {
+                          await navigator.clipboard.writeText(generated.text);
+                          setCopied(true);
+                          setTimeout(() => setCopied(false), 2000);
+                        }
+                      }}
+                      disabled={!('text' in generated)}
+                      title="Copy ASM code to clipboard"
+                    >
+                      {copied ? '✓ Copied!' : 'Copy ASM'}
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-copy"
+                      onClick={toggleAsm}
+                      aria-expanded
+                      aria-label="Hide ASM preview"
+                      title="Hide the ASM preview to give the editor more room"
+                    >
+                      »
+                    </button>
+                  </div>
+                  {checked && (
+                    <CheckResults
+                      problems={checked.problems}
+                      pieceName={(problem) => problemPieceName(problem, model.slots, library)}
+                      onSelectSlot={setSelected}
+                    />
+                  )}
+                  <pre className="asm-code">
+                    {'text' in generated ? generated.text : `; ${generated.error}`}
+                  </pre>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  className="asm-unfold"
+                  onClick={toggleAsm}
+                  aria-expanded={false}
+                  aria-label="Show ASM preview"
+                  title={
+                    checked && checked.problems.length > 0
+                      ? 'Show the ASM preview (the last check found problems)'
+                      : 'Show the ASM preview'
+                  }
+                >
+                  <span aria-hidden="true">«</span>
+                  <span className="asm-unfold-title">ASM Preview</span>
+                  {checked && checked.problems.length > 0 && (
+                    <span className="asm-unfold-alert" aria-hidden="true">
+                      !
+                    </span>
+                  )}
+                </button>
+              )}
+            </section>
+          </div>
+        </main>
+      </div>
+      <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      <PresetDialog
+        open={presetsOpen}
+        onClose={() => setPresetsOpen(false)}
+        presets={presets}
+        onPick={newFromPreset}
+      />
+      <PieceManagerDialog
+        open={piecesOpen}
+        onClose={() => setPiecesOpen(false)}
+        library={library}
+        userLibrary={userLibrary}
+        onLibraryChanged={reloadUserLibrary}
+        defaultAuthor={properties.author}
+      />
+      <AboutDialog open={aboutOpen} onClose={() => setAboutOpen(false)} version={TOOL_VERSION} />
+      {project && projectFolder !== undefined && (
+        <SaveToProjectDialog
+          open
+          onClose={() => setProjectFolder(undefined)}
+          project={project}
+          gpsFolder={projectFolder}
+          name={properties.name}
+          defaultActAs={properties.defaultActAs}
+          onSave={saveToGpsProject}
+        />
+      )}
     </div>
   );
 }
@@ -601,7 +597,9 @@ function PropertiesForm({
   const problems = propertyProblems(properties.name, actAsText);
   return (
     <section className="props" aria-label="Block properties">
-      <h1>BlockCreator</h1>
+      <div className="app-title-row">
+        <h1>Block Properties</h1>
+      </div>
       <label>
         Name
         <input

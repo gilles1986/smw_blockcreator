@@ -39,7 +39,12 @@ describe('visibilityRules', () => {
 
   it('are only for Pieces that ask for them', () => {
     expect(new Set(rules.map((rule) => rule.blockType))).toEqual(
-      new Set(['piece_spawn_sprite', 'piece_change_sprite']),
+      new Set([
+        'piece_spawn_sprite',
+        'piece_change_sprite',
+        'piece_set_midway',
+        'piece_c_yoshi_coins',
+      ]),
     );
   });
 });

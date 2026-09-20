@@ -1,7 +1,13 @@
 // Which GPS offset runs which Slot (spec "Slots → offsets"). Slots are Block sides; several
 // offsets can share one section, and some offsets split two Slots at runtime.
 
-import { cornerFollowsTop, effectiveSlot, slotFilled, type BlockModel, type SlotId } from '../model';
+import {
+  cornerFollowsTop,
+  effectiveSlot,
+  slotFilled,
+  type BlockModel,
+  type SlotId,
+} from '../model';
 
 /** GPS offsets in jump-table order; the last two exist only with the `db $37` header. */
 export const OFFSETS = [

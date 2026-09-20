@@ -45,6 +45,10 @@
         {
           "value": "away",
           "label": "Away from the block"
+        },
+        {
+          "value": "facing",
+          "label": "In the direction Mario faces"
         }
       ],
       "default": "none"

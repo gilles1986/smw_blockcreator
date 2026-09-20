@@ -1,0 +1,33 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "take_lives",
+  "version": 1,
+  "kind": "action",
+  "category": "level",
+  "name": "Take lives",
+  "description": "Takes lives from Mario ($0DBE holds the lives minus one). He must keep at least one life: with fewer than the amount plus one, nothing is taken, or the lives are set to 0 and Mario dies (game over). To make him pay only when he can, put a Lives check in front of it.",
+  "author": "BlockCreator",
+  "slots": "any",
+  "params": [
+    {
+      "name": "amount",
+      "label": "Lives (1..98)",
+      "type": "number",
+      "min": 1,
+      "max": 98,
+      "default": 1
+    },
+    {
+      "name": "if_short",
+      "label": "If he has too few",
+      "type": "enum",
+      "options": [
+        { "value": "keep", "label": "Take nothing" },
+        { "value": "game_over", "label": "Game over (0 lives, Mario dies)" }
+      ],
+      "default": "keep"
+    }
+  ],
+  "once": true,
+  "clobbers": ["A", "X", "Y"]
+}

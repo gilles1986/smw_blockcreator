@@ -1,0 +1,23 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "give_points",
+  "version": 1,
+  "kind": "action",
+  "category": "level",
+  "name": "Give points",
+  "description": "Adds to the current player's score with GPS's give_points routine, once per 10 points: it adds 1 to the score, which the game keeps divided by 10 in $0F34-$0F36 (per player, picked by $0DB3). No score number appears on the screen.",
+  "author": "BlockCreator",
+  "slots": "any",
+  "params": [
+    {
+      "name": "amount",
+      "label": "Points (x10) (1..255)",
+      "type": "number",
+      "min": 1,
+      "max": 255,
+      "default": 10
+    }
+  ],
+  "once": true,
+  "clobbers": ["A", "X", "Y"]
+}

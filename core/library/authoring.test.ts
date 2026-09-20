@@ -148,3 +148,44 @@ describe('the guide', () => {
     expect(readme).toContain('docs/piece-authoring.md');
   });
 });
+
+describe('the brief for an AI', () => {
+  const brief = readFileSync(join(root, 'docs', 'piece-authoring-for-ai.md'), 'utf8').replace(
+    /\r\n/g,
+    '\n',
+  );
+
+  it('shows the Action it uses as its example exactly as the built-in Library has it', () => {
+    const shown = new Map(
+      [...brief.matchAll(/^```\w* file=(\S+)\n([\s\S]*?)^```/gm)].map((m) => [m[1]!, m[2]!]),
+    );
+    expect([...shown.keys()].sort()).toEqual([
+      'actions/give_coins/code.asm',
+      'actions/give_coins/piece.json',
+    ]);
+    const built = readFolder(join(root, 'library'));
+    expect(shown.get('actions/give_coins/code.asm')!.trim()).toBe(
+      built['actions/give_coins/code.asm']!.replace(/\r\n/g, '\n').trim(),
+    );
+    // The built-in manifest also has the `$schema` line, which the brief leaves out.
+    const { $schema, ...manifest } = JSON.parse(built['actions/give_coins/piece.json']!);
+    expect($schema).toBeDefined();
+    expect(JSON.parse(shown.get('actions/give_coins/piece.json')!)).toEqual(manifest);
+  });
+
+  it('names every required field of the manifest and every Piece it points to', () => {
+    const named = (word: string) => brief.includes('`' + word + '`');
+    expect((schema.required as string[]).filter((name) => !named(name))).toEqual([]);
+    for (const id of ['write_ram', 'c_ram', 'custom_asm', 'boost_mario', 'c_button']) {
+      expect(library.pieces.has(id), id).toBe(true);
+      expect(named(id), id).toBe(true);
+    }
+  });
+
+  it('is linked from the README and from the guide', () => {
+    expect(readFileSync(join(root, 'README.md'), 'utf8')).toContain(
+      'docs/piece-authoring-for-ai.md',
+    );
+    expect(guide).toContain('piece-authoring-for-ai.md');
+  });
+});

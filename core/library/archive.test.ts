@@ -1,6 +1,6 @@
 import { strToU8, unzipSync, zipSync } from 'fflate';
 import { describe, expect, it } from 'vitest';
-import { ArchiveError, packPieces, unpackPieces } from './archive';
+import { ArchiveError, isPieceFile, packPieces, unpackPieces } from './archive';
 
 const GIVE_LIFE = {
   'actions/give_life/piece.json': '{ "id": "give_life" }',
@@ -30,6 +30,21 @@ describe('packPieces / unpackPieces', () => {
       'actions/ok/extra.txt': strToU8('x'),
     });
     expect(unpackPieces(dirty)).toEqual(GIVE_LIFE);
+  });
+
+  it('knows a Piece file from anything else in a Piece folder', () => {
+    expect(isPieceFile('actions/give_life/piece.json')).toBe(true);
+    expect(isPieceFile('conditions/c_button/code.asm')).toBe(true);
+    for (const other of [
+      'AGENTS.md',
+      'notes.json',
+      'actions/give_life/notes.txt',
+      'actions/Give_Life/piece.json',
+      'routines/bc_helper.asm',
+      'actions/give_life/deeper/piece.json',
+    ]) {
+      expect(isPieceFile(other), other).toBe(false);
+    }
   });
 
   it('throws ArchiveError on bytes that are not a zip', () => {

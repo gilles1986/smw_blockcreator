@@ -7,7 +7,7 @@
   "name": "P-meter is at least",
   "description": "True if Mario's P-meter ($13E4) has reached the value. It fills by 2 a frame while he runs on the ground and is full at 112, where he runs at top speed and can fly with the cape.",
   "author": "BlockCreator",
-  "slots": "mario",
+  "slots": "any",
   "params": [
     {
       "name": "at_least",

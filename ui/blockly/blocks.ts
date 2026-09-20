@@ -16,6 +16,8 @@ export function pieceIdOf(blockType: string): string | undefined {
   return blockType.startsWith('piece_') ? blockType.slice('piece_'.length) : undefined;
 }
 
+import { AT_NEIGHBOUR_BLOCK } from './toolbox';
+
 /** A label that Blockly saves with the block, so a placeholder can show what it stands for. */
 export interface LabelFieldDefinition {
   type: 'field_label_serializable';
@@ -23,16 +25,58 @@ export interface LabelFieldDefinition {
   text: string;
 }
 
+export type BlockArgDefinition =
+  | FieldDefinition
+  | LabelFieldDefinition
+  | { type: 'input_end_row' }
+  | { type: 'input_dummy' }
+  | { type: 'input_statement'; name: string };
+
 /** A Blockly block definition (Blockly's word "block", not a GPS Block). */
 export interface BlocklyBlockDefinition {
   type: string;
   message0: string;
-  args0: (FieldDefinition | LabelFieldDefinition | { type: 'input_end_row' })[];
+  args0: BlockArgDefinition[];
   colour: Colour;
   tooltip: string;
   output?: string;
   previousStatement?: null;
   nextStatement?: null;
+}
+
+export function atNeighbourBlockDefinition(): BlocklyBlockDefinition {
+  return {
+    type: AT_NEIGHBOUR_BLOCK,
+    message0: 'At neighbour block %1 by %2 %3 do %4',
+    args0: [
+      {
+        type: 'field_dropdown',
+        name: 'DIRECTION',
+        options: [
+          ['above', 'above'],
+          ['below', 'below'],
+          ['left', 'left'],
+          ['right', 'right'],
+        ],
+      },
+      {
+        type: 'field_dropdown',
+        name: 'DISTANCE',
+        options: [
+          ['1 block', '16'],
+          ['2 blocks', '32'],
+          ['3 blocks', '48'],
+          ['4 blocks', '64'],
+        ],
+      },
+      { type: 'input_dummy' },
+      { type: 'input_statement', name: 'DO' },
+    ],
+    previousStatement: null,
+    nextStatement: null,
+    colour: categoryColour('effects'),
+    tooltip: "Runs actions at the neighbour block's position, then restores the original position.",
+  };
 }
 
 export function blockDefinitions(library: Library): BlocklyBlockDefinition[] {

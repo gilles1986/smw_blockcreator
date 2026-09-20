@@ -5,9 +5,9 @@
   "kind": "action",
   "category": "sprites",
   "name": "Kill all sprites",
-  "description": "Erases every sprite on the screen without an effect, including the touching one.",
+  "description": "Erases every sprite on the screen without an effect, including the touching one when a sprite triggers it.",
   "author": "BlockCreator",
-  "slots": "sprite",
+  "slots": "any",
   "params": [],
   "clobbers": ["A", "X"]
 }

@@ -61,6 +61,7 @@ function line(ref: PieceRef): string {
 function outline(statements: Statement[] | undefined): string[] {
   return (statements ?? []).map((statement) => {
     if (statement.type === 'action') return line(statement.piece);
+    if (statement.type !== 'if') throw new Error('the Presets only use Actions and if / else');
     const braces = (body: Statement[]) => `{ ${outline(body).join('; ')} }`;
     const [first] = statement.branches;
     if (statement.branches.length !== 1 || first?.condition.type !== 'condition') {
@@ -92,17 +93,29 @@ const USED_BLOCK = 'change_to_tile tile=306';
 describe('the Presets of ticket 18', () => {
   it('are these, each named as its file, with a description and a default act as', () => {
     expect(Object.keys(PRESETS).sort()).toEqual([
+      'bonus_star_goal',
       'boost_away',
+      'brick_block',
       'coin_once',
       'death_block',
+      'key_lock',
       'kicked_shell_spawner',
+      'lava_bounce',
       'mario_passable',
+      'midway_block',
       'muncher',
       'muncher_sprite_killer',
+      'no_yoshi',
+      'note_block',
       'one_way',
       'onoff_solid',
+      'question_block_coin',
+      'question_block_powerup',
       'sprite_passable',
+      'sticky_ceiling',
+      'toll_block',
       'water_toggle',
+      'yoshi_coin_gate',
     ]);
     for (const [name, model] of Object.entries(PRESETS)) {
       expect(model.properties.name, name).toBe(name);

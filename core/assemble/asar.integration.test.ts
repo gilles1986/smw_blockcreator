@@ -114,6 +114,13 @@ describe.skipIf(!gps)('Asar (GPS project asar.dll)', { timeout: 120_000 }, () =>
       'set_sprite_state',
       'turn_sprite_around',
       'kill_touching_sprite',
+      // Ticket 24: the Pieces of the archive survey outside those categories.
+      'bounce_block',
+      'remove_carried',
+      'kill_yoshi',
+      'set_yoshi_color',
+      'limit_sprite_speed',
+      'behind_scenery',
     ]);
     const failures: string[] = [];
     for (const id of ids) {
@@ -156,7 +163,7 @@ describe.skipIf(!gps)('Asar (GPS project asar.dll)', { timeout: 120_000 }, () =>
     for (const id of ['boost_mario', 'push_sprite']) {
       const { manifest } = library.pieces.get(id)!;
       for (const slot of SLOT_IDS.filter((s) => slotKind(s) === manifest.slots)) {
-        for (const x_direction of ['none', 'left', 'right', 'away']) {
+        for (const x_direction of ['none', 'left', 'right', 'away', 'facing']) {
           for (const y_direction of ['none', 'up', 'down', 'away']) {
             for (const mode of [0, 1]) {
               for (const strength of [0, 127]) {

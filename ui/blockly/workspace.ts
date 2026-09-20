@@ -6,6 +6,7 @@ import type {
   BlockModel,
   Branch,
   ConditionExpr,
+  Direction,
   PieceRef,
   SlotId,
   Statement,
@@ -19,7 +20,14 @@ import {
   pieceIdOf,
 } from './blocks';
 import { fieldCodec } from './fields';
-import { AND_OR_BLOCK, AND_OR_INPUTS, IF_BLOCK, NOT_BLOCK, NOT_INPUT } from './toolbox';
+import {
+  AND_OR_BLOCK,
+  AND_OR_INPUTS,
+  AT_NEIGHBOUR_BLOCK,
+  IF_BLOCK,
+  NOT_BLOCK,
+  NOT_INPUT,
+} from './toolbox';
 
 /** The subset of `Blockly.serialization.workspaces.save()` output the adapter reads and writes. */
 export interface WorkspaceState {
@@ -83,12 +91,15 @@ export function blockIdsByPath(state: WorkspaceState, library: Library): Map<str
     list.forEach((statement, i) => {
       const at = `${path}/${i}`;
       note(statement, at);
-      if (statement.type !== 'if') return;
-      statement.branches.forEach((branch, b) => {
-        condition(branch.condition, `${at}/branches/${b}/condition`);
-        statements(branch.body, `${at}/branches/${b}/body`);
-      });
-      if (statement.else) statements(statement.else, `${at}/else`);
+      if (statement.type === 'if') {
+        statement.branches.forEach((branch, b) => {
+          condition(branch.condition, `${at}/branches/${b}/condition`);
+          statements(branch.body, `${at}/branches/${b}/body`);
+        });
+        if (statement.else) statements(statement.else, `${at}/else`);
+      } else if (statement.type === 'atNeighbour') {
+        statements(statement.body, `${at}/body`);
+      }
     });
   statements(reader.statements(state), '');
   return ids;
@@ -128,11 +139,25 @@ class Reader {
 
   private statement(block: BlockState): Statement | undefined {
     if (block.type === IF_BLOCK) return this.from(this.ifStatement(block), block);
+    if (block.type === AT_NEIGHBOUR_BLOCK)
+      return this.from(this.atNeighbourStatement(block), block);
     const piece =
       block.type === MISSING_ACTION_BLOCK
         ? missingRef(block)
         : pieceRef(block, this.library, 'action');
     return this.from(piece && { type: 'action', piece }, block);
+  }
+
+  private atNeighbourStatement(block: BlockState): Statement | undefined {
+    const direction = (block.fields?.DIRECTION as Direction) || 'above';
+    const rawDist = Number(block.fields?.DISTANCE);
+    const distance = Number.isFinite(rawDist) && rawDist > 0 ? rawDist : 16;
+    return {
+      type: 'atNeighbour',
+      direction,
+      distance,
+      body: this.stack(block.inputs?.DO?.block),
+    };
   }
 
   private ifStatement(block: BlockState): Statement | undefined {
@@ -223,6 +248,17 @@ function chain(statements: Statement[], library: Library): BlockState | undefine
 
 function toBlock(statement: Statement, library: Library): BlockState {
   if (statement.type === 'action') return pieceBlock(statement.piece, library, 'action');
+  if (statement.type === 'atNeighbour') {
+    const body = chain(statement.body, library);
+    return {
+      type: AT_NEIGHBOUR_BLOCK,
+      fields: {
+        DIRECTION: statement.direction,
+        DISTANCE: String(statement.distance),
+      },
+      inputs: body ? { DO: { block: body } } : {},
+    };
+  }
   const inputs: NonNullable<BlockState['inputs']> = {};
   statement.branches.forEach((branch, i) => {
     inputs[`IF${i}`] = { block: conditionBlock(branch.condition, library) };

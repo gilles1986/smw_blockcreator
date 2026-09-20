@@ -50,7 +50,7 @@ describe('searchPieces', () => {
   it('leaves out the Pieces a kind of Slot cannot take', () => {
     expect(ids('sprite', { slotKind: 'mario' })).not.toContain('push_sprite');
     expect(ids('sprite', { slotKind: 'mario' })).toContain('spawn_sprite');
-    expect(ids('mario', { slotKind: 'sprite' })).not.toContain('hurt_mario');
+    expect(ids('mario', { slotKind: 'sprite' })).not.toContain('boost_mario');
     expect(ids('sprite', { slotKind: 'sprite' })).toContain('push_sprite');
   });
 

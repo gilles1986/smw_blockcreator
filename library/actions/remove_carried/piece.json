@@ -1,0 +1,24 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "remove_carried",
+  "version": 1,
+  "kind": "action",
+  "category": "sprites",
+  "name": "Remove carried item",
+  "description": "Takes away what Mario carries. 'Delete it' finds the sprite with status $0B (carried) in the status table !14C8 ($14C8 without SA-1), deletes it and clears Mario's carrying flags $1470 and $148F. 'Let go of it' releases the run button ($15 bit 6) and left / right for a frame, so Mario drops it. To use a key on a lock, check for the key with Mario holds sprite first.",
+  "author": "BlockCreator",
+  "slots": "mario",
+  "params": [
+    {
+      "name": "mode",
+      "label": "What happens to it",
+      "type": "enum",
+      "options": [
+        { "value": "delete", "label": "Delete it" },
+        { "value": "drop", "label": "Let go of it" }
+      ],
+      "default": "delete"
+    }
+  ],
+  "clobbers": ["A", "X"]
+}

@@ -6,6 +6,9 @@ import { strFromU8, strToU8, unzipSync, zipSync } from 'fflate';
 /** An archive entry: a Piece file, nothing else. */
 const ENTRY_PATH = /^(actions|conditions)\/[a-z][a-z0-9_]*\/(piece\.json|code\.asm)$/;
 
+/** Whether a `/`-separated path is a Piece's file: `actions/<id>/piece.json`, `…/code.asm`. */
+export const isPieceFile = (path: string): boolean => ENTRY_PATH.test(path);
+
 /**
  * Packs Piece files (`actions/<id>/piece.json`, …) into a .zip. Paths that are not Piece files are
  * left out, so the archive cannot smuggle anything the Library loader would not read anyway.

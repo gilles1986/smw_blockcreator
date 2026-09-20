@@ -37,8 +37,8 @@ export interface LibraryError {
   message: string;
 }
 
-const FOLDER_KIND = { actions: 'action', conditions: 'condition' } as const;
-type KindFolder = keyof typeof FOLDER_KIND;
+export const FOLDER_KIND = { actions: 'action', conditions: 'condition' } as const;
+export type KindFolder = keyof typeof FOLDER_KIND;
 
 const ROUTINE_NAME = /^bc_[a-z0-9_]+$/;
 const ROUTINE_NAME_RULE =
@@ -105,11 +105,11 @@ export function loadLibrary(files: Readonly<Record<string, string>>, origin: Ori
 }
 
 /** A LibraryError before it knows its Library; `file` is relative to the Piece folder. */
-type PieceError = Omit<LibraryError, 'origin'>;
+export type PieceError = Omit<LibraryError, 'origin'>;
 
-type PieceResult = { manifest: Manifest; template: string } | { errors: PieceError[] };
+export type PieceResult = { manifest: Manifest; template: string } | { errors: PieceError[] };
 
-function loadPiece(
+export function loadPiece(
   manifestText: string,
   template: string | undefined,
   kindFolder: KindFolder,

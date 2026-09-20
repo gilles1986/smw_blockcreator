@@ -8,6 +8,8 @@ import { fieldCodec, type FieldValue } from './fields';
 
 /** Blockly's built-in if / else if / else block. */
 export const IF_BLOCK = 'controls_if';
+/** Container block to execute statements at the neighbour block's position. */
+export const AT_NEIGHBOUR_BLOCK = 'at_neighbour';
 /** Blockly's built-in AND / OR block and NOT block, with their input names. */
 export const AND_OR_BLOCK = 'logic_operation';
 export const AND_OR_INPUTS = ['A', 'B'] as const;
@@ -52,6 +54,9 @@ const LOGIC: ToolboxCategory = {
 /** The colour of the Search category, which stands out from the Piece categories. */
 const SEARCH_COLOUR = '#f2b233';
 
+/** Replaced by the general 'At neighbour block' container block. */
+const REPLACED_PIECES = new Set(['change_adjacent_block', 'erase_adjacent_block']);
+
 /** A Piece as a toolbox block, with its default values in place. */
 function pieceToolboxBlock(manifest: Manifest): ToolboxBlock {
   // Explicit defaults: a dropdown would otherwise start on its first option.
@@ -72,10 +77,18 @@ function pieceToolboxBlock(manifest: Manifest): ToolboxBlock {
 export function toolbox(library: Library, kind: SlotKind, query = ''): Toolbox {
   const byCategory = new Map<string, { name: string; block: ToolboxBlock }[]>();
   for (const { manifest } of library.pieces.values()) {
+    if (REPLACED_PIECES.has(manifest.id)) continue;
     if (!fitsSlot(manifest.slots, kind)) continue;
     const blocks = byCategory.get(manifest.category) ?? [];
     blocks.push({ name: manifest.name, block: pieceToolboxBlock(manifest) });
     byCategory.set(manifest.category, blocks);
+  }
+  const effects = byCategory.get('effects');
+  if (effects) {
+    effects.push({
+      name: 'At neighbour block',
+      block: { kind: 'block', type: AT_NEIGHBOUR_BLOCK },
+    });
   }
   const found = query.trim() === '' ? undefined : searchPieces(library, query, { slotKind: kind });
   const search: ToolboxCategory[] = found

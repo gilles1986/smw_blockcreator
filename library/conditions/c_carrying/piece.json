@@ -7,7 +7,7 @@
   "name": "Mario is carrying item",
   "description": "True if Mario is currently holding an item or sprite ($148F / $1470).",
   "author": "BlockCreator",
-  "slots": "mario",
+  "slots": "any",
   "params": [
     {
       "name": "carrying",

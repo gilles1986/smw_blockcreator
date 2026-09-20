@@ -1,0 +1,33 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "take_coins",
+  "version": 1,
+  "kind": "action",
+  "category": "level",
+  "name": "Take coins",
+  "description": "Takes coins from Mario's coin counter ($0DBF). When he has fewer than asked for, the counter goes to 0 or is left alone. To make him pay only when he can, put a Coins check in front of it.",
+  "author": "BlockCreator",
+  "slots": "any",
+  "params": [
+    {
+      "name": "amount",
+      "label": "Coin count (1..99)",
+      "type": "number",
+      "min": 1,
+      "max": 99,
+      "default": 1
+    },
+    {
+      "name": "if_short",
+      "label": "If he has fewer",
+      "type": "enum",
+      "options": [
+        { "value": "zero", "label": "Set the coins to 0" },
+        { "value": "keep", "label": "Take nothing" }
+      ],
+      "default": "zero"
+    }
+  ],
+  "once": true,
+  "clobbers": ["A"]
+}

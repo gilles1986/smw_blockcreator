@@ -5,9 +5,9 @@
   "kind": "action",
   "category": "damage",
   "name": "Kill Mario",
-  "description": "Kills Mario instantly, triggering the death animation and music. With the muncher hitbox on, a side contact that only touches the edge pixel does not kill, like vanilla munchers and spikes (for the Left, Right, Inside and Top corner Slots).",
+  "description": "Kills Mario instantly, triggering the death animation and music. With the muncher hitbox on, a side contact that only touches the edge pixel does not kill, like vanilla munchers and spikes (for the Left, Right, Inside and Top corner Slots; in a sprite Slot, where a sprite touches the block, the option does nothing and Mario is killed).",
   "author": "BlockCreator",
-  "slots": "mario",
+  "slots": "any",
   "params": [
     {
       "name": "side_hitbox",

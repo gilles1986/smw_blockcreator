@@ -7,7 +7,7 @@
   "name": "Stun Mario",
   "description": "Stuns Mario ($18BD counts down the frames): he faces the screen and cannot move until it runs out.",
   "author": "BlockCreator",
-  "slots": "mario",
+  "slots": "any",
   "params": [
     {
       "name": "timer",

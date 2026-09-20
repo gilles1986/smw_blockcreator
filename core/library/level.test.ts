@@ -46,15 +46,43 @@ describe('Level Actions', () => {
       [...Object.keys(face), ...Object.keys(pad), ...Object.keys(shoulder)].map((b) => [b, false]),
     );
 
+    it.each(Object.entries({ ...face, ...pad }).map(([button, mask]) => [button, mask] as const))(
+      '%s (mask %s) clears $15/$16 and sets mask $0DAA/$0DAB',
+      (button, mask) => {
+        expect(piece('disable_buttons', { ...nothing, [button]: true })).toBe(
+          lines(`LDA #${mask}`, 'TRB $15', 'TRB $16', 'TSB $0DAA|!addr', 'TSB $0DAB|!addr'),
+        );
+      },
+    );
+
+    it('a (mask $80) clears $15/$17/$18 and sets mask $0DAC/$0DAD', () => {
+      expect(piece('disable_buttons', { ...nothing, a: true })).toBe(
+        lines('LDA #$80', 'TRB $15', 'TRB $17', 'TRB $18', 'TSB $0DAC|!addr', 'TSB $0DAD|!addr'),
+      );
+    });
+
+    it('x (mask $40) clears $15/$16/$17/$18 and sets masks $0DAA-$0DAD', () => {
+      expect(piece('disable_buttons', { ...nothing, x: true })).toBe(
+        lines(
+          'LDA #$40',
+          'TRB $15',
+          'TRB $16',
+          'TRB $17',
+          'TRB $18',
+          'TSB $0DAA|!addr',
+          'TSB $0DAB|!addr',
+          'TSB $0DAC|!addr',
+          'TSB $0DAD|!addr',
+        ),
+      );
+    });
+
     it.each([
-      ...Object.entries({ ...face, ...pad }).map(
-        ([button, mask]) => [button, mask, 'DAA'] as const,
-      ),
-      ...Object.entries(shoulder).map(([button, mask]) => [button, mask, 'DAC'] as const),
-    ])('%s (mask %s) is set in the byte at 0%s and the one after it', (button, mask, at) => {
-      const next = `0${(parseInt(at, 16) + 1).toString(16).toUpperCase()}`;
+      ['l', '$20'],
+      ['r', '$10'],
+    ] as const)('%s (mask %s) clears $17/$18 and sets mask $0DAC/$0DAD', (button, mask) => {
       expect(piece('disable_buttons', { ...nothing, [button]: true })).toBe(
-        lines(`LDA #${mask}`, `TSB $0${at}|!addr`, `TSB $${next}|!addr`),
+        lines(`LDA #${mask}`, 'TRB $17', 'TRB $18', 'TSB $0DAC|!addr', 'TSB $0DAD|!addr'),
       );
     });
 
@@ -67,9 +95,14 @@ describe('Level Actions', () => {
       expect(piece('disable_buttons')).toBe(
         lines(
           'LDA #$80',
+          'TRB $15',
+          'TRB $16',
           'TSB $0DAA|!addr',
           'TSB $0DAB|!addr',
           'LDA #$80',
+          'TRB $15',
+          'TRB $17',
+          'TRB $18',
           'TSB $0DAC|!addr',
           'TSB $0DAD|!addr',
         ),

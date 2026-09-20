@@ -5,9 +5,9 @@
   "kind": "action",
   "category": "damage",
   "name": "Hurt Mario",
-  "description": "Hurts Mario like an enemy does. Small Mario dies; nothing happens while Mario is invulnerable. With the muncher hitbox on, a side contact that only touches the edge pixel does not hurt, like vanilla munchers and spikes (for the Left, Right, Inside and Top corner Slots).",
+  "description": "Hurts Mario like an enemy does. Small Mario dies; nothing happens while Mario is invulnerable. With the muncher hitbox on, a side contact that only touches the edge pixel does not hurt, like vanilla munchers and spikes (for the Left, Right, Inside and Top corner Slots; in a sprite Slot, where a sprite touches the block, the option does nothing and Mario is hurt).",
   "author": "BlockCreator",
-  "slots": "mario",
+  "slots": "any",
   "params": [
     {
       "name": "side_hitbox",

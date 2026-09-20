@@ -1,6 +1,6 @@
 # BlockCreator
 
-A visual editor for Super Mario World custom blocks (GPS). Compose a block's behaviour from reusable Pieces per Slot, get SA-1-compatible GPS `.asm`, and re-open anything the tool generated. See [CONTEXT.md](CONTEXT.md) for the vocabulary and [docs/adr](docs/adr) for the decisions. To write your own Pieces (the building blocks of the editor), read [docs/piece-authoring.md](docs/piece-authoring.md).
+A visual editor for Super Mario World custom blocks (GPS). Compose a block's behaviour from reusable Pieces per Slot, get SA-1-compatible GPS `.asm`, and re-open anything the tool generated. See [CONTEXT.md](CONTEXT.md) for the vocabulary and [docs/adr](docs/adr) for the decisions. To write your own Pieces (the building blocks of the editor), read [docs/piece-authoring.md](docs/piece-authoring.md). To have an AI write them, give it [docs/piece-authoring-for-ai.md](docs/piece-authoring-for-ai.md) too.
 
 ## Layout
 
@@ -23,3 +23,5 @@ npm run lint         # ESLint
 npm run format       # Prettier (format:check to verify only)
 npm run tauri build  # build the release .exe / installer
 ```
+
+`build.bat` makes the release: it builds the `.exe` and packs `BlockCreator.zip` (`release/package.ps1`) with the program, [release/README.txt](release/README.txt) for the user, [release/AGENTS.md](release/AGENTS.md) for an AI tool opened in the unpacked folder, and the guides, the schema and the built-in Library that AGENTS.md points to.

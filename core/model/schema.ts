@@ -90,8 +90,11 @@ const modelSchema = {
       additionalProperties: false,
       required: ['type'],
       properties: {
-        type: { enum: ['action', 'if'] },
+        type: { enum: ['action', 'if', 'atNeighbour'] },
         piece: pieceRef,
+        direction: { enum: ['above', 'below', 'left', 'right'] },
+        distance: { type: 'integer', minimum: 1 },
+        body: { $ref: '#/definitions/statements' },
         branches: {
           type: 'array',
           minItems: 1,
@@ -112,12 +115,38 @@ const modelSchema = {
           if: { properties: { type: { const: 'action' } } },
           then: {
             required: ['piece'],
-            not: { anyOf: [{ required: ['branches'] }, { required: ['else'] }] },
+            not: {
+              anyOf: [
+                { required: ['branches'] },
+                { required: ['else'] },
+                { required: ['direction'] },
+                { required: ['distance'] },
+                { required: ['body'] },
+              ],
+            },
           },
         },
         {
           if: { properties: { type: { const: 'if' } } },
-          then: { required: ['branches'], not: { required: ['piece'] } },
+          then: {
+            required: ['branches'],
+            not: {
+              anyOf: [
+                { required: ['piece'] },
+                { required: ['direction'] },
+                { required: ['distance'] },
+              ],
+            },
+          },
+        },
+        {
+          if: { properties: { type: { const: 'atNeighbour' } } },
+          then: {
+            required: ['direction', 'distance', 'body'],
+            not: {
+              anyOf: [{ required: ['piece'] }, { required: ['branches'] }, { required: ['else'] }],
+            },
+          },
         },
       ],
     },

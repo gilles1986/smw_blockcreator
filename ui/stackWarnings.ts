@@ -4,7 +4,7 @@
 
 import type { Library } from '../core/library';
 import { MISSING_ACTION_BLOCK, pieceIdOf } from './blockly/blocks';
-import { IF_BLOCK } from './blockly/toolbox';
+import { AT_NEIGHBOUR_BLOCK, IF_BLOCK } from './blockly/toolbox';
 import { sortedTops, type BlockState, type WorkspaceState } from './blockly/workspace';
 
 export const STACK_WARNING =
@@ -24,9 +24,14 @@ export function stackWarnings(state: WorkspaceState, library: Library): Map<stri
   return warnings;
 }
 
-/** An `if`, an Action, or the placeholder of an Action: what a stack is made of. */
+/** An `if`, an `at_neighbour`, an Action, or the placeholder of an Action: what a stack is made of. */
 function isStatement(block: BlockState, library: Library): boolean {
-  if (block.type === IF_BLOCK || block.type === MISSING_ACTION_BLOCK) return true;
+  if (
+    block.type === IF_BLOCK ||
+    block.type === AT_NEIGHBOUR_BLOCK ||
+    block.type === MISSING_ACTION_BLOCK
+  )
+    return true;
   const id = pieceIdOf(block.type);
   return id !== undefined && library.pieces.get(id)?.manifest.kind !== 'condition';
 }

@@ -5,7 +5,7 @@
   "kind": "action",
   "category": "level",
   "name": "Remember this block as collected",
-  "description": "Marks this block in the level's item memory, so it stays gone when the level is entered again. Use it before erasing or changing the block.",
+  "description": "Marks this block's position in SMW's Item Memory ($19F8). Requires Item Memory Setting 0, 1, 2, or 3 in Lunar Magic's Level Header (Ctrl+H). Combine with the condition 'Block was already collected' to react when re-entering.",
   "author": "BlockCreator",
   "slots": "any",
   "params": [],

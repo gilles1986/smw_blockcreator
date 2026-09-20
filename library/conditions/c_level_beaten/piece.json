@@ -1,0 +1,39 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "c_level_beaten",
+  "version": 1,
+  "kind": "condition",
+  "category": "conditions",
+  "name": "Level flag",
+  "description": "Checks a flag of a level on the overworld: 'beaten' is bit 7 and 'midway point passed' bit 6 of that level's byte in the table $1EA2, which is indexed by the translevel number (the number Lunar Magic shows for the level, 00 to 5F).",
+  "author": "BlockCreator",
+  "slots": "any",
+  "params": [
+    {
+      "name": "level",
+      "label": "Level number (hex, 00..5F)",
+      "type": "number",
+      "min": 0,
+      "max": 95,
+      "format": "hex",
+      "default": 1
+    },
+    {
+      "name": "flag",
+      "label": "Flag",
+      "type": "enum",
+      "options": [
+        { "value": "beaten", "label": "Level is beaten" },
+        { "value": "midway", "label": "Midway point passed" }
+      ],
+      "default": "beaten"
+    },
+    {
+      "name": "is_set",
+      "label": "Is set",
+      "type": "bool",
+      "default": true
+    }
+  ],
+  "clobbers": ["A", "X"]
+}

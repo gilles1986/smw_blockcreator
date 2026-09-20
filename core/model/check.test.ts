@@ -68,9 +68,9 @@ describe('checkPieces', () => {
   });
 
   it('names Pieces used in a Slot of the wrong kind', () => {
-    const model: BlockModel = { ...withTop([]), slots: { spriteTop: [action('hurt_mario')] } };
+    const model: BlockModel = { ...withTop([]), slots: { spriteTop: [action('boost_mario')] } };
     expect(checkPieces(model, library)).toEqual([
-      "spriteTop /0: Piece 'hurt_mario' only works in Mario Slots.",
+      "spriteTop /0: Piece 'boost_mario' only works in Mario Slots.",
     ]);
   });
 

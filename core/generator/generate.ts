@@ -357,6 +357,45 @@ class Emitter {
       this.pull(saves, origin);
       return;
     }
+    if (statement.type === 'atNeighbour') {
+      const { direction, distance, body } = statement;
+      const hexDist = distance.toString(16).toUpperCase().padStart(4, '0');
+      this.out.line('REP #$20', origin);
+      this.out.line('LDA $98', origin);
+      this.out.line('PHA', origin);
+      this.out.line('LDA $9A', origin);
+      this.out.line('PHA', origin);
+      if (direction === 'above') {
+        this.out.line('LDA $98', origin);
+        this.out.line('SEC', origin);
+        this.out.line(`SBC #$${hexDist}`, origin);
+        this.out.line('STA $98', origin);
+      } else if (direction === 'below') {
+        this.out.line('LDA $98', origin);
+        this.out.line('CLC', origin);
+        this.out.line(`ADC #$${hexDist}`, origin);
+        this.out.line('STA $98', origin);
+      } else if (direction === 'left') {
+        this.out.line('LDA $9A', origin);
+        this.out.line('SEC', origin);
+        this.out.line(`SBC #$${hexDist}`, origin);
+        this.out.line('STA $9A', origin);
+      } else if (direction === 'right') {
+        this.out.line('LDA $9A', origin);
+        this.out.line('CLC', origin);
+        this.out.line(`ADC #$${hexDist}`, origin);
+        this.out.line('STA $9A', origin);
+      }
+      this.out.line('SEP #$20', origin);
+      this.statements(body, at(origin, 'body'));
+      this.out.line('REP #$20', origin);
+      this.out.line('PLA', origin);
+      this.out.line('STA $9A', origin);
+      this.out.line('PLA', origin);
+      this.out.line('STA $98', origin);
+      this.out.line('SEP #$20', origin);
+      return;
+    }
     const label = this.labels.instance();
     const { branches } = statement;
     branches.forEach((branch, i) => {

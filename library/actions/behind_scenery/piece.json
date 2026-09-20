@@ -1,0 +1,24 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "behind_scenery",
+  "version": 1,
+  "kind": "action",
+  "category": "physics",
+  "name": "Behind the scenery",
+  "description": "Puts Mario behind the level's objects (like a vine climbed from behind) or back in front, by writing the priority of his graphics ($13F9: 0 in front, 1 behind objects; 1 also means behind a net). It holds only while the Piece runs, so use it in a block Mario keeps touching, as the Behind Vine block of the archive (SMWC 3948) does.",
+  "author": "BlockCreator",
+  "slots": "mario",
+  "params": [
+    {
+      "name": "layer",
+      "label": "Mario is",
+      "type": "enum",
+      "options": [
+        { "value": 1, "label": "Behind the objects" },
+        { "value": 0, "label": "In front (normal)" }
+      ],
+      "default": 1
+    }
+  ],
+  "clobbers": ["A"]
+}
