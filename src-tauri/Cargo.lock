@@ -298,7 +298,7 @@ dependencies = [
 
 [[package]]
 name = "blockcreator"
-version = "0.1.0"
+version = "0.3.0"
 dependencies = [
  "libloading 0.8.9",
  "log",
