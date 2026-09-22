@@ -108,3 +108,32 @@ export function ImportIcon() {
     </Icon>
   );
 }
+
+/** A clock: recently opened files. */
+export function RecentIcon() {
+  return (
+    <Icon>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3 3" />
+    </Icon>
+  );
+}
+
+/** A right chevron for submenu arrows. */
+export function ChevronRightIcon() {
+  return (
+    <Icon>
+      <path d="M9 6l6 6-6 6" />
+    </Icon>
+  );
+}
+
+/** A small trash can for clearing lists. */
+export function ClearIcon() {
+  return (
+    <Icon>
+      <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14" />
+    </Icon>
+  );
+}
+

@@ -76,7 +76,10 @@ async function deploy() {
 
   const config = loadConfig();
   const sftpConfig = config.sftp || config;
-  const remotePath = config.blockcreatorRemotePath || DEFAULT_REMOTE_PATH;
+  const baseRemote = sftpConfig.remotePath || '';
+  const defaultRemote = baseRemote ? `${baseRemote}/blockcreator/web` : DEFAULT_REMOTE_PATH;
+  const remotePath =
+    process.env.DEPLOY_REMOTE_PATH || config.blockcreatorRemotePath || defaultRemote;
 
   console.log('🚀 Starting SFTP upload...');
   console.log(`📁 Local dist: ${distPath}`);

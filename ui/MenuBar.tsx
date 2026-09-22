@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { isTauri } from '@tauri-apps/api/core';
 import {
+  ChevronRightIcon,
+  ClearIcon,
   ImportIcon,
   InfoIcon,
   NewIcon,
@@ -8,10 +10,13 @@ import {
   PiecesIcon,
   PresetIcon,
   ProjectIcon,
+  RecentIcon,
   SaveAsIcon,
   SaveIcon,
   SettingsIcon,
 } from './icons';
+import appIcon from './assets/app-icon.svg';
+import type { RecentFile } from './settings';
 
 interface Props {
   version: string;
@@ -19,8 +24,11 @@ interface Props {
   unsavedChanges: boolean;
   desktopFilesSupported: boolean;
   checking: boolean;
+  recentFiles: RecentFile[];
   onNew: () => void;
   onOpen: () => void;
+  onOpenRecent: (path: string) => void;
+  onClearRecent?: () => void;
   onImport?: () => void;
   onSave: () => void;
   onSaveAs: () => void;
@@ -38,14 +46,15 @@ interface MenuEntryProps {
   label: string;
   hint?: string;
   disabled?: boolean;
-  onClick: () => void;
+  hasSubmenu?: boolean;
+  onClick?: () => void;
 }
 
-function MenuEntry({ icon, label, hint, disabled, onClick }: MenuEntryProps) {
+function MenuEntry({ icon, label, hint, disabled, hasSubmenu, onClick }: MenuEntryProps) {
   return (
     <button
       type="button"
-      className="menu-entry"
+      className={`menu-entry ${hasSubmenu ? 'has-submenu' : ''}`}
       disabled={disabled}
       onClick={onClick}
       role="menuitem"
@@ -53,6 +62,11 @@ function MenuEntry({ icon, label, hint, disabled, onClick }: MenuEntryProps) {
       <span className="entry-icon">{icon}</span>
       <span className="entry-label">{label}</span>
       {hint && <span className="entry-hint">{hint}</span>}
+      {hasSubmenu && (
+        <span className="entry-chevron">
+          <ChevronRightIcon />
+        </span>
+      )}
     </button>
   );
 }
@@ -63,8 +77,11 @@ export function MenuBar({
   unsavedChanges,
   desktopFilesSupported,
   checking,
+  recentFiles,
   onNew,
   onOpen,
+  onOpenRecent,
+  onClearRecent,
   onImport,
   onSave,
   onSaveAs,
@@ -122,6 +139,7 @@ export function MenuBar({
     <header className="menu-bar" ref={barRef} role="menubar">
       {/* Brand & Version Badge */}
       <div className="menu-brand">
+        <img className="brand-icon" src={appIcon} alt="" width={16} height={16} />
         {!isTauri() ? (
           <a
             href="https://saphros.de/block-creator"
@@ -164,6 +182,40 @@ export function MenuBar({
                 hint={desktopFilesSupported ? 'Ctrl+O' : undefined}
                 onClick={() => runAction(onOpen)}
               />
+              {desktopFilesSupported && (
+                <div className="menu-submenu-wrapper">
+                  <MenuEntry
+                    icon={<RecentIcon />}
+                    label="Open Recent"
+                    hasSubmenu
+                    disabled={recentFiles.length === 0}
+                    hint={recentFiles.length === 0 ? 'Empty' : undefined}
+                  />
+                  {recentFiles.length > 0 && (
+                    <div className="menu-dropdown menu-submenu" role="menu">
+                      {recentFiles.map((entry) => (
+                        <MenuEntry
+                          key={entry.path}
+                          icon={<OpenIcon />}
+                          label={entry.name}
+                          hint={entry.path.replace(/\\/g, '/').split('/').slice(-2, -1)[0] ?? ''}
+                          onClick={() => runAction(() => onOpenRecent(entry.path))}
+                        />
+                      ))}
+                      {onClearRecent && (
+                        <>
+                          <div className="menu-divider" />
+                          <MenuEntry
+                            icon={<ClearIcon />}
+                            label="Clear Recently Opened"
+                            onClick={() => runAction(onClearRecent)}
+                          />
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
               {onImport && (
                 <MenuEntry
                   icon={<ImportIcon />}

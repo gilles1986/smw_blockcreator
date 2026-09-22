@@ -2,11 +2,13 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { isTauri } from '@tauri-apps/api/core';
 import { checkBlock, type CheckProblem } from '../core/assemble';
 import { generate, GenerateError, type GenerateResult } from '../core/generator';
-import { canonicalJson } from '../core/header';
+import { canonicalJson, parse } from '../core/header';
 import {
+  checkPieces,
   cornerFollowsTop,
   effectiveSlot,
   slotKind,
+  upgradePieces,
   type BlockModel,
   type BlockProperties,
   type SlotId,
@@ -44,7 +46,16 @@ import { presetList, type Preset } from './presets';
 import { propertyProblems } from './properties';
 import { saveToProject, type ListChoice, type RoutineFile } from './projectSave';
 import { routineFilesNote, savedToProjectNotice } from './routineNotes';
-import { getAsmOpen, getFolder, setAsmOpen } from './settings';
+import {
+  addRecentFile,
+  clearRecentFiles,
+  getAsmOpen,
+  getFolder,
+  getRecentFiles,
+  removeRecentFile,
+  setAsmOpen,
+  type RecentFile,
+} from './settings';
 import { SaveToProjectDialog } from './SaveToProjectDialog';
 import { SettingsDialog } from './SettingsDialog';
 import { copySlot } from './slotOps';
@@ -88,6 +99,7 @@ export function App() {
     savedJson: canonicalJson(NEW_BLOCK),
   });
   const [notice, setNotice] = useState<Notice | null>(null);
+  const [recentFiles, setRecentFiles] = useState<RecentFile[]>(getRecentFiles);
   const [copied, setCopied] = useState(false);
   /** Whether the ASM pane takes its column; folded away, the editor gets the room. */
   const [asmOpen, setAsmOpenState] = useState(getAsmOpen);
@@ -289,7 +301,54 @@ export function App() {
     if (outcome.kind === 'failed') setNotice({ kind: 'error', text: outcome.message });
     if (outcome.kind !== 'opened') return;
     load(outcome.model, outcome.path);
+    addRecentFile(outcome.path);
+    setRecentFiles(getRecentFiles());
     setNotice(openNotice(outcome));
+  }
+
+  /** Opens a file from the recent-files list by its path. */
+  async function openRecentFile(path: string) {
+    if (!files) return;
+    try {
+      const exists = await files.exists(path);
+      if (!exists) {
+        removeRecentFile(path);
+        setRecentFiles(getRecentFiles());
+        setNotice({ kind: 'error', text: `File no longer exists: ${path}` });
+        return;
+      }
+    } catch (error) {
+      setNotice({ kind: 'error', text: `Cannot check ${path}: ${String(error)}` });
+      return;
+    }
+    if (unsavedChanges && !(await files.confirm(DISCARD_QUESTION))) return;
+    let text: string;
+    try {
+      text = await files.read(path);
+    } catch (error) {
+      setNotice({ kind: 'error', text: `Could not read ${path}: ${String(error)}` });
+      return;
+    }
+    const result = parse(text);
+    if (!result.ok) {
+      setNotice({ kind: 'error', text: result.message });
+      return;
+    }
+    const { model: parsed, upgraded, ahead, missing } = upgradePieces(result.model, library);
+    const problems = checkPieces(parsed, library, { allowMissing: true });
+    if (problems.length > 0) {
+      setNotice({ kind: 'error', text: `${path} cannot be opened:\n${problems.map((p) => `- ${p}`).join('\n')}` });
+      return;
+    }
+    load(parsed, path);
+    addRecentFile(path);
+    setRecentFiles(getRecentFiles());
+    setNotice(openNotice({ kind: 'opened', path, model: parsed, handEdited: !result.checksumOk, missing, upgraded, ahead }));
+  }
+
+  function clearRecent() {
+    clearRecentFiles();
+    setRecentFiles([]);
   }
 
   async function saveFile(saveAs: boolean) {
@@ -324,6 +383,8 @@ export function App() {
       revision: file.revision + 1,
       savedJson: canonicalJson(model),
     });
+    addRecentFile(outcome.path);
+    setRecentFiles(getRecentFiles());
     // A plain save cannot copy the routines; say which files the Block needs and where they go.
     const routineNote = routineFilesNote(generated.routines, getFolder('gpsFolder'));
     if (routineNote === undefined) setNotice(verdict.notice);
@@ -443,6 +504,9 @@ export function App() {
         checking={checking}
         onNew={newBlock}
         onOpen={openFile}
+        onOpenRecent={openRecentFile}
+        onClearRecent={clearRecent}
+        recentFiles={recentFiles}
         onImport={() => setImportOpen(true)}
         onSave={() => saveFile(false)}
         onSaveAs={() => saveFile(true)}

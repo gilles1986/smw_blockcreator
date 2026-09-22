@@ -52,6 +52,16 @@ npm run lint
 npm run format:check
 ```
 
+### App Icon
+
+The icon is pixel art defined as a 16x16 grid in `scripts/make-app-icon.mjs`. Edit the
+grid there rather than any `.png` -- regenerate the master, the favicon and every
+platform icon (including `.ico` and `.icns`) with:
+
+```bash
+npm run icon
+```
+
 ---
 
 ## 🐛 Reporting Issues & Feature Requests

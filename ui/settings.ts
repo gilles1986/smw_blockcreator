@@ -68,3 +68,70 @@ export function setAsmOpen(open: boolean): void {
     // Not remembered: the pane opens again next time.
   }
 }
+
+// ---- Recent files (desktop only, up to 5 entries) ----------------------------------------
+
+const RECENT_FILES_KEY = 'blockcreator.recentFiles';
+const MAX_RECENT = 5;
+
+export interface RecentFile {
+  /** Absolute file path on disk. */
+  path: string;
+  /** Just the file name (last segment), for display. */
+  name: string;
+}
+
+/**
+ * Returns the most-recently-opened file paths, newest first. Paths that no longer exist are not
+ * pruned here (checking the file system is async); they are pruned when the user opens one.
+ */
+export function getRecentFiles(): RecentFile[] {
+  try {
+    const raw = localStorage.getItem(RECENT_FILES_KEY);
+    if (!raw) return [];
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(
+      (entry): entry is RecentFile =>
+        typeof entry === 'object' &&
+        entry !== null &&
+        typeof (entry as RecentFile).path === 'string' &&
+        typeof (entry as RecentFile).name === 'string',
+    );
+  } catch {
+    return [];
+  }
+}
+
+/** Puts `path` at the top of the recent list, pushing older entries out past `MAX_RECENT`. */
+export function addRecentFile(path: string): void {
+  try {
+    const name = path.replace(/\\/g, '/').split('/').pop() ?? path;
+    const list = getRecentFiles().filter((entry) => entry.path !== path);
+    list.unshift({ path, name });
+    if (list.length > MAX_RECENT) list.length = MAX_RECENT;
+    localStorage.setItem(RECENT_FILES_KEY, JSON.stringify(list));
+  } catch {
+    // Not remembered.
+  }
+}
+
+/** Removes a single path from the recent list (e.g. when the file no longer exists). */
+export function removeRecentFile(path: string): void {
+  try {
+    const list = getRecentFiles().filter((entry) => entry.path !== path);
+    localStorage.setItem(RECENT_FILES_KEY, JSON.stringify(list));
+  } catch {
+    // Not remembered.
+  }
+}
+
+/** Clears all recent files. */
+export function clearRecentFiles(): void {
+  try {
+    localStorage.removeItem(RECENT_FILES_KEY);
+  } catch {
+    // Not remembered.
+  }
+}
+
