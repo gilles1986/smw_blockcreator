@@ -31,21 +31,55 @@ Compose custom block logic visually using reusable **Pieces** (Actions & Conditi
 
 ---
 
+## 🖥️ Desktop vs. Web App
+
+| Feature | Desktop App (Windows) | Web App (Browser) |
+| --- | --- | --- |
+| **Availability** | Native lightweight `.exe` (via Tauri 2) | Instant in any modern browser |
+| **GPS Integration** | "Save to project..." auto-writes to `GPS/blocks/` & `list.txt` | Downloads `.asm` or copies to clipboard |
+| **Local Asar Validation** | Validates assembly directly with project's `asar.dll` | In-browser live preview |
+| **Custom Sprites** | Auto-detects custom sprites from PIXI `list.txt` | Vanilla sprite name catalog |
+| **Custom Pieces** | Loads custom pieces from AppData or program directory | Full built-in Library & Presets |
+
+---
+
 ## 🚀 How It Works
 
 1. **Configure Block Properties:** Name your block, set author and description (shown as tooltips in Lunar Magic), and specify the default *Act As* tile number.
 2. **Select an Interaction Slot:** Choose how the block responds (e.g. Mario hitting from below, standing on top, or a sprite touching the side).
 3. **Assemble Logic:** Drag Actions and Conditions into the Blockly workspace.
-4. **Export / Save:** Save directly into your GPS blocks directory or copy the generated `.asm` code.
+4. **Live ASM Preview:** Inspect the generated, SA-1-ready assembly code updated in real time.
 
 ---
 
-## 📚 Documentation
+## 🎮 Inserting Blocks into Your ROM Hack (GPS)
+
+Once your block is ready, inserting it into Super Mario World takes just a few clicks:
+
+1. **Save or Export:**
+   - **In the Desktop App:** Click **Save to project...**, select your GPS directory, and assign your Map16 tile. BlockCreator places the file into `GPS/blocks/` and automatically updates `GPS/list.txt`.
+   - **In the Web App:** Click **Download .asm** and save the file into your hack's `GPS/blocks/` folder.
+2. **Register in `list.txt` (Web App):**
+   - Add a line to your `GPS/list.txt`:
+     ```text
+     0250:0025 my_custom_block.asm
+     ```
+     *(Format is `<Map16-Tile>:<Act-As-Tile> <Filename>.asm`)*
+3. **Run GPS:**
+   - Launch `gps.exe` to insert the block into your SMW ROM.
+4. **Place in Lunar Magic:**
+   - Open your level in **Lunar Magic**, press `F8` to open the 16x16 Tile Map editor, select your tile (e.g. at `0250`), and place it directly into your level!
+
+---
+
+## 📚 Documentation & Contributing
 
 - [CONTEXT.md](CONTEXT.md) — Architecture overview, core concepts, and terminology.
 - [docs/piece-authoring.md](docs/piece-authoring.md) — Complete guide for creating your own Actions and Conditions.
 - [docs/piece-authoring-for-ai.md](docs/piece-authoring-for-ai.md) — Guidelines for using AI models to write new Pieces.
 - [docs/adr/](docs/adr/) — Architectural Decision Records.
+- [CONTRIBUTING.md](CONTRIBUTING.md) — How to contribute new Pieces, bugfixes, or improvements.
+- [LICENSE](LICENSE) — MIT License.
 
 ---
 
