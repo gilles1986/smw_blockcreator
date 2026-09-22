@@ -5,7 +5,7 @@
   "kind": "action",
   "category": "level",
   "name": "Water / slippery level",
-  "description": "Sets the water level flag ($85: 1 is a water level) and the slippery flag ($86: $80 is slippery, the values 1 to $7F only half slippery, 0 normal).",
+  "description": "Sets or toggles the water level flag ($85: 1 is a water level) and the slippery flag ($86: $80 is slippery, the values 1 to $7F only half slippery, 0 normal). When toggle is checked, each checked physics is toggled instead of set.",
   "author": "BlockCreator",
   "slots": "any",
   "params": [
@@ -18,6 +18,12 @@
     {
       "name": "slippery",
       "label": "Slippery physics",
+      "type": "bool",
+      "default": false
+    },
+    {
+      "name": "toggle",
+      "label": "Toggle",
       "type": "bool",
       "default": false
     }

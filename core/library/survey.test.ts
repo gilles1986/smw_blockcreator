@@ -363,7 +363,12 @@ describe('Bounce block', () => {
     // Values from $1C up need the Custom Bounce Block Sprites patch (see the routine's header).
     const { params } = library.pieces.get('bounce_block')!.manifest;
     for (const param of params) {
-      for (const option of param.options!) expect(option.value as number).toBeLessThan(0x1c);
+      if (!param.options) continue;
+      for (const option of param.options) {
+        if (typeof option.value === 'number') {
+          expect(option.value).toBeLessThan(0x1c);
+        }
+      }
     }
   });
 });
@@ -528,3 +533,40 @@ describe('Midway point', () => {
     expect(exec('set_midway', { state: 'clear' }, { ram: { 0x13ce: 1 } }).ram[0x13ce]).toBe(0);
   });
 });
+
+describe('Cooldown', () => {
+  // $14 is SMW's effective frame counter. Cooldown uses 8-bit modular subtraction:
+  // ($14 - last_hit_time) >= frames.
+  it('allows execution and saves current frame when cooldown has elapsed', () => {
+    const result = exec('c_cooldown', { frames: 20 }, { ram: { 0x14: 30, 0x0f3a: 0 } });
+    expect(result.falseTaken).toBe(false);
+    expect(result.ram[0x0f3a]).toBe(30);
+  });
+
+  it('branches to false and preserves RAM when within cooldown period', () => {
+    const result = exec('c_cooldown', { frames: 20 }, { ram: { 0x14: 35, 0x0f3a: 30 } });
+    expect(result.falseTaken).toBe(true);
+    expect(result.ram[0x0f3a]).toBe(30);
+  });
+
+  it('correctly handles 8-bit frame counter wrap-around across $FF to $00', () => {
+    const duringCooldown = exec('c_cooldown', { frames: 20 }, { ram: { 0x14: 5, 0x0f3a: 250 } });
+    expect(duringCooldown.falseTaken).toBe(true);
+    expect(duringCooldown.ram[0x0f3a]).toBe(250);
+
+    const afterCooldown = exec('c_cooldown', { frames: 20 }, { ram: { 0x14: 20, 0x0f3a: 250 } });
+    expect(afterCooldown.falseTaken).toBe(false);
+    expect(afterCooldown.ram[0x0f3a]).toBe(20);
+  });
+
+  it('supports custom RAM addresses', () => {
+    const result = exec(
+      'c_cooldown',
+      { frames: 15, address: 'custom', custom_address: 0x7fa400 },
+      { ram: { 0x14: 50, 0x7fa400: 0 } },
+    );
+    expect(result.falseTaken).toBe(false);
+    expect(result.ram[0x7fa400]).toBe(50);
+  });
+});
+

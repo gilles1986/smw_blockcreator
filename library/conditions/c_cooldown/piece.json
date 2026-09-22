@@ -1,0 +1,45 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "c_cooldown",
+  "version": 1,
+  "kind": "condition",
+  "category": "conditions",
+  "name": "Cooldown",
+  "description": "True if at least the given number of frames have passed since this block was last triggered. Compares and stores the frame counter ($14) in the selected free RAM address to prevent re-triggering within the cooldown period.",
+  "author": "BlockCreator",
+  "slots": "any",
+  "params": [
+    {
+      "name": "frames",
+      "label": "Cooldown (frames)",
+      "type": "number",
+      "min": 1,
+      "max": 128,
+      "default": 20
+    },
+    {
+      "name": "address",
+      "label": "RAM address",
+      "type": "enum",
+      "options": [
+        { "value": 3898, "label": "$0F3A (Free RAM, Direct Page)" },
+        { "value": 6249, "label": "$1869 (Free RAM, Level)" },
+        { "value": 7677, "label": "$1DFD (Timer scratch RAM)" },
+        { "value": 8365056, "label": "$7FA400 (Bank 7F free RAM)" },
+        { "value": "custom", "label": "Custom address..." }
+      ],
+      "default": 3898
+    },
+    {
+      "name": "custom_address",
+      "label": "Custom address (hex)",
+      "type": "number",
+      "min": 0,
+      "max": 16777215,
+      "format": "hex",
+      "default": 3898,
+      "showWhen": { "param": "address", "equals": "custom" }
+    }
+  ],
+  "clobbers": ["A"]
+}

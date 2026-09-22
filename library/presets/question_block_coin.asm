@@ -1,5 +1,5 @@
 ;bc-format 1
-;bc-model {"properties":{"author":"BlockCreator","defaultActAs":304,"description":"Hit it from below for a coin: the block bounces like a ? block and turns into a used block.","name":"question_block_coin"},"slots":{"marioBottom":[{"piece":{"id":"give_coins","params":{"amount":1},"version":1},"type":"action"},{"piece":{"id":"bounce_block","params":{"becomes":13,"bounce":3,"direction":0},"version":1},"type":"action"}]}}
+;bc-model {"properties":{"author":"BlockCreator","defaultActAs":304,"description":"Hit it from below for a coin: the block bounces like a ? block and turns into a used block.","name":"question_block_coin"},"slots":{"marioBottom":[{"piece":{"id":"give_coins","params":{"amount":1},"version":1},"type":"action"},{"piece":{"id":"bounce_block","params":{"becomes":13,"bounce":3,"direction":0},"version":3},"type":"action"}]}}
 ;bc-checksum 7a13047b
 ;
 ; question_block_coin

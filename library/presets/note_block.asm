@@ -1,5 +1,5 @@
 ;bc-format 1
-;bc-model {"properties":{"author":"BlockCreator","defaultActAs":304,"description":"Land on it to bounce high: the block sinks and comes back as a note block, and Mario is thrown up.","name":"note_block"},"slots":{"marioTop":[{"piece":{"id":"bounce_block","params":{"becomes":14,"bounce":2,"direction":3},"version":1},"type":"action"},{"piece":{"id":"boost_mario","params":{"mode":0,"x_direction":"none","x_strength":48,"y_direction":"up","y_strength":112},"version":2},"type":"action"}]}}
+;bc-model {"properties":{"author":"BlockCreator","defaultActAs":304,"description":"Land on it to bounce high: the block sinks and comes back as a note block, and Mario is thrown up.","name":"note_block"},"slots":{"marioTop":[{"piece":{"id":"bounce_block","params":{"becomes":14,"bounce":2,"direction":3},"version":3},"type":"action"},{"piece":{"id":"boost_mario","params":{"mode":0,"x_direction":"none","x_strength":48,"y_direction":"up","y_strength":112},"version":2},"type":"action"}]}}
 ;bc-checksum 39f8b632
 ;
 ; note_block

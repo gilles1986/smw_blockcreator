@@ -1,0 +1,34 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "c_water_slippery",
+  "version": 1,
+  "kind": "condition",
+  "category": "conditions",
+  "name": "Water / slippery level is",
+  "description": "True while the water level flag ($85) or slippery flag ($86) is in the chosen state.",
+  "author": "BlockCreator",
+  "slots": "any",
+  "params": [
+    {
+      "name": "physics",
+      "label": "Physics",
+      "type": "enum",
+      "options": [
+        { "value": "water", "label": "Water level" },
+        { "value": "slippery", "label": "Slippery level" }
+      ],
+      "default": "water"
+    },
+    {
+      "name": "state",
+      "label": "State",
+      "type": "enum",
+      "options": [
+        { "value": 1, "label": "Active (enabled)" },
+        { "value": 0, "label": "Inactive (disabled)" }
+      ],
+      "default": 1
+    }
+  ],
+  "clobbers": ["A"]
+}

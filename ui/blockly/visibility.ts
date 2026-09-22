@@ -16,11 +16,24 @@ export function setVisibilityRules(rules: readonly VisibilityRule[]): void {
 
 /** Shows or hides the rows of one block as its fields now say. */
 export function applyVisibility(block: Blockly.Block): void {
+  let changed = false;
   for (const rule of rulesByBlock.get(block.type) ?? []) {
     const input = block.inputList[rule.row];
     if (!input) continue;
     const shown = String(block.getFieldValue(rule.control)) === String(rule.shownWhen);
-    if (input.isVisible() !== shown) input.setVisible(shown);
+    if (input.isVisible() !== shown) {
+      input.setVisible(shown);
+      changed = true;
+    }
+  }
+  if (changed && (block as any).rendered) {
+    let current: Blockly.Block | null = block;
+    while (current) {
+      if (typeof (current as any).render === 'function') {
+        (current as any).render();
+      }
+      current = current.getParent();
+    }
   }
 }
 

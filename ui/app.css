@@ -78,6 +78,17 @@ body,
   letter-spacing: 0.02em;
 }
 
+.menu-brand a.brand-name {
+  text-decoration: none;
+  cursor: pointer;
+  transition: opacity 0.15s ease, color 0.15s ease;
+}
+
+.menu-brand a.brand-name:hover {
+  text-decoration: underline;
+  opacity: 0.9;
+}
+
 .menu-brand .brand-version {
   font-size: 11px;
   font-weight: 600;
@@ -451,6 +462,46 @@ body,
   background: var(--panel2);
   border: 1px solid var(--line);
   border-radius: 6px;
+}
+
+.modal-wide {
+  width: min(680px, 92vw);
+}
+
+.import-controls {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.import-textarea {
+  width: 100%;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 13px;
+  line-height: 1.4;
+  padding: 8px 10px;
+  color: var(--text);
+  background: var(--panel2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  resize: vertical;
+  min-height: 200px;
+  max-height: 50vh;
+}
+
+.import-textarea:focus {
+  outline: none;
+  border-color: var(--accent2);
+}
+
+.import-error-banner {
+  padding: 8px 12px;
+  background: rgba(220, 53, 69, 0.15);
+  border: 1px solid rgba(220, 53, 69, 0.4);
+  border-radius: 6px;
+  color: #ff6b6b;
+  font-size: 13px;
+  white-space: pre-wrap;
 }
 
 .preset-list {

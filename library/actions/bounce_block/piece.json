@@ -1,7 +1,7 @@
 {
   "$schema": "../../../core/library/piece.schema.json",
   "id": "bounce_block",
-  "version": 1,
+  "version": 3,
   "kind": "action",
   "category": "effects",
   "name": "Bounce block",
@@ -61,3 +61,4 @@
   "removesBlock": true,
   "clobbers": ["A", "X", "Y"]
 }
+

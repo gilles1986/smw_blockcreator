@@ -34,6 +34,30 @@ describe('Level Actions', () => {
     expect(piece('water_slippery', { water: false, slippery: false })).toBe(
       lines('STZ $85', 'STZ $86'),
     );
+    expect(piece('water_slippery', { water: true, slippery: false, toggle: true })).toBe(
+      lines('LDA $85', 'EOR #$01', 'STA $85'),
+    );
+    expect(piece('water_slippery', { water: false, slippery: true, toggle: true })).toBe(
+      lines('LDA $86', 'EOR #$80', 'STA $86'),
+    );
+    expect(piece('water_slippery', { water: true, slippery: true, toggle: true })).toBe(
+      lines('LDA $85', 'EOR #$01', 'STA $85', 'LDA $86', 'EOR #$80', 'STA $86'),
+    );
+  });
+
+  it('c_water_slippery: tests $85 for water level and $86 for slippery level', () => {
+    expect(piece('c_water_slippery', { physics: 'water', state: 1 }, 'L_false')).toBe(
+      lines('LDA $85', 'BEQ L_false'),
+    );
+    expect(piece('c_water_slippery', { physics: 'water', state: 0 }, 'L_false')).toBe(
+      lines('LDA $85', 'BNE L_false'),
+    );
+    expect(piece('c_water_slippery', { physics: 'slippery', state: 1 }, 'L_false')).toBe(
+      lines('LDA $86', 'BEQ L_false'),
+    );
+    expect(piece('c_water_slippery', { physics: 'slippery', state: 0 }, 'L_false')).toBe(
+      lines('LDA $86', 'BNE L_false'),
+    );
   });
 
   describe('disable_buttons', () => {

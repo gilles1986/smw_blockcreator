@@ -1,5 +1,5 @@
 ;bc-format 1
-;bc-model {"properties":{"author":"BlockCreator","defaultActAs":304,"description":"Hit it from below: small Mario makes it bounce, bigger Mario shatters it.","name":"brick_block"},"slots":{"marioBottom":[{"branches":[{"body":[{"piece":{"id":"bounce_block","params":{"becomes":12,"bounce":1,"direction":0},"version":1},"type":"action"}],"condition":{"piece":{"id":"c_mario_powerup","params":{"powerup":0},"version":1},"type":"condition"}}],"else":[{"piece":{"id":"shatter","params":{"rainbow":false},"version":1},"type":"action"}],"type":"if"}]}}
+;bc-model {"properties":{"author":"BlockCreator","defaultActAs":304,"description":"Hit it from below: small Mario makes it bounce, bigger Mario shatters it.","name":"brick_block"},"slots":{"marioBottom":[{"branches":[{"body":[{"piece":{"id":"bounce_block","params":{"becomes":12,"bounce":1,"direction":0},"version":3},"type":"action"}],"condition":{"piece":{"id":"c_mario_powerup","params":{"powerup":0},"version":1},"type":"condition"}}],"else":[{"piece":{"id":"shatter","params":{"rainbow":false},"version":1},"type":"action"}],"type":"if"}]}}
 ;bc-checksum 71581cbf
 ;
 ; brick_block

@@ -134,6 +134,17 @@ export function BlocklyEditor({
       Blockly.serialization.workspaces.load(initialStateRef.current, ws);
       // The loaded values, not the defaults, decide which rows are shown.
       refreshVisibility(ws);
+      // Re-render from leaves to root so nested conditions (e.g. logic_operation inside if)
+      // and blocks whose rows were shown/hidden are properly sized and positioned by Zelos.
+      const renderAll = () => {
+        for (const block of ws.getAllBlocks(false).reverse()) {
+          if (typeof (block as any).render === 'function') {
+            (block as any).render();
+          }
+        }
+      };
+      renderAll();
+      requestAnimationFrame(renderAll);
       // Each Slot starts with its own history; otherwise undo would replay another Slot's edits.
       ws.clearUndo();
     } finally {

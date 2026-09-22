@@ -1,0 +1,26 @@
+{
+  "$schema": "../../../core/library/piece.schema.json",
+  "id": "c_block_half",
+  "version": 1,
+  "kind": "condition",
+  "category": "conditions",
+  "name": "Mario is on block half",
+  "description": "True if the point where Mario touches the block lies in the chosen half of it, 8 pixels each ($9A for horizontal, $98 for vertical; the game does not round them to the block). In Top that is his foot, in Left and Right his side. Mario has two foot points, 6 pixels apart: while he stands across the middle, both halves are true in the same frame, one for each foot.",
+  "author": "BlockCreator",
+  "slots": "mario",
+  "params": [
+    {
+      "name": "half",
+      "label": "Half",
+      "type": "enum",
+      "options": [
+        { "value": 0, "label": "Left" },
+        { "value": 1, "label": "Right" },
+        { "value": 2, "label": "Top" },
+        { "value": 3, "label": "Bottom" }
+      ],
+      "default": 0
+    }
+  ],
+  "clobbers": ["A"]
+}

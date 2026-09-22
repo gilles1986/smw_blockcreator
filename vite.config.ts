@@ -4,6 +4,7 @@ import pkg from './package.json' with { type: 'json' };
 
 // Tauri expects a fixed dev port and must see Rust errors in the terminal.
 export default defineConfig({
+  base: './',
   plugins: [react()],
   define: { 'import.meta.env.VITE_APP_VERSION': JSON.stringify(pkg.version) },
   clearScreen: false,

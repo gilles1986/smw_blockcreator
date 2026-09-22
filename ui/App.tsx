@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { isTauri } from '@tauri-apps/api/core';
 import { checkBlock, type CheckProblem } from '../core/assemble';
 import { generate, GenerateError, type GenerateResult } from '../core/generator';
 import { canonicalJson } from '../core/header';
@@ -22,6 +23,8 @@ import {
 } from './blockly/workspace';
 import { DISCARD_QUESTION, openBlock, saveBlock } from './blockDocument';
 import { formatHex, parseHex } from './hex';
+import { ImportDialog } from './ImportDialog';
+import { parseBlockText } from './importBlock';
 import { CheckResults } from './CheckResults';
 import {
   blockWarnings,
@@ -95,13 +98,14 @@ export function App() {
   const [presetsOpen, setPresetsOpen] = useState(false);
   const [piecesOpen, setPiecesOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   /** What the Piece search box looks for. */
   const [query, setQuery] = useState('');
   /** The user's own Pieces, loaded from the app's data dir; null until read (browser: never). */
   const [userLibrary, setUserLibrary] = useState<Library | null>(null);
   const library = useMemo(
     () => (userLibrary ? mergeLibraries(builtInLibrary, userLibrary) : builtInLibrary),
-    [userLibrary],
+    [userLibrary, builtInLibrary],
   );
   const presets = useMemo(() => presetList(library), [library]);
   /** The GPS folder the "Save to project" dialog is open for; undefined while it is closed. */
@@ -113,7 +117,8 @@ export function App() {
 
   useEffect(() => {
     const displayVersion = TOOL_VERSION.startsWith('v') ? TOOL_VERSION : `v${TOOL_VERSION}`;
-    document.title = `BlockCreator ${displayVersion}`;
+    const prefix = isTauri() ? 'BlockCreator' : 'Saphros BlockCreator';
+    document.title = `${prefix} ${displayVersion}`;
   }, []);
 
   // The custom sprite names come from the PIXI folder in the settings: read at the start, and
@@ -241,8 +246,45 @@ export function App() {
     setNotice(null);
   }
 
+  function openBrowserFile() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.asm';
+    input.onchange = async () => {
+      const selectedFile = input.files?.[0];
+      if (!selectedFile) return;
+      try {
+        const text = await selectedFile.text();
+        const parsed = parseBlockText(text, library);
+        if (!parsed.ok) {
+          setNotice({ kind: 'error', text: parsed.message });
+          return;
+        }
+        load(parsed.model, selectedFile.name);
+        setNotice({ kind: 'info', text: `Opened ${selectedFile.name}` });
+      } catch (error) {
+        setNotice({ kind: 'error', text: `Cannot read file: ${String(error)}` });
+      }
+    };
+    input.click();
+  }
+
+  function downloadAsm(name: string, content: string) {
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = name.endsWith('.asm') ? name : `${name}.asm`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   async function openFile() {
-    if (!files) return;
+    if (!files) {
+      if (!(await mayDiscard())) return;
+      openBrowserFile();
+      return;
+    }
     const outcome = await openBlock(files, { library, unsavedChanges });
     if (outcome.kind === 'failed') setNotice({ kind: 'error', text: outcome.message });
     if (outcome.kind !== 'opened') return;
@@ -251,9 +293,20 @@ export function App() {
   }
 
   async function saveFile(saveAs: boolean) {
-    if (!files) return;
     if ('error' in generated) {
       setNotice({ kind: 'error', text: `Cannot save: ${generated.error}` });
+      return;
+    }
+    if (!files) {
+      const fileName = properties.name ? `${properties.name}.asm` : 'block.asm';
+      downloadAsm(fileName, generated.text);
+      setFile((current) => ({
+        ...current,
+        path: fileName,
+        revision: current.revision + 1,
+        savedJson: canonicalJson(model),
+      }));
+      setNotice({ kind: 'info', text: `Downloaded ${fileName}` });
       return;
     }
     // Errors block the save; they stay on screen through `check`.
@@ -390,6 +443,7 @@ export function App() {
         checking={checking}
         onNew={newBlock}
         onOpen={openFile}
+        onImport={() => setImportOpen(true)}
         onSave={() => saveFile(false)}
         onSaveAs={() => saveFile(true)}
         onSaveToProject={openProjectDialog}
@@ -485,6 +539,14 @@ export function App() {
                     <button
                       type="button"
                       className="btn-copy"
+                      onClick={() => setImportOpen(true)}
+                      title="Import block from ASM code or JSON"
+                    >
+                      Import
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-copy"
                       onClick={checkOnly}
                       disabled={checking || !('text' in generated)}
                       title="Assemble with the GPS project's Asar"
@@ -570,6 +632,19 @@ export function App() {
         defaultAuthor={properties.author}
       />
       <AboutDialog open={aboutOpen} onClose={() => setAboutOpen(false)} version={TOOL_VERSION} />
+      <ImportDialog
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        library={library}
+        onImport={async (importedModel) => {
+          if (!(await mayDiscard())) return;
+          load(importedModel, undefined);
+          setNotice({
+            kind: 'info',
+            text: `Imported block: ${importedModel.properties.name || 'Untitled'}`,
+          });
+        }}
+      />
       {project && projectFolder !== undefined && (
         <SaveToProjectDialog
           open

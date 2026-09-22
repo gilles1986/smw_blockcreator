@@ -40,11 +40,13 @@ describe('built-in Library seed Pieces', () => {
       'bounce_block',
       'c_adjacent_tile',
       'c_block_collected',
+      'c_block_half',
       'c_bonus_stars',
       'c_button',
       'c_carrying',
       'c_climbing',
       'c_coins',
+      'c_cooldown',
       'c_ducking',
       'c_events_passed',
       'c_facing',
@@ -72,6 +74,7 @@ describe('built-in Library seed Pieces', () => {
       'c_switch_palace',
       'c_timer',
       'c_wall',
+      'c_water_slippery',
       'c_yoshi',
       'c_yoshi_coins',
       'change_adjacent_block',
@@ -436,6 +439,28 @@ describe('built-in Library seed Pieces', () => {
           'SEP #$20',
           'BCC L_false',
         ),
+      );
+    });
+
+    it.each([
+      [0, 'LDA $9A', 'BNE'],
+      [1, 'LDA $9A', 'BEQ'],
+      [2, 'LDA $98', 'BNE'],
+      [3, 'LDA $98', 'BEQ'],
+    ])('c_block_half %j tests bit 3 of contact point', (half, lda, branch) => {
+      expect(render('c_block_half', { half }, 'L_false')).toContain(
+        lines(lda, 'AND #$08', `${branch} L_false`),
+      );
+    });
+
+    it.each([
+      [{ physics: 'water', state: 1 }, 'LDA $85', 'BEQ'],
+      [{ physics: 'water', state: 0 }, 'LDA $85', 'BNE'],
+      [{ physics: 'slippery', state: 1 }, 'LDA $86', 'BEQ'],
+      [{ physics: 'slippery', state: 0 }, 'LDA $86', 'BNE'],
+    ])('c_water_slippery %j', (params, lda, branch) => {
+      expect(render('c_water_slippery', params, 'L_false')).toContain(
+        lines(lda, `${branch} L_false`),
       );
     });
 

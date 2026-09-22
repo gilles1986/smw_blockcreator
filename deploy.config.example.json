@@ -1,0 +1,9 @@
+{
+  "sftp": {
+    "host": "your-server.uberspace.de",
+    "port": 22,
+    "username": "your-username",
+    "password": "your-password-here",
+    "remotePath": "/var/www/virtual/your-username/html/blockcreator/web"
+  }
+}

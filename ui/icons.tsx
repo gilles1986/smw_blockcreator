@@ -99,3 +99,12 @@ export function PiecesIcon() {
     </Icon>
   );
 }
+
+/** A page with an arrow pointing down into it: import text or code. */
+export function ImportIcon() {
+  return (
+    <Icon>
+      <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M12 11v6M9.5 14.5L12 17l2.5-2.5" />
+    </Icon>
+  );
+}

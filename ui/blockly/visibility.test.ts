@@ -44,6 +44,7 @@ describe('visibilityRules', () => {
         'piece_change_sprite',
         'piece_set_midway',
         'piece_c_yoshi_coins',
+        'piece_c_cooldown',
       ]),
     );
   });

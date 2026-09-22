@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { isTauri } from '@tauri-apps/api/core';
 import {
+  ImportIcon,
   InfoIcon,
   NewIcon,
   OpenIcon,
@@ -19,6 +21,7 @@ interface Props {
   checking: boolean;
   onNew: () => void;
   onOpen: () => void;
+  onImport?: () => void;
   onSave: () => void;
   onSaveAs: () => void;
   onSaveToProject: () => void;
@@ -62,6 +65,7 @@ export function MenuBar({
   checking,
   onNew,
   onOpen,
+  onImport,
   onSave,
   onSaveAs,
   onSaveToProject,
@@ -118,7 +122,17 @@ export function MenuBar({
     <header className="menu-bar" ref={barRef} role="menubar">
       {/* Brand & Version Badge */}
       <div className="menu-brand">
-        <span className="brand-name">BlockCreator</span>
+        {!isTauri() ? (
+          <a
+            href="https://saphros.de/block-creator"
+            className="brand-name"
+            title="Back to the Block Creator page on saphros.de"
+          >
+            ← Saphros BlockCreator
+          </a>
+        ) : (
+          <span className="brand-name">BlockCreator</span>
+        )}
         <span className="brand-version">{displayVersion}</span>
       </div>
 
@@ -147,23 +161,30 @@ export function MenuBar({
               <MenuEntry
                 icon={<OpenIcon />}
                 label="Open Block…"
-                hint={desktopFilesSupported ? 'Ctrl+O' : '(desktop only)'}
-                disabled={!desktopFilesSupported}
+                hint={desktopFilesSupported ? 'Ctrl+O' : undefined}
                 onClick={() => runAction(onOpen)}
               />
+              {onImport && (
+                <MenuEntry
+                  icon={<ImportIcon />}
+                  label="Import ASM / Text…"
+                  hint="Paste"
+                  onClick={() => runAction(onImport)}
+                />
+              )}
               <div className="menu-divider" />
               <MenuEntry
                 icon={<SaveIcon />}
                 label="Save"
-                hint={desktopFilesSupported ? 'Ctrl+S' : '(desktop only)'}
-                disabled={!desktopFilesSupported || checking}
+                hint={desktopFilesSupported ? 'Ctrl+S' : 'Download'}
+                disabled={checking}
                 onClick={() => runAction(onSave)}
               />
               <MenuEntry
                 icon={<SaveAsIcon />}
                 label="Save As…"
-                hint={desktopFilesSupported ? '' : '(desktop only)'}
-                disabled={!desktopFilesSupported || checking}
+                hint={desktopFilesSupported ? undefined : 'Download'}
+                disabled={checking}
                 onClick={() => runAction(onSaveAs)}
               />
             </div>
